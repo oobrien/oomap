@@ -1,0 +1,17 @@
+<!ENTITY yellow100 "#FFBF50">
+<!ENTITY yellow50 "#FFDDA3">
+<!ENTITY green100 "#2FB457">
+<!ENTITY green30 "#C5FFB2">
+<!ENTITY blue100 "#009DDD">
+<!ENTITY blue50 "#8FE8FF">
+<!ENTITY brown "#F1CDAB">
+<!ENTITY brown100 "#CF7417">
+<!ENTITY brown50 "#E7B27E">
+<!ENTITY contour "#D96919">
+<!ENTITY olive100 "#ACA637">
+<!ENTITY black "#000000">
+<!ENTITY grey "#999999">
+<!ENTITY grey70 "#555555">
+<!ENTITY grey50 "#888888">
+<!ENTITY grey30 "#BBBBBB">
+<!ENTITY white "#FFFFFF">
