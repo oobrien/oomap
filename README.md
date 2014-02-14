@@ -1,7 +1,9 @@
 OOMap
 =====
 
-Mapnik stylesheets for OOMap (as used at http://oomap.co.uk/ when zoomed in) and other raster tile layers (e.g. as used at http://bikes.oobrien.com/london/). The stylesheets were based on the "old" (pre-2012) osm.xml stylesheet at http://svn.openstreetmap.org/applications/rendering/mapnik/osm.xml that used to be used for the "main" map rendering on http://osm.org/
+Mapnik stylesheets for OOMap (as used at http://oomap.co.uk/ when zoomed in) and other raster tile layers (e.g. the "futurecity" stylesheet is used at http://bikes.oobrien.com/london/). 
+
+The stylesheets are based on the "old" (pre-2012) osm.xml stylesheet at http://svn.openstreetmap.org/applications/rendering/mapnik/osm.xml that used to be used for the "main" map rendering on http://osm.org/
 
 Setup
 ===
@@ -13,7 +15,7 @@ You need a copy of the OpenStreetMap data on a PostgreSQL/PostGIS database (I'm 
 
 Put the data on a database using osm2pgsql: http://wiki.openstreetmap.org/wiki/Osm2pgsql
 
-You also need the coastline data from OpenStreetMap which is distributed as a shapefile. Use the large split one here: http://openstreetmapdata.com/data/land-polygons
+You also need the coastline data from OpenStreetMap which is distributed as a shapefile. Use the large split "Mercator" one from here: http://openstreetmapdata.com/data/land-polygons
 
 Contours are a bit more involved. I use, for Great Britain, the set from Ordnance Survey Terrain 50: http://www.ordnancesurvey.co.uk/business-and-government/products/terrain-50.html
 
@@ -35,7 +37,7 @@ mapnik.register_fonts(custom_fonts_dir)
 Examples
 ===
 
-The example images, using the XYZ map tile convention have x=16090, y=10213, z=15. See http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames for further details.
+The example images, using the XYZ map tile convention, have x=16090, y=10213, z=15. See http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames for further details.
 
 ![futurecity](https://raw.github.com/oobrien/oomap/master/examples/futurecity_z15.png "futurecity") futurecity
 
