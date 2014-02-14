@@ -1,15 +1,22 @@
-oomap
+OOMap
 =====
 
 Mapnik 2.3.0-dev stylesheets for OOMap (as used at http://oomap.co.uk/ when zoomed in) and other raster tile layers (e.g. as used at http://bikes.oobrien.com/london/).
 
-You need a copy of the OpenStreetMap data on a PostgreSQL/PostGIS database - either the whole world or for a specific area, e.g. I get data from http://download.geofabrik.de/europe/british-isles.html
+Setup
+===
 
-You also need the coastline data from OpenStreetMap which is distributed as a shapefile. I use the large split one here: http://openstreetmapdata.com/data/land-polygons
+You need a copy of the OpenStreetMap data on a PostgreSQL/PostGIS database (I'm using PostgreSQL 9.3) - either the whole world or for a specific area, e.g. from http://download.geofabrik.de/europe/british-isles.html
 
-I use a version of https://github.com/openstreetmap/mapnik-stylesheets/blob/master/generate_tiles.py to generate sets of tiles from these stylesheets.
+Put the data on a database using osm2pgsql: http://wiki.openstreetmap.org/wiki/Osm2pgsql
 
-Note the futurecity.xml requires msttcorefonts - & you'll need to let it know where these live, e.g.:
+You also need the coastline data from OpenStreetMap which is distributed as a shapefile. Use the large split one here: http://openstreetmapdata.com/data/land-polygons
+
+Once setup, Mapnik (including its python bindings) needs to be installed. I'm using 2.3.0-dev (i.e. the current nightly builds) but 2.2.0 should work OK for creating PNGs at least.
+
+The script at https://github.com/openstreetmap/mapnik-stylesheets/blob/master/generate_tiles.py to generate sets of tiles from the stylesheets.
+
+Note the futurecity.xml stylesheet requires msttcorefonts - & you'll need to let mapnik know where these live, e.g. in the python script:
 
 custom_fonts_dir = '/usr/share/fonts/truetype/msttcorefonts/'
 
