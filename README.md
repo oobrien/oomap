@@ -1,7 +1,7 @@
 OOMap
 =====
 
-Mapnik 2.3.0-dev stylesheets for OOMap (as used at http://oomap.co.uk/ when zoomed in) and other raster tile layers (e.g. as used at http://bikes.oobrien.com/london/).
+Mapnik stylesheets for OOMap (as used at http://oomap.co.uk/ when zoomed in) and other raster tile layers (e.g. as used at http://bikes.oobrien.com/london/). The stylesheets were based on the "old" (pre-2012) osm.xml stylesheet at http://svn.openstreetmap.org/applications/rendering/mapnik/osm.xml that used to be used for the "main" map rendering on http://osm.org/
 
 Setup
 ===
