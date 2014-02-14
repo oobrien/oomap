@@ -13,3 +13,8 @@ custom_fonts_dir = '/usr/share/fonts/truetype/msttcorefonts/'
 
 mapnik.register_fonts(custom_fonts_dir)
 
+Examples
+===
+
+The example images come from http://tiler1.oobrien.com/[style_name]/[z]/16090/10213.png
+
