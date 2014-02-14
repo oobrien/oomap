@@ -179,7 +179,7 @@
         <Filter>&minor_road; and not &tunnel;</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
-    < Rule>
+    <Rule>
         &maxscale_zoom12;
         &minscale_zoom12;
         <Filter>&service_road; and not &tunnel;</Filter>
