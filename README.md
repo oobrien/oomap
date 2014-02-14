@@ -6,13 +6,23 @@ Mapnik 2.3.0-dev stylesheets for OOMap (as used at http://oomap.co.uk/ when zoom
 Setup
 ===
 
+Data
+---
+
 You need a copy of the OpenStreetMap data on a PostgreSQL/PostGIS database (I'm using PostgreSQL 9.3) - either the whole world or for a specific area, e.g. from http://download.geofabrik.de/europe/british-isles.html
 
 Put the data on a database using osm2pgsql: http://wiki.openstreetmap.org/wiki/Osm2pgsql
 
 You also need the coastline data from OpenStreetMap which is distributed as a shapefile. Use the large split one here: http://openstreetmapdata.com/data/land-polygons
 
-Once setup, Mapnik (including its python bindings) needs to be installed. I'm using 2.3.0-dev (i.e. the current nightly builds) but 2.2.0 should work OK for creating PNGs at least.
+Contours are a bit more involved. I use, for Great Britain, the set from Ordnance Survey Terrain 50: http://www.ordnancesurvey.co.uk/business-and-government/products/terrain-50.html
+
+These can then be put into a PostgreSQL/PostGIS database using shp2pgsql with comes with PostGIS.
+
+Scripts
+---
+
+Once the data is ready, Mapnik (including its python bindings) needs to be installed. I'm using 2.3.0-dev (i.e. the current nightly builds) but 2.2.0 should work OK for creating PNGs at least.
 
 The script at https://github.com/openstreetmap/mapnik-stylesheets/blob/master/generate_tiles.py to generate sets of tiles from the stylesheets.
 
