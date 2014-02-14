@@ -18,11 +18,9 @@ mapnik.register_fonts(custom_fonts_dir)
 Examples
 ===
 
-The example images come from http://tiler1.oobrien.com/[style_name]/[z]/16090/10213.png
+The example images come from http://tiler1.oobrien.com/[style_name]/[z]/16090/10213.png with z=15
 
-e.g. http://tiler1.oobrien.com/[style_name]/[z]/16090/10213.png
-
-They are all at zoom 15.
+e.g. http://tiler1.oobrien.com/streeto/15/16090/10213.png
 
 
 ![futurecity](https://raw.github.com/oobrien/oomap/master/examples/futurecity_z15.png "futurecity") futurecity
