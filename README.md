@@ -35,7 +35,7 @@ mapnik.register_fonts(custom_fonts_dir)
 Examples
 ===
 
-The example images have x=16090, y=10213, z=15.
+The example images, using the XYZ map tile convention have x=16090, y=10213, z=15. See http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames for further details.
 
 ![futurecity](https://raw.github.com/oobrien/oomap/master/examples/futurecity_z15.png "futurecity") futurecity
 
