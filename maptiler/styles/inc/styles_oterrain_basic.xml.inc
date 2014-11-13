@@ -248,8 +248,8 @@
 <Style name="leisure">
     <Rule>
         &maxscale_zoom12;
-        <Filter>[landuse] = 'brownfield' or [landuse] = 'landfill' or [landuse] = 'greenfield' or [landuse] = 'construction'</Filter>
-        <PolygonPatternSymbolizer file="&symbols;/oob.png" />
+        <Filter>[landuse] = 'landfill' or [landuse] = 'construction'</Filter>
+        <PolygonSymbolizer fill="&magenta50;" gamma="0.6" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
