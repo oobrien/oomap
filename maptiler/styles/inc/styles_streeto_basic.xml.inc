@@ -240,6 +240,11 @@
 <Style name="leisure">
     <Rule>
         &maxscale_zoom12;
+        <Filter>[landuse] = 'landfill' or [landuse] = 'construction'</Filter>
+        <PolygonSymbolizer fill="&magenta50;" gamma="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
         <Filter>[natural] = 'wood' or [landuse] = 'wood' or [landuse] = 'forest'</Filter>
         <PolygonSymbolizer fill="&green30;" gamma="0.6" />
     </Rule>
