@@ -360,21 +360,25 @@
 
 <Style name="water_lines_casing">
     <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom12;
         &minscale_zoom12;
         <LineSymbolizer stroke="&black;" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom13;
         &minscale_zoom13;
         <LineSymbolizer stroke="&black;" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom14;
         &minscale_zoom16;
         <LineSymbolizer stroke="&black;" stroke-width="4.6" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom17;
         <LineSymbolizer stroke="&black;" stroke-width="6.0" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
@@ -390,21 +394,25 @@
 
 <Style name="water_lines_core">
     <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom12;
         &minscale_zoom12;
         <LineSymbolizer stroke="&blue50;" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom13;
         &minscale_zoom13;
         <LineSymbolizer stroke="&blue50;" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
 <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom14;
         &minscale_zoom16;
         <LineSymbolizer stroke="&blue50;" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom17;
         <LineSymbolizer stroke="&blue50;" stroke-width="4.4" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
@@ -431,8 +439,6 @@
         &maxscale_zoom12;
         <Filter>[leisure] = 'pitch'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
-        <LinePatternSymbolizer file="&symbols;/fence.png" />
     </Rule>
 </Style>
 
@@ -476,8 +482,14 @@
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>[barrier] &lt;&gt; '' and not [barrier] = 'hedge'</Filter>
+        <Filter>[barrier] = 'citywall' or [barrier] = 'wall' or [barrier] = 'retaining_wall' or [barrier] = 'jersey_barrier' or [barrier] = 'yes'</Filter>
         <LinePatternSymbolizer file="&symbols;/wall.png" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>[barrier] = 'fence'</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
+        <LinePatternSymbolizer file="&symbols;/fence.png" />
     </Rule>
 </Style>
 
