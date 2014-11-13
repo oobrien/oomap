@@ -12,6 +12,7 @@
 <!ENTITY black "#000000">
 <!ENTITY grey "#999999">
 <!ENTITY grey70 "#555555">
-<!ENTITY grey50 "#888888">
+<!ENTITY grey50 "#808080">
 <!ENTITY grey30 "#BBBBBB">
 <!ENTITY white "#FFFFFF">
+<!ENTITY magenta50 "#FF99FF">
