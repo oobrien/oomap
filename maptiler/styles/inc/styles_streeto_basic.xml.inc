@@ -22,17 +22,20 @@
 
 <Style name="water_lines">
     <Rule>
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom12;
         &minscale_zoom12;
         <LineSymbolizer stroke="&blue50;" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule> 
+	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom13;
         &minscale_zoom16;
         <LineSymbolizer stroke="&blue50;" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
-        &maxscale_zoom17;
+ 	    <Filter>not &tunnel;</Filter>
+       &maxscale_zoom17;
         <LineSymbolizer stroke="&blue50;" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
 </Style>
@@ -252,7 +255,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational'</Filter>
+        <Filter>[leisure] = 'garden' or [leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
     </Rule>
     <Rule>
