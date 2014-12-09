@@ -358,31 +358,33 @@
     </Rule>
 </Style>
 
+<!--
 <Style name="water_lines_casing">
     <Rule>
 	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom12;
         &minscale_zoom12;
-        <LineSymbolizer stroke="&black;" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="butt" />
     </Rule>
     <Rule>
 	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom13;
         &minscale_zoom13;
-        <LineSymbolizer stroke="&black;" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="butt" />
     </Rule>
     <Rule>
 	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom14;
         &minscale_zoom16;
-        <LineSymbolizer stroke="&black;" stroke-width="4.6" stroke-linejoin="round" stroke-linecap="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="4.6" stroke-linejoin="round" stroke-linecap="butt" />
     </Rule>
     <Rule>
 	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom17;
-        <LineSymbolizer stroke="&black;" stroke-width="6.0" stroke-linejoin="round" stroke-linecap="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="6.0" stroke-linejoin="round" stroke-linecap="butt" />
     </Rule>
 </Style>
+-->
 
 <Style name="water_areas_core">
     <Rule>
@@ -391,6 +393,7 @@
         <PolygonSymbolizer fill="&blue50;" gamma="0.6" />
     </Rule>
 </Style>
+
 
 <Style name="water_lines_core">
     <Rule>
@@ -496,7 +499,7 @@
 <Style name="coast-line">
     <Rule>
         &maxscale_zoom12;
-        <LineSymbolizer stroke="&black;" stroke-width="0.8" />
+        <LineSymbolizer stroke="&black;" stroke-width="1.6" />
     </Rule>
 </Style>
 
