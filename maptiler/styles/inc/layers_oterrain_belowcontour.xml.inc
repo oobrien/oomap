@@ -9,6 +9,14 @@
     </Datasource>
 </Layer>
 
+<Layer name="coast-line" status="on" srs="&srs900913;">
+    <StyleName>coast-line</StyleName>
+    <Datasource>
+        <Parameter name="type">shape</Parameter>
+        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="coast-poly" status="on" srs="&srs900913;">
     <StyleName>coast-poly</StyleName>
     <Datasource>
@@ -61,7 +69,7 @@
     </Datasource>
 </Layer>
 
-<Layer name="water_areas" status="on" srs="&srs900913;">
+<Layer name="water_areas_casing" status="on" srs="&srs900913;">
     <StyleName>water_areas_casing</StyleName>
     <StyleName>marshes</StyleName>
     <Datasource>
@@ -78,7 +86,8 @@
     </Datasource>
 </Layer>
 
-<Layer name="water_lines" status="on" srs="&srs900913;">
+<!--
+<Layer name="water_lines_casing" status="on" srs="&srs900913;">
     <StyleName>water_lines_casing</StyleName>
     <Datasource>
         &datasource-settings;
@@ -93,16 +102,9 @@
         </Parameter>
     </Datasource>
 </Layer>
+-->
 
-<Layer name="coast-line" status="on" srs="&srs900913;">
-    <StyleName>coast-line</StyleName>
-    <Datasource>
-        <Parameter name="type">shape</Parameter>
-        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="water_areas" status="on" srs="&srs900913;">
+<Layer name="water_areas_core" status="on" srs="&srs900913;">
     <StyleName>water_areas_core</StyleName>
     <Datasource>
         &datasource-settings;
@@ -118,7 +120,7 @@
     </Datasource>
 </Layer>
 
-<Layer name="water_lines" status="on" srs="&srs900913;">
+<Layer name="water_lines_core" status="on" srs="&srs900913;">
     <StyleName>water_lines_core</StyleName>
     <Datasource>
         &datasource-settings;
