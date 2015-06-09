@@ -83,7 +83,7 @@
         &datasource-settings;
         <Parameter name="table">
             (select way,waterway,
-            case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel
+            case when tunnel in ('yes','true','1','culvert') then 'yes'::text else tunnel end as tunnel
             from &prefix;_line
             where waterway in ('weir','river','canal','derelict_canal','stream','drain')
                 and (bridge is null or bridge not in ('yes','true','1','aqueduct'))
@@ -99,6 +99,19 @@
         &datasource-settings;
         <Parameter name="table">
             (select way,highway,amenity from &prefix;_line where tunnel in ('yes','true','1') order by z_order) as roads
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="islands" status="on" srs="&srs900913;">
+    <StyleName>islands</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select way,"natural" from &prefix;_polygon
+            where "natural" in ('land', 'island')
+                or "man_made" in ('pier')
+            order by z_order,way_area desc) as land
         </Parameter>
     </Datasource>
 </Layer>
