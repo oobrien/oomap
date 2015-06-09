@@ -237,6 +237,13 @@
     </Rule>
 </Style>
 
+<Style name="islands">
+    <Rule>
+        &maxscale_zoom12;
+        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+    </Rule>
+</Style>
+
 <Style name="leisure">
     <Rule>
         &maxscale_zoom12;
