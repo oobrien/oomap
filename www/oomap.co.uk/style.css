@@ -1,0 +1,388 @@
+body
+{
+	margin: 0;
+	font-family: "Trebuchet MS", Tahoma, Arial, Verdana, sans-serif;
+	font-size: 13px;
+}
+
+/* * { border: 1px solid red !IMPORTANT; } 
+*/
+
+
+a:link, a:visited { color: #006699; }
+a:active, a:hover { color: #cc0032; }
+
+/* Three main panels */
+/* 1. Top Panel */
+#toppanel
+{
+	top: 0;
+	left: 0;
+	right: 0;
+	background-color: #fff;
+	color: #666;
+	padding-bottom: 10px;
+	height: 30px;
+}
+
+#title
+{
+	padding: 2px 10px 2px 10px;
+	width: 300px;
+	font-size: 22px;
+	font-style: italic;
+	color: white;
+	background-color: #cc0032;
+	font-variant: small-caps;
+	-moz-border-bottom-right-radius: 80px;
+	border-bottom-right-radius: 80px;
+}
+
+#titlestatus
+{
+	font-size: 9px !IMPORTANT;
+}
+
+#search
+{
+	padding: 10px 10px 0 10px;
+	float: right;
+}
+
+#load
+{
+	padding: 10px 10px 0 10px;
+	float: right;
+}
+
+#editions
+{
+	
+	position: absolute;
+	top: 0;
+	left: 330px;
+
+}
+
+#editions div, #editions2 div
+{
+	float: left;
+	border-radius: 3px;
+	padding: 5px 0; 
+	margin: 7px 7px 0 0;
+	font-size: 10px;
+}
+
+#uk, #ireland, #global, .editionbutton
+{
+	background-color: #03f;
+}
+
+#uk a, #ireland a, #global a, .editionbutton a
+{
+	color: white;
+	text-decoration: none;
+}
+
+.currentedition
+{
+	background-color: #cc0032 !IMPORTANT;
+}
+
+#wishlist
+{
+	float: left;
+	color: #000;
+	background-color: #fff;
+}
+
+/* 2. Options Panel */
+
+#optionspanel
+{
+	position: relative;
+	left: 0;
+	right: 0;
+	height: 112px;
+	border-color: blue !IMPORTANT;
+}
+
+#toolbar {
+	position: absolute;
+	left: 0;
+	right: 440px;
+	margin: 0 10px;
+    padding: 5px 1px 5px 0;
+    display: inline-block;
+    font-size: 10px;
+	height: 90px;
+	overflow: auto;
+  }
+  /* support: IE7 */
+  *+html #toolbar {
+    display: inline;
+  }
+  
+  #create {
+	position: absolute;
+	width: 188px;
+	right: 240px;
+	margin: 0 10px;
+    padding: 5px 1px 5px 0;
+    display: inline-block;
+    font-size: 10px;
+	top: 0;
+    bottom: 10px;
+  }
+  /* support: IE7 */
+  *+html #create {
+    display: inline;
+  }
+
+#mapstyle 
+{ 
+	font-size: 8px; 
+	margin: 0 10px; 
+	width: 334px;
+}
+
+#spacerrow th { padding: 0 !IMPORTANT; border-width: 0 !IMPORTANT; }
+
+#create button
+{
+	width: 168px;
+	margin: 10px 10px;
+}
+
+#messagePanelHolder
+{
+	position: absolute;
+	top: 0;
+	width: 230px;
+	height: 102px;
+	right: 10px;
+	opacity: 0.8;
+	text-align: center;
+	color: #000;
+	font-size: 14px;
+}
+
+.messagePanel
+{
+	padding: 15px;
+	width: 200px;
+	height: 72px;	
+
+}
+
+#messageZoom
+{
+	display: block;
+	background-color: #faa;
+}
+
+#messageCentre
+{
+	background-color: #ff6;
+	display: none;
+
+}
+
+#messageAdd
+{
+	background-color: #afa;
+	display: none;
+}
+
+
+
+
+/* 3. Main Panel */
+
+#mainpanel
+{
+	position: absolute;
+	top: 152px;
+	bottom: 0;
+	width: 100%;
+}
+
+.ui-dialog .ui-state-error { padding: .3em; }
+.validateTips { border: 1px solid transparent; padding: 0.3em; }
+
+#map
+{
+	position: absolute;	
+	top: 0;
+	bottom: 10px;
+	left: 10px;
+	right: 320px;
+	border: 1px solid #aaa;
+}
+
+/* Control descriptions */
+
+#controlpanel
+{
+	position: absolute;
+	top: 0;
+	right: 7px;
+	width: 302px;
+	bottom: 339px;
+	margin: 0;
+	padding: 0 1px;
+	overflow: auto;
+}
+
+.edit, .delete { font-size: 10px; }
+.controlrow { font-size: 10px; }
+
+#controldescriptions
+{
+	border-collapse: collapse;	
+	table-layout: fixed;
+	width: 286px;
+}
+
+#controldescriptions td, #controldescriptions th
+{
+	border: 1px solid black;
+	padding: 5px;
+}
+
+#maptitle
+{
+	font-size: 14px;
+}
+
+#sponsor
+{
+	position: absolute;
+	right: 0;
+	margin: 10px 10px 0 10px;
+	width: 300px;
+	height: 250px;
+	bottom: 65px;
+	//-moz-border-top-left-radius: 150px;
+	//border-top-left-radius: 150px;
+	//border: 1px solid #006699;
+	text-align: center;
+	vertical-align: center;
+}
+
+#supported
+{
+	position: absolute;
+	right: 0;
+	margin: 10px 10px 0 10px;
+	width: 300px;
+	height: 150px;
+	bottom: 65px;
+	text-align: center;
+	vertical-align: center;
+}
+
+#sponsor div { padding: 50px; color: #006699; font-style: italic; font-size: 11px; clear: both; }
+#sponsor img { padding: 0; }
+
+#supported div { padding: 20px; color: #006699; font-style: italic; font-size: 11px; clear: both; }
+#supported img { padding: 0; }
+
+
+#attribution
+{
+        position: absolute;
+        right: 0;
+        margin: 10px;
+		padding: 5px 10px;
+        width: 278px;
+        height: 35px;
+        bottom: 0;
+        border: 1px solid #006699;
+        text-align: center;
+}
+
+#attribution div { color: #006699; font-style: italic; font-size: 11px; clear: both; }
+
+/* Dialog - Add/Edit Control */
+
+#newcontroloptions
+{
+	display: none;
+	font-size: 11px;
+}
+
+#newcontroloptions td { padding: 5px; }
+
+#newcontroloutsidemap { display: none; }
+
+/* Dialog - Cluesheet */
+
+#cluesheet
+{
+	border: 2px solid white;
+}
+
+#cs_fillinbox
+{
+	float: right;
+	border-collapse: collapse;	
+	margin-left: 10px;
+	margin-bottom: 10px;
+}
+
+#cs_fillinbox td
+{
+	width: 110px;
+	height: 30px;
+	font-size: 8px;
+	font-style: italic;
+	font-variant: small-caps;
+	text-align: left;
+	vertical-align: bottom;
+	border: 1px dotted black;
+}
+
+#cs_title
+{
+	font-size: 28px;
+	font-style: italic;
+	text-transform: uppercase;
+	margin-bottom: 10px;
+}
+
+#cs_raceinstructions
+{
+	font-size: 14px;
+	margin-bottom: 10px;
+	max-width: 500px;
+}
+
+#cs_controls
+{
+	width: 100%;
+	border-collapse: collapse;	
+	border-spacing: 1px;
+}
+
+#cs_controls td
+{
+	border: 1px solid black;
+	text-align: center;
+	padding: 1px 5px;
+}
+
+#cs_controls th
+{
+	height: 25px;	
+}
+
+.cs_spacer td
+{
+	border-top: 3px solid black !IMPORTANT;
+}
+
+/* OpenLayers */
+
+.olControlPermalink { position: absolute; left: 0; bottom: 50px; margin: 30px 10px; }
+.olControlPermalink a { font-weight: normal; color: black; font-size: 10px; text-decoration: underline; }

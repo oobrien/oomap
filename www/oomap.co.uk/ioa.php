@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">	
+		<title>OpenOrienteeringMap: The easy Street-O map creation tool</title>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4js/proj4js-compressed.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4js/defs/EPSG27700.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/openlayers/OpenLayers-2.13.1/OpenLayers.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-1.11.3.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.knob.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.jqprint-0.3.js'></script>
+		<script src="http://code.jquery.com/jquery-migrate-1.2.1.js"></script>
+		<script type="text/javascript">
+		  var _gaq = _gaq || [];
+		  _gaq.push(['_setAccount', 'UA-424605-5']);
+		  _gaq.push(['_setDomainName', 'oomap.co.uk']);
+		  _gaq.push(['_trackPageview']);
+		  (function() {
+		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		  })();
+		</script>
+		<script type='text/javascript'>
+			var country = "ioa";
+		</script>
+		<script type='text/javascript' src='main.js'></script>
+		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.css'>
+		<link rel='stylesheet' type='text/css' href='style.css'>
+		<link rel='stylesheet' type='text/css' href='style_ioa.css'>
+	</head>
+	<body>
+		<div id='toppanel'>
+				<form id='load'>Load saved map #: <input type='text' size='15' id='savedMapID' />
+					<button id='loadButton' type="submit">Load</button>
+				</form>
+				<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v2.4</span></div>
+				<div id='editions'>
+                                        <div id='global'><a href="global.php">&nbsp;  Global  &nbsp;</a></div>
+                                        <div id='uk'><a href="uk.php">&nbsp;  UK  &nbsp;</a></div>
+                                        <div id='ireland' class='currentedition'><a href="ioa.php">&nbsp;  Ireland  &nbsp;</a></div>
+                					<div id='wishlist'>Was this useful for your event? Want to say thanks? Here's a link to <a href="http://www.amazon.co.uk/registry/wishlist/2WLZDJ7S00ERD">my Amazon wish list</a>.</div>
+
+                                </div>
+		</div>
+		<div id='optionspanel'>
+			<div id='toolbar' class="ui-widget-header ui-corner-all">
+				<table>
+					<tr style='height: 27px'>
+						<td rowspan='3' style='vertical-align: top;'>
+							<div id="mapstyle" class="buttonset">
+								<input type="radio" id="streeto_ioa" name="mapstyle" checked="checked" />
+									<label for="streeto_ioa"><img src='images/oom_s.png' alt='Street-O' style='width: 60px; height: 60px;' /><br />StreetO</label>
+								<input type="radio" id="streeto_norail_ioa" name="mapstyle" />
+									<label for="streeto_norail_ioa"><img src='images/oom_snr.png' alt='Street-O xrail' style='width: 60px; height: 60px;' /><br />StreetO xrail</label>
+								<input type="radio" id="oterrain_ioa" name="mapstyle" />
+									<label for="oterrain_ioa"><img src='images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
+							</div>
+						</td>
+						<td colspan='3'> 
+							<div id="mapscale">Scale 1:
+								<input type="radio" id="s5000" value="5000" name="mapscale" /><label for="s5000">5000</label>
+								<input type="radio" id="s7500" value="7500" name="mapscale" /><label for="s7500">7500</label>
+								<input type="radio" id="s10000" value="10000" name="mapscale" checked="checked" /><label for="s10000">10000</label>
+								<input type="radio" id="s12500" value="12500" name="mapscale" /><label for="s12500">12500</label>
+								<input type="radio" id="s15000" value="15000" name="mapscale" /><label for="s15000">15k</label>
+								<input type="radio" id="s20000" value="20000" name="mapscale" /><label for="s20000">20k</label>
+							</div>
+						</td>
+					</tr>
+					<tr style='height: 27px'>
+						<td>	
+							<div id="papersize">Sheet 
+								<input type="radio" id="p2970-2100" name="papersize" checked="checked" /><label for="p2970-2100">A4</label>
+								<input type="radio" id="p4200-2970" name="papersize" /><label for="p4200-2970">A3</label>
+								<!-- <input type="radio" id="p4430-3140" name="papersize" /><label for="p4430-3140">RA3</label> -->
+							</div>
+						</td>
+						<td>
+							<div id="paperorientation"> 
+								<input type="radio" id="portrait" name="paperorientation" /><label for="portrait">Portrait</label>
+								<input type="radio" id="landscape" name="paperorientation" checked="checked" /><label for="landscape">Landscape</label>
+							</div>
+						</td>
+						<td></td>
+					</tr>
+					<tr style='height: 26px'>
+						<td colspan='3'>	
+							<div id="specialoptions">Special 
+								<button id='deletesheet'>Delete Map</button>
+								<button id='deleteXs'>Delete Xs</button>
+								<button id='getOpenplaques'>Add Plaques</button>
+							</div>
+						</td>					
+					</tr>
+				</table>  	
+
+			</div>	
+			<div id='create' class="ui-widget-header ui-corner-all">
+				<button id='createmap'>Save & get PDF map</button><br />					
+				<button id='createclue'>Show clue sheet</button>						
+			</div>	
+			<div id='messagePanelHolder'>
+				<div class='messagePanel' id='messageZoom'>Tip: zoom in to see the orienteering map, before setting options or adding controls.</div>
+				<div class='messagePanel' id='messageCentre'>Tip: click where you want the centre of your sheet to be. Don't forget you can drag the map to move it.</div>
+				<div class='messagePanel' id='messageAdd'>Tip: click to add controls, or drag the blue marker to move the map. Once done, click "Save & get PDF map".</div>
+			</div>
+		</div>
+		<div id='mainpanel'>
+			<div id='controlpanel'>
+				<table id='controldescriptions'>
+					<tr id='spacerrow'><th style='width: 40px;'></th><th style='width: 30px;'></th><th></th><th></th><th style='width:64px;'></th></tr>
+					<tr><th colspan='4' id='maptitle'></th><th><span class="edit" id="edittitle">Edit</span></th></tr>
+					<tr><th colspan='3' id='scalecaption'></th><th colspan='2'>10m&nbsp;contours</th></tr>
+					<tr><td colspan='4' id='racedescription'></td><th><span class="edit" id="editinstructions">Edit</span></th></tr>
+					<tr><th colspan='3' id='controlcaption'>0 controls</th><th colspan='2' id='pointscaption'>0 points</th></tr>
+				</table>
+			</div>
+			<div id='sponsor'>
+				<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+				<!-- OpenOrienteeeringMap -->
+				<ins class="adsbygoogle"
+    				 style="display:inline-block;width:300px;height:250px"
+    				 data-ad-client="ca-pub-3486529756444295"
+  				   data-ad-slot="6719111565"></ins>
+				<script>
+					(adsbygoogle = window.adsbygoogle || []).push({});
+				</script>	
+			</div>	
+
+		<!--	<div id='sponsor'>
+                               <div>In association with</div>
+                                <a href="http://www.orienteering.ie/"><img src='images/ioa2013.png' alt='Irish Orienteering Association' style='width: 156px; height: 55px; border-width: 0;' /></a><br />
+			</div> -->
+			<div id='attribution'>
+				<div>Created by <a href="http://blog.oomap.co.uk/">Oliver O'Brien</a> in association with <a href="http://www.orienteering.ie/">Irish Orienteering Association</a>. <a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. Plaques from Open Plaques project.'); return false;">Attribution</a> (OSM) <a href="http://blog.oomap.co.uk/oom/">About</a></div>
+			</div>
+			<div id='map'></div>
+		</div>
+		<div id="newcontroloptions" title="Control options" style='display: none;'>
+		  <p class="validateTips">Tip: There can only be one start/finish control. Adding another moves it.</p>
+		  <fieldset>
+			<table style='margin: 0 auto;'>
+			<tr>
+				<td id="c_type" class="buttonset">
+					<input type="radio" id="c_regular" name="c_type" checked="checked" /><label for="c_regular"><img src='images/c_regular.png' alt='Regular' style='width: 60px; height: 60px;' /><br />Control</label>
+					<input type="radio" id="c_startfinish" name="c_type" /><label for="c_startfinish"><img src='images/c_startfinish.png' alt='Start and Finish' style='width: 60px; height: 60px;' /><br />Start/Finish</label>
+					<input type="radio" id="c_cross" name="c_type" /><label for="c_cross"><img src='images/c_cross.png' alt='Cross' style='width: 60px; height: 60px;' /><br />Red X</label>
+				</td>
+				<td style='text-align: center; padding: 0 30px;'>
+					<input type="text" id="c_angle" class="knob" value="45"><br /><label for="c_angle">Label angle</label>
+				</td>
+			</tr>
+			</table>
+			<table style='margin: 0 auto;'>
+			<tr>
+				<td>	
+					<label for="c_number">Number</label>
+				</td>
+				<td>
+					<input type="text" name="c_number" id="c_number" size='3' maxlength='3' class="text ui-widget-content ui-corner-all" />
+				</td>
+				<td id="c_score" class="buttonset" colspan="2">
+						Score
+						<input type="radio" id="c_score10" value="10" name="c_score" checked="checked" /><label for="c_score10">10</label>
+						<input type="radio" id="c_score20" value="20" name="c_score" /><label for="c_score20">20</label>
+						<input type="radio" id="c_score30" value="30" name="c_score" /><label for="c_score30">30</label>
+						<input type="radio" id="c_score40" value="40" name="c_score" /><label for="c_score40">40</label>
+						<input type="radio" id="c_score50" value="50" name="c_score" /><label for="c_score50">50</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="c_description">Description</label>
+				</td>
+				<td colspan="3">  	
+					<input type="text" size='45' maxlength='255' value="" name="c_description" id="c_description" class="text ui-widget-content ui-corner-all" />			
+				</td>
+			</tr>
+			</table>
+		  </fieldset>
+		</div>
+		<div id="newcontroloutsidemap" title="Control outside map" style='display: none;'>
+			<p>
+				<span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 50px 0;"></span>
+				New controls must be placed within the map area of the current sheet.
+			</p>
+		</div>
+		<div id="setmaptitle" title="Map title" style='display: none;'>
+		  <p class="validateTips"></p>
+		  <fieldset>
+			<table>
+			<tr>
+				<td>
+					<label for="s_maptitle">Title</label>
+				</td>
+				<td>  	
+					<input type="text" size='30' maxlength='50' value="" name="maptitle" id="s_maptitle" class="text ui-widget-content ui-corner-all" />			
+				</td>
+			</tr>
+			</table>
+		  </fieldset>
+		</div>
+		<div id="setracedescription" title="Race instructions" style='display: none;'>
+		  <p class="validateTips"></p>
+		  <fieldset>
+			<table>
+			<tr>
+				<td>
+					<label for="s_racedescription">Instructions</label>
+				</td>
+				<td>  	
+					<input type="text" size='70' maxlength='255' value="" name="racedescription" id="s_racedescription" class="text ui-widget-content ui-corner-all" />			
+				</td>
+			</tr>
+			</table>
+		  </fieldset>
+		</div>
+		<div id="validationerror" title="Validation Error" style='display: none;'>
+			<table>
+				<tr><td class="ui-icon ui-icon-alert" style='margin: 0 7px 20px 0;'></td><td style='padding-bottom: 20px; vertical-align: top'>There were one or more errors validating your map.</td></tr>
+				<tr><td class="ui-icon ui-icon-info" style='margin: 0 7px 20px 0;'></td><td style='padding-bottom: 20px; vertical-align: top' id='validationerror_text'></td></tr>
+			</table>
+		</div>
+		<div id="saving" title="Saving" style='display: none;'>
+			<table>
+				<tr><td class="ui-icon ui-icon-info" style='margin: 0 7px 20px 0;'></td><td style='padding-bottom: 20px; vertical-align: top'>Saving map and descriptions to the database...</td></tr>
+			</table>
+		</div>
+		<div id="saveerror" title="Save Error" style='display: none;'>
+			<table>
+				<tr><td class="ui-icon ui-icon-alert" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top'>Unfortunately your map and descriptions could not be saved. An error occurred.</td></tr>
+				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top' id='saveerror_text'></td></tr>
+			</table>
+		</div>
+		<div id="generating" title="Saved" style='display: none;'>
+			<table>
+				<tr><td class="ui-icon ui-icon-check" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top'>Your map and descriptions have been successfully saved. The map is now being generated and will automatically download to your computer in the next few seconds.</td></tr>
+				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top' id='saved_mapid'></td></tr>
+			</table>
+		</div>
+		<div id="loaderror" title="Load Error" style='display: none;'>
+			<table>
+				<tr><td class="ui-icon ui-icon-alert" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top'>Unfortunately your map and descriptions could not be loaded. An error occurred.</td></tr>
+				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top' id='loaderror_text'></td></tr>
+			</table>
+		</div>
+		<div id="openplaques_searching" title="Searching" style='display: none;'>
+			<table>
+				<tr><td class="ui-icon ui-icon-info" style='margin: 0 7px 20px 0;'></td><td style='padding-bottom: 20px; vertical-align: top'>Retrieving local plaques from Open Plaques project at openplaques.org...</td></tr>
+			</table>
+		</div>
+		<div id="openplaques_error" title="Plaques Error" style='display: none;'>
+			<table>
+				<tr><td class="ui-icon ui-icon-alert" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top'>Unfortunately local plaques could not be retrieved. An error occurred.</td></tr>
+				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top' id='openplaques_error_text'></td></tr>
+			</table>
+		</div>
+		<div id="cluesheet" title="Clue Sheet" style='display: none;'>
+			<table id='cs_fillinbox'>
+				<tr><td colspan='2'>Name</td><td>Club</td></tr>
+				<tr><td>Start</td><td>Finish</td><td>Time</td></tr>
+				<tr><td>Score</td><td>Penalty</td><td>Total</td></tr>
+			</table>
+			<div id='cs_title'></div>
+			<div id='cs_raceinstructions'></div>
+			<br style='clear: both;' />
+			<table id='cs_controls'>
+				<tr><th></th></tr>
+			</table>
+		</div>
+	</body>
+</html>
