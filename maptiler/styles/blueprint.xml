@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Map [
+<!ENTITY % settings SYSTEM "inc/settings_global.xml.inc">
+<!ENTITY % colours SYSTEM "inc/colours_oom.xml.inc">
+<!ENTITY % types SYSTEM "inc/types_withrail.xml.inc">
+<!ENTITY styles-basic SYSTEM "inc/styles_blueprint_basic.xml.inc">
+<!ENTITY layers SYSTEM "inc/layers_blueprint.xml.inc">
+%settings;
+%colours;
+%types;
+]>
+
+<Map srs="&srs900913;">
+&fontset-settings;
+
+&styles-basic;
+
+&layers;
+</Map>

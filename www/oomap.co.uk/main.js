@@ -195,6 +195,8 @@ function init()
 		{numZoomLevels: 18, isBaseLayer: true, attribution: "", tileOptions: {crossOriginKeyword: null}});
 	var layerUrbanSkeleton = new OpenLayers.Layer.OSM("urban_skeleton", [prefix1 + "urban_skeleton" + "/${z}/${x}/${y}.png", prefix2 + "urban_skeleton" + "/${z}/${x}/${y}.png", prefix3 + "urban_skeleton" + "/${z}/${x}/${y}.png"],
 		{numZoomLevels: 18, isBaseLayer: true, attribution: "", tileOptions: {crossOriginKeyword: null}});
+	var layerBlueprint = new OpenLayers.Layer.OSM("blueprint", [prefix1 + "blueprint" + "/${z}/${x}/${y}.png", prefix2 + "blueprint" + "/${z}/${x}/${y}.png", prefix3 + "blueprint" + "/${z}/${x}/${y}.png"],
+		{numZoomLevels: 18, isBaseLayer: true, attribution: "", tileOptions: {crossOriginKeyword: null}});
 
 
 	layerMapBorder = new OpenLayers.Layer.Vector("mapborder");
@@ -203,7 +205,7 @@ function init()
 	layerX = new OpenLayers.Layer.Vector("controlsX", {styleMap: styleMap});
 	layerControls = new OpenLayers.Layer.Vector("controls", {styleMap: styleMap});
 	
-    map.addLayers([layerStreetO, layerStreetONoRail, layerOTerrain, layerUrbanSkeleton, layerMapnik, 
+    map.addLayers([layerStreetO, layerStreetONoRail, layerOTerrain, layerBlueprint, layerMapnik, 
     	layerMapBorder, layerMapCentre, layerSF, layerX, layerControls]);
 
 	map.setBaseLayer(layerMapnik);
@@ -1159,7 +1161,7 @@ function generateMap()
 		xText  = xText.substring(0, xText.length - 1);
 	}
 	
-	if (mapstyle == "urban_skeleton")
+	if (mapstyle == "blueprint" || mapstyle == "urban_skeleton")
 	{
 		pdf_suffix = "";
 	}

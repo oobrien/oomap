@@ -59,7 +59,7 @@
 		<ul>
 		<li><a href="uk.php">UK (BOF) edition</a> (with contours and daily updating from OpenStreetMap)</li>
 		<li><a href="ioa.php">Ireland (IOA) edition</a> (with daily updating from OpenStreetMap)</li>
-		<li><a href="global.php">Global edition</a> (with OpenStreetMap data as of 7 April 2015)</li>
+		<li><a href="global.php">Global edition</a> (with OpenStreetMap data as of early February 2016)</li>
 		</ul>	
 		
 		If you have any comments, leave them at the end <a href="http://blog.oomap.co.uk/oom/#commentform">here</a>.<br />

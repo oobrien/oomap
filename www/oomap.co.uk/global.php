@@ -54,8 +54,8 @@
 									<label for="streeto_norail_global"><img src='images/oom_snr.png' alt='Street-O xrail' style='width: 60px; height: 60px;' /><br />StreetO xrail</label>
 								<input type="radio" id="oterrain_global" name="mapstyle" />
 									<label for="oterrain_global"><img src='images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
-								<input type="radio" id="urban_skeleton" name="mapstyle" />
-									<label for="urban_skeleton"><img src='images/oom_urban_skeleton.png' alt='Urban Skeleton' style='width: 60px; height: 60px;' /><br />Urban Skeleton</label>
+								<input type="radio" id="blueprint" name="mapstyle" />
+									<label for="blueprint"><img src='images/oom_blueprint.png' alt='Blueprint' style='width: 60px; height: 60px;' /><br />Blueprint</label>
 							</div>
 						</td>
 						<td colspan='3'> 
