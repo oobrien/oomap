@@ -1,0 +1,11 @@
+# In su crontab
+50 7 * * * /bin/rm -rf /home/ollie/www/tilecache/pngs/oterra/oterrain/
+41 7 * * * /bin/rm -rf /home/ollie/www/tilecache/pngs/oterra/oterrain_ioa/
+51 7 * * * /bin/rm -rf /home/ollie/www/tilecache/pngs/street/streeto/
+52 7 * * * /bin/rm -rf /home/ollie/www/tilecache/pngs/street/streeto_norail/
+53 7 * * * /bin/rm -rf /home/ollie/www/tilecache/pngs/street/streeto_ioa/
+54 7 * * * /bin/rm -rf /home/ollie/www/tilecache/pngs/street/streeto_norail_ioa/
+
+# In user crontab
+0 7 * * * /usr/bin/wget -O /home/ollie/production/osmdb/british-isles-latest.osm.pbf -N http://download.geofabrik.de/europe/british-isles-latest.osm.pbf
+5 7 * * * /usr/bin/osm2pgsql -c -d osm -m -p uk_osm -C 30000 -U ollie --number-processes 20 /home/ollie/production/osmdb/british-isles-latest.osm.pbf
