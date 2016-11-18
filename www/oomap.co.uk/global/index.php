@@ -2,15 +2,26 @@
 <html lang="en">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">	
+		<meta name="viewport" content="minimal-ui, initial-scale=0.5, user-scalable=no, width=device-width">
+
+		<meta property="og:title" content="OpenOrienteeringMap: The easy Street-O map creation tool" />
+		<meta property="og:type" content="article" />
+		<meta property="og:url" content="http://oomap.co.uk/" />
+		<meta property="og:description" content="Create orienteering maps of anywhere in the world with just a few clicks. Add controls and print high-quality vector PDFs, suitable for training events." />
+		<meta property="og:image" content="http://oomap.co.uk/images/oom_screenshot.png" />
+		<meta property="og:site_name" content="OpenOrienteeringMap: The easy Street-O map creation tool" />    
+		<meta property="fb:admins" content="507348039" />    
+		<meta property="fb:app_id" content="1592343544404355" />    
+
 		<title>OpenOrienteeringMap: The easy Street-O map creation tool</title>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4js/proj4js-compressed.js'></script>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4js/defs/EPSG27700.js'></script>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/openlayers/OpenLayers-2.13.1/OpenLayers.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/openlayers/v3.18.2-dist/ol-debug.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-1.11.3.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.knob.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.jqprint-0.3.js'></script>
 		<script src="http://code.jquery.com/jquery-migrate-1.2.1.js"></script>
+		<script src="//platform.twitter.com/widgets.js"></script>			
 		<script type="text/javascript">
 		  var _gaq = _gaq || [];
 		  _gaq.push(['_setAccount', 'UA-424605-5']);
@@ -23,39 +34,68 @@
 		  })();
 		</script>
 		<script type='text/javascript'>
-			var country = "ioa";
+			var country = "global";
 		</script>
-		<script type='text/javascript' src='main.js'></script>
+		<script type='text/javascript' src="/main.js?t=<?php echo time(); ?>"></script>
+		<link rel="canonical" href="http://oomap.co.uk/">
 		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.css'>
-		<link rel='stylesheet' type='text/css' href='style.css'>
-		<link rel='stylesheet' type='text/css' href='style_ioa.css'>
+		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/openlayers/v3.18.2-dist/ol.css'>
+		<link rel='stylesheet' type='text/css' href='/style.css'>
 	</head>
 	<body>
+		<script>
+		  window.fbAsyncInit = function() {
+			FB.init({
+			  appId      : '1592343544404355',
+			  xfbml      : true,
+			  version    : 'v2.8'
+			});
+		  };
+
+		  (function(d, s, id){
+			 var js, fjs = d.getElementsByTagName(s)[0];
+			 if (d.getElementById(id)) {return;}
+			 js = d.createElement(s); js.id = id;
+			 js.src = "//connect.facebook.net/en_US/sdk.js";
+			 fjs.parentNode.insertBefore(js, fjs);
+		   }(document, 'script', 'facebook-jssdk'));
+		</script>
 		<div id='toppanel'>
-				<form id='load'>Load saved map #: <input type='text' size='15' id='savedMapID' />
+				<form id='load'>Map ID: <input type='text' size='15' id='savedMapID' />
 					<button id='loadButton' type="submit">Load</button>
 				</form>
-				<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v2.4</span></div>
-				<div id='editions'>
-                                        <div id='global'><a href="global.php">&nbsp;  Global  &nbsp;</a></div>
-                                        <div id='uk'><a href="uk.php">&nbsp;  UK  &nbsp;</a></div>
-                                        <div id='ireland' class='currentedition'><a href="ioa.php">&nbsp;  Ireland  &nbsp;</a></div>
-                					<div id='wishlist'>Was this useful for your event? Want to say thanks? Here's a link to <a href="http://www.amazon.co.uk/registry/wishlist/2WLZDJ7S00ERD">my Amazon wish list</a>.</div>
-
-                                </div>
+				<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.0</span></div>
+		</div>
+		<div id='editions'>
+			<div id='messagePanelHolder'>
+				<div class='messagePanel' id='messageZoom'>Tip: zoom in to see the orienteering map, before setting options or adding controls.</div>
+				<div class='messagePanel' id='messageCentre'>Tip: click where you want the centre of your sheet to be. Don't forget you can drag the map to move it.</div>
+				<div class='messagePanel' id='messageAdd'>Tip: click to add controls, To move the map, select and then drag the blue marker. Once done, click "Save" to get PDF.</div>
+			</div>
+			<table><tr><td>
+			<div id='blueprint' class='editionbutton'><a href="/blueprint/">&nbsp;  Blueprint  &nbsp;</a></div></td><td>
+			<div id='global' class='editionbutton currentedition'><a href="/global/">&nbsp;  Global  &nbsp;</a></div></td><td>
+			<div id='uk' class='editionbutton'><a href="/gb/">&nbsp;  UK  &nbsp;</a></div></td><td>
+			<div id='ireland' class='editionbutton'><a href="/ie/">&nbsp;  Ireland  &nbsp;</a></div></td><td>
+			<div id='wishlist'>Was this useful for your event? Want to say thanks?<br />Here's a link to <a href="http://www.amazon.co.uk/registry/wishlist/2WLZDJ7S00ERD">my Amazon wish list</a>.</div>	</td><td>				
+			<div class="fb-like" data-href="http://oomap.co.uk/global.php" data-send="false"  data-layout="button_count" data-width="150" data-show-faces="false" data-share="true" data-font="arial"></div></td><td>
+			<div id='social'><a href="https://twitter.com/share" class="twitter-share-button" data-count="horizontal" data-via="oobr">Tweet</a></div></td>
+			</tr></table>
 		</div>
 		<div id='optionspanel'>
 			<div id='toolbar' class="ui-widget-header ui-corner-all">
 				<table>
-					<tr style='height: 27px'>
+					<tr>
 						<td rowspan='3' style='vertical-align: top;'>
 							<div id="mapstyle" class="buttonset">
-								<input type="radio" id="streeto_ioa" name="mapstyle" checked="checked" />
-									<label for="streeto_ioa"><img src='images/oom_s.png' alt='Street-O' style='width: 60px; height: 60px;' /><br />StreetO</label>
-								<input type="radio" id="streeto_norail_ioa" name="mapstyle" />
-									<label for="streeto_norail_ioa"><img src='images/oom_snr.png' alt='Street-O xrail' style='width: 60px; height: 60px;' /><br />StreetO xrail</label>
-								<input type="radio" id="oterrain_ioa" name="mapstyle" />
-									<label for="oterrain_ioa"><img src='images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
+								<input type="radio" id="streeto_global" name="mapstyle" checked="checked" />
+									<label for="streeto_global"><img src='/images/oom_s.png' alt='Street-O' style='width: 60px; height: 60px;' /><br />StreetO</label>
+								<input type="radio" id="streeto_norail_global" name="mapstyle" />
+									<label for="streeto_norail_global"><img src='/images/oom_snr.png' alt='Street-O xrail' style='width: 60px; height: 60px;' /><br />StreetO xrail</label>
+								<input type="radio" id="oterrain_global" name="mapstyle" />
+									<label for="oterrain_global"><img src='/images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
+								<input type="radio" id="blueprint" name="mapstyle" />
+									<label for="blueprint"><img src='/images/oom_blueprint.png' alt='Blueprint' style='width: 60px; height: 60px;' /><br />Blueprint</label>
 							</div>
 						</td>
 						<td colspan='3'> 
@@ -66,10 +106,11 @@
 								<input type="radio" id="s12500" value="12500" name="mapscale" /><label for="s12500">12500</label>
 								<input type="radio" id="s15000" value="15000" name="mapscale" /><label for="s15000">15k</label>
 								<input type="radio" id="s20000" value="20000" name="mapscale" /><label for="s20000">20k</label>
+								<input type="radio" id="s40000" value="40000" name="mapscale" /><label for="s40000">40k</label>
 							</div>
 						</td>
 					</tr>
-					<tr style='height: 27px'>
+					<tr>
 						<td>	
 							<div id="papersize">Sheet 
 								<input type="radio" id="p2970-2100" name="papersize" checked="checked" /><label for="p2970-2100">A4</label>
@@ -85,38 +126,50 @@
 						</td>
 						<td></td>
 					</tr>
-					<tr style='height: 26px'>
+					<tr>
 						<td colspan='3'>	
 							<div id="specialoptions">Special 
-								<button id='deletesheet'>Delete Map</button>
+								<button id='deletesheet'>Delete Sheet</button>
 								<button id='deleteXs'>Delete Xs</button>
 								<button id='getOpenplaques'>Add Plaques</button>
 							</div>
 						</td>					
 					</tr>
-				</table>  	
-
+				</table>  		
 			</div>	
 			<div id='create' class="ui-widget-header ui-corner-all">
-				<button id='createmap'>Save & get PDF map</button><br />					
+				<button id='createmap'>Save & get PDF map</button>					
 				<button id='createclue'>Show clue sheet</button>						
 			</div>	
-			<div id='messagePanelHolder'>
-				<div class='messagePanel' id='messageZoom'>Tip: zoom in to see the orienteering map, before setting options or adding controls.</div>
-				<div class='messagePanel' id='messageCentre'>Tip: click where you want the centre of your sheet to be. Don't forget you can drag the map to move it.</div>
-				<div class='messagePanel' id='messageAdd'>Tip: click to add controls, or drag the blue marker to move the map. Once done, click "Save & get PDF map".</div>
-			</div>
 		</div>
 		<div id='mainpanel'>
 			<div id='controlpanel'>
 				<table id='controldescriptions'>
 					<tr id='spacerrow'><th style='width: 40px;'></th><th style='width: 30px;'></th><th></th><th></th><th style='width:64px;'></th></tr>
 					<tr><th colspan='4' id='maptitle'></th><th><span class="edit" id="edittitle">Edit</span></th></tr>
+					<tr>
+						<th colspan='3' id='eventdate_holder'>Event Date<br /><input type="text" id="eventdate">&nbsp;<input type="text" id="eventdate_alternate" size="30"></th>
+						<th colspan='2' id='club'>Club<br /><select id="club"><option value="none">None</option></select></th>
+					</tr>
 					<tr><th colspan='3' id='scalecaption'></th><th colspan='2'>10m&nbsp;contours</th></tr>
 					<tr><td colspan='4' id='racedescription'></td><th><span class="edit" id="editinstructions">Edit</span></th></tr>
 					<tr><th colspan='3' id='controlcaption'>0 controls</th><th colspan='2' id='pointscaption'>0 points</th></tr>
 				</table>
 			</div>
+			<!--
+			<div id='supported'>
+				<div style='padding: 0 30px 10px 30px; margin: 0; border: 1px dotted #00f;'>
+				<h2>Tip Jar</h2>
+					Like this service? Did it create a useful map for your successful event? All tip jar donations are gratefully appreciated and go towards hosting and bandwidth costs for the website. Thanks!<br /><br />
+					<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+						<input type="hidden" name="cmd" value="_s-xclick">
+						<input type="hidden" name="hosted_button_id" value="AF24M2DV983GJ">
+						<input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal – The safer, easier way to pay online.">
+						<img alt="" border="0" src="https://www.paypalobjects.com/en_GB/i/scr/pixel.gif" width="1" height="1">
+					</form>
+				</div>
+			</div>	
+			-->
 			<div id='sponsor'>
 				<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 				<!-- OpenOrienteeeringMap -->
@@ -128,13 +181,8 @@
 					(adsbygoogle = window.adsbygoogle || []).push({});
 				</script>	
 			</div>	
-
-		<!--	<div id='sponsor'>
-                               <div>In association with</div>
-                                <a href="http://www.orienteering.ie/"><img src='images/ioa2013.png' alt='Irish Orienteering Association' style='width: 156px; height: 55px; border-width: 0;' /></a><br />
-			</div> -->
 			<div id='attribution'>
-				<div>Created by <a href="http://blog.oomap.co.uk/">Oliver O'Brien</a> in association with <a href="http://www.orienteering.ie/">Irish Orienteering Association</a>. <a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. Plaques from Open Plaques project.'); return false;">Attribution</a> (OSM) <a href="http://blog.oomap.co.uk/oom/">About</a></div>
+				<div>Created by <a href="http://blog.oomap.co.uk/">Oliver O'Brien</a><br /><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. Plaques from Open Plaques project.'); return false;">Attribution</a> (OSM) <a href="http://blog.oomap.co.uk/oom/">About</a> <a href="http://blog.oomap.co.uk/oom/">Comments?</a></div>
 			</div>
 			<div id='map'></div>
 		</div>
@@ -144,9 +192,9 @@
 			<table style='margin: 0 auto;'>
 			<tr>
 				<td id="c_type" class="buttonset">
-					<input type="radio" id="c_regular" name="c_type" checked="checked" /><label for="c_regular"><img src='images/c_regular.png' alt='Regular' style='width: 60px; height: 60px;' /><br />Control</label>
-					<input type="radio" id="c_startfinish" name="c_type" /><label for="c_startfinish"><img src='images/c_startfinish.png' alt='Start and Finish' style='width: 60px; height: 60px;' /><br />Start/Finish</label>
-					<input type="radio" id="c_cross" name="c_type" /><label for="c_cross"><img src='images/c_cross.png' alt='Cross' style='width: 60px; height: 60px;' /><br />Red X</label>
+					<input type="radio" id="c_regular" name="c_type" checked="checked" /><label for="c_regular"><img src='/images/c_regular.png' alt='Regular' style='width: 60px; height: 60px;' /><br />Control</label>
+					<input type="radio" id="c_startfinish" name="c_type" /><label for="c_startfinish"><img src='/images/c_startfinish.png' alt='Start and Finish' style='width: 60px; height: 60px;' /><br />Start/Finish</label>
+					<input type="radio" id="c_cross" name="c_type" /><label for="c_cross"><img src='/images/c_cross.png' alt='Cross' style='width: 60px; height: 60px;' /><br />Red X</label>
 				</td>
 				<td style='text-align: center; padding: 0 30px;'>
 					<input type="text" id="c_angle" class="knob" value="45"><br /><label for="c_angle">Label angle</label>

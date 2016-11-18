@@ -2,6 +2,17 @@
 <html lang="en">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">	
+		<meta name="viewport" content="minimal-ui, initial-scale=0.5, user-scalable=no, width=device-width">
+
+		<meta property="og:title" content="OpenOrienteeringMap: The easy Street-O map creation tool" />
+		<meta property="og:type" content="article" />
+		<meta property="og:url" content="http://oomap.co.uk/" />
+		<meta property="og:description" content="Create orienteering maps of anywhere in the world with just a few clicks. Add controls and print high-quality vector PDFs, suitable for training events." />
+		<meta property="og:image" content="http://oomap.co.uk/images/oom_screenshot.png" />
+		<meta property="og:site_name" content="OpenOrienteeringMap: The easy Street-O map creation tool" />    
+		<meta property="fb:admins" content="507348039" />    
+		<meta property="fb:app_id" content="1592343544404355" />    
+
 		<title>OpenOrienteeringMap: The easy Street-O map creation tool</title>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4js/proj4js-compressed.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4js/defs/EPSG27700.js'></script>
@@ -10,6 +21,7 @@
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-ui-1.9.2.custom.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.knob.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.jqprint-0.3.js'></script>
+		<script src="//platform.twitter.com/widgets.js"></script>			
 		<script type="text/javascript">
 		  var _gaq = _gaq || [];
 		  _gaq.push(['_setAccount', 'UA-424605-5']);
@@ -24,22 +36,44 @@
 		<style>
 			html
 			{
-				background: url('images/oom_background.png');
+				background: url('/images/oom_background.png');
 			}
 		</style>
+		<link rel="canonical" href="http://oomap.co.uk/">
 		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.css'>
 		<link rel='stylesheet' type='text/css' href='style.css'>
 	</head>
 	<body>
+		<script>
+		  window.fbAsyncInit = function() {
+			FB.init({
+			  appId      : '1592343544404355',
+			  xfbml      : true,
+			  version    : 'v2.8'
+			});
+		  };
+
+		  (function(d, s, id){
+			 var js, fjs = d.getElementsByTagName(s)[0];
+			 if (d.getElementById(id)) {return;}
+			 js = d.createElement(s); js.id = id;
+			 js.src = "//connect.facebook.net/en_US/sdk.js";
+			 fjs.parentNode.insertBefore(js, fjs);
+		   }(document, 'script', 'facebook-jssdk'));
+		</script>
 	<div id='toppanel' style='border-bottom: 1px solid #aaa;'>
-			<div id='editions'>
-				<div id='global'><a href="global.php">&nbsp;  Global  &nbsp;</a></div>
-				<div id='uk'><a href="uk.php">&nbsp;  UK  &nbsp;</a></div>
-				<div id='ireland'><a href="ioa.php">&nbsp;  Ireland  &nbsp;</a></div>
-			</div>
-			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v2.3</span></div>
+			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.0</span></div>
 	</div>
-	<div style='padding: 20px 30px 30px 30px; margin: 30px; border: 1px solid #aaa; border-radius: 20px; background-color: white; opacity: 0.9; width: 725px;'>
+	<div id='editions'><table><tr><td>
+			<div id='blueprint' class='editionbutton'><a href="/blueprint/">&nbsp;  Blueprint  &nbsp;</a></div></td><td>
+			<div id='global' class='editionbutton'><a href="/global/">&nbsp;  Global  &nbsp;</a></div></td><td>
+			<div id='uk' class='editionbutton'><a href="/gb/">&nbsp;  UK  &nbsp;</a></div></td><td>
+			<div id='ireland' class='editionbutton'><a href="/ie/">&nbsp;  Ireland  &nbsp;</a></div></td><td>
+			<div class="fb-like" data-href="http://oomap.co.uk/" data-send="false"  data-layout="button_count" data-width="150" data-show-faces="false" data-share="true" data-font="arial"></div></td><td>
+			<div id='social'><a href="https://twitter.com/share" class="twitter-share-button" data-count="horizontal" data-via="oobr">Tweet</a></div></td>
+			</tr></table>
+	</div>
+	<div style='padding: 20px 30px 30px 30px; margin: 30px; border: 1px solid #aaa; border-radius: 20px; background-color: white; opacity: 0.9;'>
 		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 		<!-- OpenOrienteeringMap LB -->
 		<ins class="adsbygoogle"
@@ -57,9 +91,10 @@
 		<br /><br />
 		There are three editions of OpenOrienteeringMap currently:
 		<ul>
-		<li><a href="uk.php">UK (BOF) edition</a> (with contours and daily updating from OpenStreetMap)</li>
-		<li><a href="ioa.php">Ireland (IOA) edition</a> (with daily updating from OpenStreetMap)</li>
-		<li><a href="global.php">Global edition</a> (with OpenStreetMap data as of early February 2016)</li>
+		<li><a href="/gb/">UK (BOF) edition</a> (with contours and daily updating from OpenStreetMap)</li>
+		<li><a href="/ie/">Ireland (IOA) edition</a> (with daily updating from OpenStreetMap)</li>
+		<li><a href="/global/">Global edition</a> (with OpenStreetMap data as of early September 2016.)</li>
+		<li><a href="/blueprint/">Blueprint</a> (a simplified version of the Global edition, showcasing the Blueprint style map)</li>
 		</ul>	
 		
 		If you have any comments, leave them at the end <a href="http://blog.oomap.co.uk/oom/#commentform">here</a>.<br />
@@ -72,10 +107,11 @@
 		</div>
 		<div style='padding: 20px; margin: 20px 0; background-color: #fee; border-radius: 20px;'>
 		OpenOrienteeringMap is completely free. If you really want to, you could  
-		please <a href="http://www.amazon.co.uk/gp/registry/wishlist/2WLZDJ7S00ERD/ref=cm_wl_huc_view">buy me something on my gift-list</a> or <a href="http://shop.oobrien.com/">buy a print</a>. Or buy yourself something through my <a href="http://www.amazon.co.uk/ref=as_sl_pc_wdgt_ex?&linkCode=wey&tag=yepsport-21">Amazon store link</a>. Gifts will encourage further development and offset the costs of hosting the site.</i>
+		please <a href="http://www.amazon.co.uk/gp/registry/wishlist/2WLZDJ7S00ERD/ref=cm_wl_huc_view">buy me something on my gift-list</a> or <a href="http://shop.oobrien.com/">buy a print</a>.<br />Or buy yourself something through my <a href="http://www.amazon.co.uk/ref=as_sl_pc_wdgt_ex?&linkCode=wey&tag=yepsport-21">Amazon store link</a>. Gifts will encourage further development and offset the costs of hosting the site.</i>
 		</div>
 
 		<div style='margin: 50px auto 50px auto;'>
+			<a href="blueprint.php" style='width: 30px; height: 30px; background-color: #00f; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Blueprint</a>
 			<a href="global.php" style='width: 30px; height: 30px; background-color: #00f; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Global</a>
 			<a href="uk.php" style='width: 30px; height: 30px; background-color: #00f; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>UK</a>
 			<a href="ioa.php" style='width: 30px; height: 30px; background-color: #00f; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Ireland</a>

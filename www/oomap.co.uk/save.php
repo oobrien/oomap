@@ -68,6 +68,8 @@ $shortcode = uniqid();
 $action = mysql_real_escape_string($inData['action']);
 $title =  mysql_real_escape_string($inData['title']);
 $race_instructions = mysql_real_escape_string($inData['race_instructions']);
+$eventdate = mysql_real_escape_string($inData['eventdate']);
+$club = mysql_real_escape_string($inData['club']);
 $style = mysql_real_escape_string($inData['style']);
 $scale = mysql_real_escape_string($inData['scale']);
 $papersize = mysql_real_escape_string($inData['papersize']);
@@ -75,7 +77,7 @@ $paperorientation = mysql_real_escape_string($inData['paperorientation']);
 $centre_lat = mysql_real_escape_string($inData['centre_wgs84lat']);
 $centre_lon = mysql_real_escape_string($inData['centre_wgs84lon']);
 
-$writequery = "insert into map values($next_id, '$shortcode', '$action', '$title', '$race_instructions', '$style', '$scale', '$papersize', '$paperorientation', $centre_lat, $centre_lon, '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now())";
+$writequery = "insert into map values($next_id, '$shortcode', '$action', '$title', '$race_instructions', '$eventdate', '$club', '$style', '$scale', '$papersize', '$paperorientation', $centre_lat, $centre_lon, '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now())";
 $result = mysql_query($writequery, $conn);
 if (!$result)
 {

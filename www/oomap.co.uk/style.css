@@ -21,8 +21,7 @@ a:active, a:hover { color: #cc0032; }
 	right: 0;
 	background-color: #fff;
 	color: #666;
-	padding-bottom: 10px;
-	height: 30px;
+	height: 37px;
 }
 
 #title
@@ -30,6 +29,7 @@ a:active, a:hover { color: #cc0032; }
 	padding: 2px 10px 2px 10px;
 	width: 300px;
 	font-size: 22px;
+	height: 27px;
 	font-style: italic;
 	color: white;
 	background-color: #cc0032;
@@ -57,24 +57,22 @@ a:active, a:hover { color: #cc0032; }
 
 #editions
 {
-	
-	position: absolute;
-	top: 0;
-	left: 330px;
-
+	clear: both;
+	margin: 0 7px;	
+	height: 35px;
 }
 
 #editions div, #editions2 div
 {
-	float: left;
-	border-radius: 3px;
-	padding: 5px 0; 
-	margin: 7px 7px 0 0;
 	font-size: 10px;
 }
 
 #uk, #ireland, #global, .editionbutton
 {
+	border-radius: 3px;
+	padding: 5px 0 5px 0; 
+	margin: 0 7px 0 0;
+	font-size: 10px;
 	background-color: #03f;
 }
 
@@ -91,32 +89,27 @@ a:active, a:hover { color: #cc0032; }
 
 #wishlist
 {
-	float: left;
+	font-size: 9px;
+	margin-right: 10px;
 	color: #000;
 	background-color: #fff;
 }
 
-/* 2. Options Panel */
-
-#optionspanel
+#social
 {
-	position: relative;
-	left: 0;
-	right: 0;
-	height: 112px;
-	border-color: blue !IMPORTANT;
+	float: left;
 }
 
+/* 2. Options Panel */
+
 #toolbar {
-	position: absolute;
-	left: 0;
-	right: 440px;
 	margin: 0 10px;
-    padding: 5px 1px 5px 0;
+    padding: 5px 5px 5px 0;
     display: inline-block;
     font-size: 10px;
-	height: 90px;
-	overflow: auto;
+	/* height: 90px;
+	   overflow: auto;
+	 */
   }
   /* support: IE7 */
   *+html #toolbar {
@@ -124,43 +117,38 @@ a:active, a:hover { color: #cc0032; }
   }
   
   #create {
-	position: absolute;
+	float: right;
 	width: 188px;
-	right: 240px;
-	margin: 0 10px;
+	margin-right: 10px;
     padding: 5px 1px 5px 0;
     display: inline-block;
     font-size: 10px;
-	top: 0;
-    bottom: 10px;
+	height: 88px;
   }
-  /* support: IE7 */
-  *+html #create {
-    display: inline;
-  }
-
-#mapstyle 
-{ 
-	font-size: 8px; 
-	margin: 0 10px; 
-	width: 334px;
-}
-
-#spacerrow th { padding: 0 !IMPORTANT; border-width: 0 !IMPORTANT; }
-
-#create button
+  #create button
 {
 	width: 168px;
 	margin: 10px 10px;
 }
 
+
+#optionspanel
+{
+	clear: both;
+}
+
+#mapstyle 
+{ 
+	font-size: 8px; 
+	margin: 0 15px 0 7px; 
+}
+
+#spacerrow th { padding: 0 !IMPORTANT; border-width: 0 !IMPORTANT; }
+
+
 #messagePanelHolder
 {
-	position: absolute;
-	top: 0;
-	width: 230px;
-	height: 102px;
-	right: 10px;
+	float: right;
 	opacity: 0.8;
 	text-align: center;
 	color: #000;
@@ -169,11 +157,10 @@ a:active, a:hover { color: #cc0032; }
 
 .messagePanel
 {
-	padding: 15px;
-	width: 200px;
-	height: 72px;	
-
+	margin: 3px;
+	padding: 6px;
 }
+
 
 #messageZoom
 {
@@ -202,7 +189,7 @@ a:active, a:hover { color: #cc0032; }
 #mainpanel
 {
 	position: absolute;
-	top: 152px;
+	top: 182px;
 	bottom: 0;
 	width: 100%;
 }
@@ -225,11 +212,12 @@ a:active, a:hover { color: #cc0032; }
 #controlpanel
 {
 	position: absolute;
+	clear: both;
+	right: 0;
 	top: 0;
-	right: 7px;
 	width: 302px;
-	bottom: 339px;
-	margin: 0;
+	bottom: 325px;
+	margin: 0 7px 0 0;
 	padding: 0 1px;
 	overflow: auto;
 }
@@ -249,6 +237,13 @@ a:active, a:hover { color: #cc0032; }
 	border: 1px solid black;
 	padding: 5px;
 }
+
+#eventdate
+{
+	width: 90px;
+}
+
+#eventdate_alternate { display: none; }
 
 #maptitle
 {
@@ -386,3 +381,37 @@ a:active, a:hover { color: #cc0032; }
 
 .olControlPermalink { position: absolute; left: 0; bottom: 50px; margin: 30px 10px; }
 .olControlPermalink a { font-weight: normal; color: black; font-size: 10px; text-decoration: underline; }
+
+@media screen and (min-width: 0px) and (max-width: 1050px) 
+{
+	#wishlist { display: none; }	
+}
+
+@media screen and (min-width: 0px) and (max-width: 980px) 
+{
+  #create {
+	float: right;
+	width: inherit;
+	margin-right: 10px;
+    padding: 0;
+    display: inline-block;
+    font-size: 8px;
+	height: inherit;
+  }
+  #create button
+	{
+	width: 150px;
+	margin: 0;
+	}
+	#toolbar { padding: 0px; font-size: 8px; }
+	#editions { height: 30px; }
+	#toppanel { height: 30px; }
+	#title { font-size: 14px; } 
+	
+}
+
+
+@media screen and (min-width: 0px) and (max-width: 820px) 
+{
+	#messagePanelHolder { display: none; }	
+}

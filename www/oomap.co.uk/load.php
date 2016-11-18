@@ -26,7 +26,7 @@ mysql_select_db($dbdb, $conn);
 
 $shortcode = mysql_real_escape_string($inData);
 
-$mapquery = "select id, title, race_instructions, style, scale, papersize, paperorientation, centre_lat, centre_lon from map where shortcode = '$shortcode' limit 1";
+$mapquery = "select id, title, race_instructions, eventdate, club, style, scale, papersize, paperorientation, centre_lat, centre_lon from map where shortcode = '$shortcode' limit 1";
 
 $result = mysql_query($mapquery, $conn);
 if (!$result)
@@ -60,6 +60,8 @@ $data = array();
 $map_id = $row['id'];
 $data["title"] = $row['title'];
 $data["race_instructions"] = $row['race_instructions'];
+$data["eventdate"] = $row['eventdate'];
+$data["club"] = $row['club'];
 $data["style"] = $row['style'];
 $data["scale"] = $row['scale'];
 $data["papersize"] = $row['papersize'];

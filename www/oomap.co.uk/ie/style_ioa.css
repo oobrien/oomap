@@ -3,9 +3,9 @@
 	background-color: #168942;
 }
 
-#editions div
+.editionbutton
 {
-	background-color: #ec893d;
+	background-color: #ec893d !IMPORTANT;
 }
 
 #wishlist
