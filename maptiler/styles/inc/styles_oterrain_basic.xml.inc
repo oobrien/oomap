@@ -506,12 +506,54 @@
 <Style name="symbols">
     <Rule>
         &maxscale_zoom13;
+        &minscale_zoom13;
         <Filter>[natural]='tree'</Filter>
-        <PointSymbolizer file="&symbols;/tree2.png" />
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.15,0.15)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom14;
+        &minscale_zoom14;
+        <Filter>[natural]='tree'</Filter>
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.3,0.3)" />
     </Rule>
     <Rule>
         &maxscale_zoom15;
+        &minscale_zoom15;
+        <Filter>[natural]='tree'</Filter>
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.4,0.4)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom16;
+        &minscale_zoom16;
+        <Filter>[natural]='tree'</Filter>
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.5,0.5)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom17;
+        <Filter>[natural]='tree'</Filter>
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.8,0.8)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom14;
+        &minscale_zoom14;
         <Filter>[historic]='monument'</Filter>
-        <PointSymbolizer file="&symbols;/monument.png" />
+        <PointSymbolizer file="&symbols;/monument.svg" allow-overlap="true" transform="scale(0.3,0.3)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom15;
+        &minscale_zoom15;
+        <Filter>[historic]='monument'</Filter>
+        <PointSymbolizer file="&symbols;/monument.svg" allow-overlap="true" transform="scale(0.4,0.4)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom16;
+        &minscale_zoom16;
+        <Filter>[historic]='monument'</Filter>
+        <PointSymbolizer file="&symbols;/monument.svg" allow-overlap="true" transform="scale(0.6,0.6)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom17;
+        <Filter>[historic]='monument'</Filter>
+        <PointSymbolizer file="&symbols;/monument.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
 </Style>
