@@ -295,7 +295,7 @@
    <Rule>
         &maxscale_zoom12;
         <Filter>[natural] = 'scrub'</Filter>
-        <PolygonPatternSymbolizer file="&symbols;/undergrowth.png" />
+        <PolygonPatternSymbolizer file="&symbols;/undergrowth.svg" transform="scale(1.0, 1.0)"  />
     </Rule>
     <Rule>
         &maxscale_zoom12;
