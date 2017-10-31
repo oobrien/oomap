@@ -66,7 +66,7 @@
 			<form id='load'>Map ID: <input type='text' size='10' id='savedMapID' />
 				<button id='loadButton' type="submit">Load</button>
 			</form>
-			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.0</span></div>
+			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.1</span></div>
 		</div>
 		<div id='editions'>
 			<div id='messagePanelHolder'>
@@ -139,6 +139,8 @@
 			</div>	
 			<div id='create' class="ui-widget-header ui-corner-all">
 				<button id='createmap'>Save & get PDF map</button>				
+				<button id='getraster'>Get JPG</button>				
+				<button id='getworldfile'>Get Worldfile</button>				
 				<button id='createclue'>Show clue sheet</button>						
 			</div>	
 		</div>
@@ -175,7 +177,7 @@
 
 			<div id='attribution'>
 				<div>Created by <a href="http://blog.oomap.co.uk/">Oliver O'Brien</a> <a href="http://blog.oomap.co.uk/oom/">Comments?</a><br /><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are Crown Copyright and Database Right Ordnance Survey 2012-5. Postboxes from dracos.co.uk Locating Postboxes service. Plaques from Open Plaques project.'); return false;">Attribution</a> (OSM, Ordnance Survey, Dracos) <a href="http://blog.oomap.co.uk/oom/">About</a><br />
-				Development part-funded by <a href="http://www.britishorienteering.org.uk/">British Orienteering</a>.</div>
+				Supported by <a href="http://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>.</div>
 			</div>
 			<div id='map'></div>
 		</div>

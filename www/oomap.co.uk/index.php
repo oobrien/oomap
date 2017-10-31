@@ -73,7 +73,7 @@
 			<div id='social'><a href="https://twitter.com/share" class="twitter-share-button" data-count="horizontal" data-via="oobr">Tweet</a></div></td>
 			</tr></table>
 	</div>
-	<div style='padding: 20px 30px 30px 30px; margin: 30px; border: 1px solid #aaa; border-radius: 20px; background-color: white; opacity: 0.9;'>
+	<div style='width: 730px; padding: 30px; margin: 10px 30px; border: 1px solid #aaa; border-radius: 20px; background-color: white; opacity: 0.9;'>
 		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 		<!-- OpenOrienteeringMap LB -->
 		<ins class="adsbygoogle"
@@ -89,37 +89,39 @@
 		-->
 		You can quickly and easily set a map, add controls, and create a print-ready, high quality vector PDF.
 		<br /><br />
-		There are three editions of OpenOrienteeringMap currently:
+		There are four editions of OpenOrienteeringMap currently:
 		<ul>
 		<li><a href="/gb/">UK (BOF) edition</a> (with contours and daily updating from OpenStreetMap)</li>
 		<li><a href="/ie/">Ireland (IOA) edition</a> (with daily updating from OpenStreetMap)</li>
-		<li><a href="/global/">Global edition</a> (with OpenStreetMap data as of early September 2016.)</li>
+		<li><a href="/global/">Global edition</a> (with OpenStreetMap data as of early August 2017.)</li>
 		<li><a href="/blueprint/">Blueprint</a> (a simplified version of the Global edition, showcasing the Blueprint style map)</li>
 		</ul>	
 		
-		If you have any comments, leave them at the end <a href="http://blog.oomap.co.uk/oom/#commentform">here</a>.<br />
+		If you have any comments, leave them at the end <a href="http://blog.oomap.co.uk/oom/#commentform">here</a>. 
 		You can also <a href="http://blog.oomap.co.uk/oom/">find out more</a> about OpenOrienteeringMap, and keep an eye on <a href="http://blog.oomap.co.uk/">my blog</a> for news on updates.
 		<br /><br />
-		
-		<div>	
+		Development for the current version was part-funded by a grant from <a href="https://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>, more details about the new features are <a href="http://blog.oomap.co.uk/2017/10/openorienteeringmap-version-3/">here</a>.<br />	
+		<img src="images/orienteeringfoundation.png" style='width: 300px; height: 135px;' alt="The Orienteering Foundation" />
+		<!-- <div>	
 		<i>If you are interested in commissioning a branded and ad-free version of the OpenOrienteeringMap website,<br />
 		for example to include national, regional or club colours and logos, please contact me at o.obrien (at) outlook.com</i>
+		</div> -->
+		<!-- <div style='padding: 20px; margin: 20px 0; background-color: #fee; border-radius: 20px;'> -->
+		<div style='margin: 20px 0;'>OpenOrienteeringMap is completely free. If you really want to, you could  
+		please <a href="http://www.amazon.co.uk/gp/registry/wishlist/2WLZDJ7S00ERD/ref=cm_wl_huc_view">buy me something on my gift-list</a> or <a href="http://shop.oobrien.com/">buy a print</a>. Or buy yourself something through my <a href="http://www.amazon.co.uk/ref=as_sl_pc_wdgt_ex?&linkCode=wey&tag=yepsport-21">Amazon store link</a>. Gifts will encourage further development and offset the costs of hosting the site.</i>
 		</div>
-		<div style='padding: 20px; margin: 20px 0; background-color: #fee; border-radius: 20px;'>
-		OpenOrienteeringMap is completely free. If you really want to, you could  
-		please <a href="http://www.amazon.co.uk/gp/registry/wishlist/2WLZDJ7S00ERD/ref=cm_wl_huc_view">buy me something on my gift-list</a> or <a href="http://shop.oobrien.com/">buy a print</a>.<br />Or buy yourself something through my <a href="http://www.amazon.co.uk/ref=as_sl_pc_wdgt_ex?&linkCode=wey&tag=yepsport-21">Amazon store link</a>. Gifts will encourage further development and offset the costs of hosting the site.</i>
-		</div>
+		<!-- </div> -->
 
 		<div style='margin: 50px auto 50px auto;'>
-			<a href="blueprint.php" style='width: 30px; height: 30px; background-color: #00f; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Blueprint</a>
-			<a href="global.php" style='width: 30px; height: 30px; background-color: #00f; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Global</a>
-			<a href="uk.php" style='width: 30px; height: 30px; background-color: #00f; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>UK</a>
-			<a href="ioa.php" style='width: 30px; height: 30px; background-color: #00f; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Ireland</a>
+			<a href="/blueprint/" style='width: 30px; height: 30px; background-color: #08d; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Blueprint</a>
+			<a href="/global/" style='width: 30px; height: 30px; background-color: #08d; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Global</a>
+			<a href="/gb/" style='width: 30px; height: 30px; background-color: #08d; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>UK</a>
+			<a href="/ie/" style='width: 30px; height: 30px; background-color: #08d; border-radius: 50px; margin: 10px; padding: 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Ireland</a>
 
 		</div>
 		<div style='font-size: 10px; margin: 30px 0;'>OpenOrienteeringMap's data is obtained from <a href="http://osm.org/">OpenStreetMap</a> which is Copyright OpenStreetMap and contributors 
-		and used under the Open Database Licence (ODbL). Contours (UK edition) are Crown Copyright and Database Right Ordnance Survey 2014.
-		OpenOrienteeringMap is maintained by Oliver O'Brien (SLOW).</div>
+		and used under ODbL.<br /> Contours (UK edition) are Crown Copyright and Database Right Ordnance Survey 2014.
+		<br />OpenOrienteeringMap is maintained by Oliver O'Brien (SLOW). <br />Development for the current version was part-funded by a grant from <a href="https://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>.</div>
 		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 		<!-- OpenOrienteeringMap LB -->
 		<ins class="adsbygoogle"

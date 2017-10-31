@@ -64,7 +64,7 @@
 				<form id='load'>Map ID: <input type='text' size='15' id='savedMapID' />
 					<button id='loadButton' type="submit">Load</button>
 				</form>
-				<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.0</span></div>
+				<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.1</span></div>
 		</div>
 		<div id='editions'>
 			<div id='messagePanelHolder'>
@@ -94,8 +94,8 @@
 									<label for="streeto_norail_global"><img src='/images/oom_snr.png' alt='Street-O xrail' style='width: 60px; height: 60px;' /><br />StreetO xrail</label>
 								<input type="radio" id="oterrain_global" name="mapstyle" />
 									<label for="oterrain_global"><img src='/images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
-								<input type="radio" id="blueprint" name="mapstyle" />
-									<label for="blueprint"><img src='/images/oom_blueprint.png' alt='Blueprint' style='width: 60px; height: 60px;' /><br />Blueprint</label>
+								<!-- <input type="radio" id="blueprint" name="mapstyle" />
+									<label for="blueprint"><img src='/images/oom_blueprint.png' alt='Blueprint' style='width: 60px; height: 60px;' /><br />Blueprint</label> -->
 							</div>
 						</td>
 						<td colspan='3'> 
@@ -138,7 +138,9 @@
 				</table>  		
 			</div>	
 			<div id='create' class="ui-widget-header ui-corner-all">
-				<button id='createmap'>Save & get PDF map</button>					
+				<button id='createmap'>Save & get PDF map</button>				
+				<button id='getraster'>Get JPG</button>				
+				<button id='getworldfile'>Get Worldfile</button>				
 				<button id='createclue'>Show clue sheet</button>						
 			</div>	
 		</div>
