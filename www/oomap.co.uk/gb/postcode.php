@@ -7,7 +7,7 @@
 
 sleep(0.5);
 
-include_once "db.php";
+include_once "../db.php";
 
 global $pc;
 
