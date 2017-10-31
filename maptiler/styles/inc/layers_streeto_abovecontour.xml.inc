@@ -1,19 +1,10 @@
-<Layer name="roads" status="on" srs="&srs900913;">
-    <StyleName>trams-casing</StyleName>
-    <StyleName>trams-core</StyleName>
-    <StyleName>roads-casing</StyleName>
-    <StyleName>roads-core</StyleName>
+<Layer name="line features" status="on" srs="&srs900913;">
+    <StyleName>cliffs</StyleName>
+    <StyleName>barriers</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,railway,amenity,
-            case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
-            case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
-            from &prefix;_line
-            where highway is not null
-                or railway is not null
-            order by z_order
-            ) as roads
+            (select way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
         </Parameter>
     </Datasource>
 </Layer>
@@ -35,6 +26,26 @@
                 and bridge in ('yes','true','1')
             order by z_order
             ) as roads
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="power" status="on" srs="&srs900913;">
+    <StyleName>power</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">(select way from &prefix;_line where "power"='line') as power</Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="symbols" status="on" srs="&srs900913;">
+    <StyleName>symbols</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select *
+            from &prefix;_point
+            ) as symbols
         </Parameter>
     </Datasource>
 </Layer>

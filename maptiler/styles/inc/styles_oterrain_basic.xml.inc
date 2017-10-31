@@ -12,6 +12,20 @@
 	</Rule>
 </Style>
 
+<Style name="buildings-casing">
+    <Rule>
+        &maxscale_zoom12;
+        <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linejoin="miter" stroke-linecap="square" />
+    </Rule>
+</Style>
+
+<Style name="buildings-core">
+    <Rule>
+        &maxscale_zoom12;
+        <PolygonSymbolizer fill="&grey50;" gamma="0.0" />
+    </Rule>
+</Style>
+
 <Style name="bridges-casing">
 	<Rule>
 		&maxscale_zoom13;
@@ -224,13 +238,6 @@
     </Rule>
 </Style>
 
-<Style name="buildings">
-    <Rule>
-        &maxscale_zoom12;
-        <PolygonSymbolizer fill="&black;" gamma="0.6" />
-    </Rule>
-</Style>
-
 <Style name="islands">
     <Rule>
         &maxscale_zoom12;
@@ -326,9 +333,14 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[amenity] = 'parking' or [landuse] = 'playground' or [leisure] = 'playground' or [landuse] = 'farmyard' or [landuse] = 'parking' or [highway] = 'pedestrian' or [highway] = 'services'</Filter>
+        <Filter>[amenity] = 'parking' or [landuse] = 'playground' or [leisure] = 'playground' or [landuse] = 'farmyard' or [landuse] = 'parking' or [highway] = 'services'</Filter>
         <PolygonSymbolizer fill="&brown50;" gamma="0.6" />
         <LineSymbolizer stroke="&black;" stroke-width="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[highway] = 'pedestrian'</Filter>
+        <PolygonSymbolizer fill="&brown50;" gamma="0.6" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
@@ -340,7 +352,9 @@
 <Style name="graveyard_overprint">
     <Rule>
         &maxscale_zoom12;
-        <PolygonPatternSymbolizer file="&symbols;/tomb.png" />
+ 	<!-- <MarkersSymbolizer file="&symbols;tomb.svg" placement="interior" spacing="5" max-error="0.5" transform="scale(0.5)" /> -->
+        <PolygonPatternSymbolizer file="&symbols;/tomb.png" transform="scale(0.01)" />
+	<!-- <PolygonPatternSymbolizer file="&symbols;/tomb.svg" transform="scale(3)" /> -->
     </Rule>
 </Style>
 
@@ -448,7 +462,8 @@
 <Style name="power">
     <Rule>
         &maxscale_zoom13;
-        <LinePatternSymbolizer file="&symbols;/power.png" />
+        <MarkersSymbolizer file="&symbols;/power.svg" placement="line" spacing="30" max-error="0.5" transform="scale(1.2)" />
+        <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
 </Style>
 
@@ -456,12 +471,14 @@
      <Rule>
         &maxscale_zoom13;
         <Filter>[natural] = 'cliff'</Filter>
-        <LinePatternSymbolizer file="&symbols;/cliff.png" />
+        <MarkersSymbolizer file="&symbols;/cliff.svg" placement="line" offset="1.4" spacing="3" max-error="0.5" />
+        <LineSymbolizer stroke="&black;" stroke-width="2.0" stroke-linecap="square" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
         <Filter>[man_made] = 'embankment'</Filter>
-        <LinePatternSymbolizer file="&symbols;/embankment.png" />
+        <MarkersSymbolizer file="&symbols;/embankment.svg" placement="line" offset="1.4" spacing="3" max-error="0.5" />
+        <LineSymbolizer stroke="&brown;" stroke-width="2.0" stroke-linecap="square" />
     </Rule>
 </Style>
 
@@ -480,19 +497,26 @@
     </Rule>
     <Rule>
         &maxscale_zoom14;
+	&minscale_zoom15;
         <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
-        <LineSymbolizer stroke="&green100;" stroke-width="3" />
+        <LineSymbolizer stroke="&green100;" stroke-width="2" />
     </Rule>
     <Rule>
+        &maxscale_zoom15;
+        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <LineSymbolizer stroke="&green100;" stroke-width="2.5" />
+    </Rule>
+   <Rule>
         &maxscale_zoom13;
         <Filter>[barrier] = 'citywall' or [barrier] = 'wall' or [barrier] = 'retaining_wall' or [barrier] = 'jersey_barrier' or [barrier] = 'yes'</Filter>
-        <LinePatternSymbolizer file="&symbols;/wall.png" />
+        <MarkersSymbolizer file="&symbols;/wall.svg" placement="line" spacing="8" max-error="0.5" transform="scale(0.7)" />
+        <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
         <Filter>[barrier] = 'fence'</Filter>
+        <MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.4" max-error="0.5" transform="scale(0.8)"  />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
-        <LinePatternSymbolizer file="&symbols;/fence.png" />
     </Rule>
 </Style>
 
@@ -507,7 +531,7 @@
     <Rule>
         &maxscale_zoom13;
         &minscale_zoom13;
-        <Filter>[natural]='tree'</Filter>
+	<Filter>[natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.15,0.15)" />
     </Rule>
     <Rule>
@@ -542,7 +566,7 @@
     <Rule>
         &maxscale_zoom15;
         &minscale_zoom15;
-        <Filter>[historic]='monument'</Filter>
+	<Filter>[historic]='monument'</Filter>
         <PointSymbolizer file="&symbols;/monument.svg" allow-overlap="true" transform="scale(0.4,0.4)" />
     </Rule>
     <Rule>
@@ -555,5 +579,22 @@
         &maxscale_zoom17;
         <Filter>[historic]='monument'</Filter>
         <PointSymbolizer file="&symbols;/monument.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom15;
+        &minscale_zoom15;
+        <Filter>[amenity]='bench' or [leisure]='picnic_table' or [amenity]='waste_basket' or [amenity]='recycling'</Filter>
+        <PointSymbolizer file="&symbols;/cross.svg" allow-overlap="true" transform="scale(0.5,0.5)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom16;
+        &minscale_zoom16;
+        <Filter>[amenity]='bench' or [leisure]='picnic_table' or [amenity]='waste_basket' or [amenity]='recycling'</Filter>
+        <PointSymbolizer file="&symbols;/cross.svg" allow-overlap="true" transform="scale(0.65,0.65)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom17;
+        <Filter>[amenity]='bench' or [leisure]='picnic_table' or [amenity]='waste_basket' or [amenity]='recycling'</Filter>
+        <PointSymbolizer file="&symbols;/cross.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
 </Style>
