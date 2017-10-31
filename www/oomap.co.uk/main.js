@@ -210,6 +210,8 @@ function init()
 	$( "#c_type input[type=radio]" ).change(handleControlTypeChange);
 
 	$( "#createmap" ).button({ icons: { primary: "ui-icon-disk" } }).click(function() { handleGenerateMap(); });
+	$( "#getraster" ).button().click(function() { generateMap("jpg"); });
+	$( "#getworldfile" ).button().click(function() {generateMap("jgw"); });
 	$( "#createclue" ).button().click(function() { handleGenerateClue(); });
 	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteSheet(); });
 	$( "#deleteXs" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteXs(); });
@@ -217,6 +219,8 @@ function init()
 	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).click(function() { handleGetOpenplaques(); });
 
 	$( "#createmap" ).button("disable");
+	$( "#getraster" ).button("disable");
+	$( "#getworldfile" ).button("disable");
 	$( "#createclue" ).button("disable");
 	$( "#deletesheet" ).button("disable");
 	$( "#deleteXs" ).button("disable");
@@ -603,7 +607,7 @@ function init()
 	  buttons: {
 		"Create anyway": function() {
 		  	mapID = "new";
-			generateMap();
+			generateMap("pdf");
 			$( this ).dialog( "close" );
 		},
 		Cancel: function() {
@@ -827,6 +831,8 @@ function handleZoom()
 	}
 	
 	$( "#createmap" ).button("disable");
+	$( "#getraster" ).button("disable");
+	$( "#getworldfile" ).button("disable");
 	$( "#deletesheet" ).button("disable");
 	$( "#deleteXs" ).button("disable");
 	$( "#getPostboxes" ).button("disable");	
@@ -1098,13 +1104,15 @@ function handleSaveCallback(json)
 		mapID = result.message;
 		updateUrl();
 		if (debug) { console.log(result.data); }
-		generateMap();
+		generateMap("pdf");
 	}	
 	else
 	{
 		$( "#saveerror" ).dialog( "open" );
 		$( "#saveerror_text" ).html(result.message);
 	}
+	$( "#getraster" ).button("enable");
+	$( "#getworldfile" ).button("enable");
 }
 
 function handleLoadCallback(json)
@@ -1295,7 +1303,7 @@ function saveMap()
 	if (mapID != "new")
 	{
 		$( "#generating" ).dialog( "open" );
-		generateMap();
+		generateMap("pdf");
 	}
 	var controlsForDB = controls.concat(controlsSF).concat(controlsX);
 
@@ -1319,8 +1327,10 @@ function saveMap()
 	$.post('/save.php', json, handleSaveCallback);
 	$( "#saving" ).dialog( "open" );
 }
+
+
 	
-function generateMap()
+function generateMap(type)
 {
 	//Construct the URL to the PDF.
 	var escapeTitleText = escape(mapTitle);
@@ -1341,7 +1351,7 @@ function generateMap()
 		xText  = xText.substring(0, xText.length - 1);
 	}
 	
-	url = prefix1 + "pdf"
+	url = prefix1 + type
 		+ "/?style=" + mapStyleID 
    		+ "|paper=" + paper 
 		+ "|scale=" + scale 
@@ -1544,6 +1554,8 @@ function rebuildMapSheet()
 	rebuildDescriptions();
 
 	$( "#createmap" ).button("enable");
+	$( "#getraster" ).button("disable");
+	$( "#getworldfile" ).button("disable");
 	$( "#deletesheet" ).button("enable");
 	$( "#getPostboxes" ).button("enable");	
 	$( "#getOpenplaques" ).button("enable");
