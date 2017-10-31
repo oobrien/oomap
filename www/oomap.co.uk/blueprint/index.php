@@ -42,7 +42,7 @@
 		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/openlayers/v3.18.2-dist/ol.css'>
 		<link rel='stylesheet' type='text/css' href='/style.css'>
 	</head>
-	<body>
+	<body style="background-image: url('../images/blueprint_background.png')">
 		<script>
 		  window.fbAsyncInit = function() {
 			FB.init({
@@ -60,11 +60,11 @@
 			 fjs.parentNode.insertBefore(js, fjs);
 		   }(document, 'script', 'facebook-jssdk'));
 		</script>
-		<div id='toppanel'>
+		<div id='toppanel' style="background-image: url('../images/blueprint_background.png')">
 				<form id='load'>Map ID: <input type='text' size='15' id='savedMapID' />
 					<button id='loadButton' type="submit">Load</button>
 				</form>
-				<div id='title'>OOMAP Blueprint<span id='titlestatus'>v3.0</span></div>
+				<div id='title' style='background-color: #08c;'>OOMAP Blueprint<span id='titlestatus'></span></div>
 		</div>
 		<div id='editions'>
 			<div id='messagePanelHolder'>
@@ -73,7 +73,7 @@
 				<div class='messagePanel' id='messageAdd'>Tip: Happy with your map? Click "Save & get PDF map".</div>
 			</div>
 			<table><tr><td>
-			<div id='blueprint' class='editionbutton currentedition'><a href="/blueprint/">&nbsp;  Blueprint  &nbsp;</a></div></td><td>
+			<div id='blueprint' class='editionbutton' style='background-color: black;'><a href="/blueprint/">&nbsp;  Blueprint  &nbsp;</a></div></td><td>
 			<div id='global' class='editionbutton'><a href="/global/">&nbsp;  Global  &nbsp;</a></div></td><td>
 			<div id='uk' class='editionbutton'><a href="/gb/">&nbsp;  UK  &nbsp;</a></div></td><td>
 			<div id='ireland' class='editionbutton'><a href="/ie/">&nbsp;  Ireland  &nbsp;</a></div></td><td>
@@ -138,6 +138,17 @@
 					<tr><th colspan='4' id='maptitle'></th><th><span class="edit" id="edittitle">Edit</span></th></tr>
 					<tr><th colspan='3' id='scalecaption'></th><th colspan='2'></th></tr>
 				</table>
+				<div style='margin: 10px 0; padding: 10px; background-color: white;'>
+				Welcome to Blueprint by OOMap!<br /><br />To create a map:
+				<ol>
+					<li>Zoom and pan to your favourite area, using the standard map on the left. Once zoomed in a certain amount, the Blueprint map will show.</li>
+					<li>If you like, you can zoom in further for more detail!</li>
+					<li>Use the controls at the top to place a sheet on the map, and adjust scale/size etc.</li>
+					<li>Optionally, set the title of your map using the edit button on the top right.</li>
+					<li>Create your high quality PDF map by clicking the "Save and get PDF map" button on the top right.</li>
+					<li>A PDF will download a few seconds later. You can now open and print this PDF!</li>
+				</ol>
+				</div>
 			</div>
 			<!--
 			<div id='supported'>
@@ -164,10 +175,10 @@
 					(adsbygoogle = window.adsbygoogle || []).push({});
 				</script>	
 			</div>	
-			<div id='attribution'>
-				<div>Created by <a href="http://blog.oomap.co.uk/">Oliver O'Brien</a><br /><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. Plaques from Open Plaques project.'); return false;">Attribution</a> (OSM) <a href="http://blog.oomap.co.uk/oom/">About</a> <a href="http://blog.oomap.co.uk/oom/">Comments?</a></div>
+			<div id='attribution' style='background-color: white;'>
+				<div>Created by <a href="http://blog.oomap.co.uk/">Oliver O'Brien</a><br /><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2017. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. Plaques from Open Plaques project.'); return false;">Attribution</a> (OSM) <a href="http://blog.oomap.co.uk/oom/">About</a> <a href="http://blog.oomap.co.uk/oom/">Comments?</a><br />Supported by <a href="http://www.orienteeringfoundation.org.uk">The Orienteering Foundation</a>.</div>
 			</div>
-			<div id='map'></div>
+			<div id='map' style='background-color: white;'></div>
 		</div>
 		<div id="setmaptitle" title="Map title" style='display: none;'>
 		  <p class="validateTips"></p>
