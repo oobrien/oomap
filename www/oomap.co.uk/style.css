@@ -73,7 +73,7 @@ a:active, a:hover { color: #cc0032; }
 	padding: 5px 0 5px 0; 
 	margin: 0 7px 0 0;
 	font-size: 10px;
-	background-color: #03f;
+	background-color: #08d;
 }
 
 #uk a, #ireland a, #global a, .editionbutton a
@@ -118,19 +118,17 @@ a:active, a:hover { color: #cc0032; }
   
   #create {
 	float: right;
-	width: 188px;
+	width: 182px;
 	margin-right: 10px;
-    padding: 5px 1px 5px 0;
+    padding: 5px 1px 5px 10px;
     display: inline-block;
     font-size: 10px;
 	height: 88px;
   }
   #create button
 {
-	width: 168px;
-	margin: 10px 10px;
+	margin: 2px 0;
 }
-
 
 #optionspanel
 {
