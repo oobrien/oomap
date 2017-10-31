@@ -2,5 +2,5 @@
 %fontset-settings;
 <!ENTITY % entities-common SYSTEM "entities.xml.inc">
 %entities-common;
-<!ENTITY prefix "planet_osm">
+<!ENTITY prefix "planet2_osm">
 <!ENTITY datasource-settings SYSTEM "db_global.xml.inc">
