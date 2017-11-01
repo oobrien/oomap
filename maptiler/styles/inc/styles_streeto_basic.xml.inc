@@ -329,7 +329,7 @@
         &maxscale_zoom13;
         <Filter>[man_made] = 'embankment'</Filter>
         <MarkersSymbolizer file="&symbols;/embankment.svg" placement="line" offset="1.4" spacing="3" max-error="0.5" />
-        <LineSymbolizer stroke="&brown;" stroke-width="2.0" stroke-linecap="square" />
+        <LineSymbolizer stroke="&brown100;" stroke-width="2.0" stroke-linecap="square" />
     </Rule>
 </Style>
 
