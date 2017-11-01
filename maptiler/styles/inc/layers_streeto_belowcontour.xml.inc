@@ -103,6 +103,16 @@
     </Datasource>
 </Layer>
 
+<Layer name="line features" status="on" srs="&srs900913;">
+    <StyleName>barriers</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
+        </Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="roads" status="on" srs="&srs900913;">
     <StyleName>trams-casing</StyleName>
     <StyleName>trams-core</StyleName>

@@ -1,6 +1,5 @@
 <Layer name="line features" status="on" srs="&srs900913;">
     <StyleName>cliffs</StyleName>
-    <StyleName>barriers</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
@@ -8,7 +7,6 @@
         </Parameter>
     </Datasource>
 </Layer>
-
 <Layer name="bridges" status="on" srs="&srs900913;">
     <StyleName>bridges-casing</StyleName>
     <StyleName>bridges-core</StyleName>

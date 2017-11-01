@@ -1,20 +1,9 @@
 <Layer name="line features" status="on" srs="&srs900913;">
     <StyleName>cliffs</StyleName>
-    <StyleName>barriers</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
             (select way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
-        </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="polygon barriers" status="on" srs="&srs900913;">
-    <StyleName>barriers</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select way,barrier,"natural" from &prefix;_polygon where barrier is not null or "natural"='hedge') as barriers
         </Parameter>
     </Datasource>
 </Layer>
