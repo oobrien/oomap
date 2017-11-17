@@ -363,12 +363,12 @@
 	<MarkersSymbolizer file="&symbols;/wall.svg" placement="line" spacing="8" max-error="0.5" transform="scale(0.6)" /> 
         <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linecap="square" />
     </Rule>
-    <Rule>
+    <!-- <Rule>
         &maxscale_zoom13;
         <Filter>[barrier] = 'fence'</Filter>
 	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />	
         <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linecap="square" />
-    </Rule>
+    </Rule> -->
 </Style>
 
 <Style name="symbols">
