@@ -130,7 +130,7 @@
 						<td colspan='3'>	
 							<div id="specialoptions">Special 
 								<button id='deletesheet'>Delete Sheet</button>
-								<button id='deleteXs'>Delete Xs</button>
+								<button id='deleteXs'>Delete all X &amp; ][</button>
 								<button id='getOpenplaques'>Add Plaques</button>
 							</div>
 						</td>					
@@ -194,12 +194,13 @@
 			<table style='margin: 0 auto;'>
 			<tr>
 				<td id="c_type" class="buttonset">
-					<input type="radio" id="c_regular" name="c_type" checked="checked" /><label for="c_regular"><img src='/images/c_regular.png' alt='Regular' style='width: 60px; height: 60px;' /><br />Control</label>
-					<input type="radio" id="c_startfinish" name="c_type" /><label for="c_startfinish"><img src='/images/c_startfinish.png' alt='Start and Finish' style='width: 60px; height: 60px;' /><br />Start/Finish</label>
-					<input type="radio" id="c_cross" name="c_type" /><label for="c_cross"><img src='/images/c_cross.png' alt='Cross' style='width: 60px; height: 60px;' /><br />Red X</label>
+					<input type="radio" id="c_regular" name="c_type" checked="checked" /><label for="c_regular"><img src='/images/c_regular.png' alt='Regular' style='width: 60px; height: 60px;' /><br />Control<br />&nbsp;</label>
+					<input type="radio" id="c_startfinish" name="c_type" /><label for="c_startfinish"><img src='/images/c_startfinish.png' alt='Start and Finish' style='width: 60px; height: 60px;' /><br />Start/<br />Finish</label>
+					<input type="radio" id="c_cross" name="c_type" /><label for="c_cross"><img src='/images/c_cross.png' alt='Do not Cross' style='width: 60px; height: 60px;' /><br />Do Not<br />Cross: X</label>
+					<input type="radio" id="c_crossingpoint" name="c_type" /><label for="c_crossingpoint"><img src='/images/c_crossingpoint.png' alt='Crossing Point' style='width: 60px; height: 60px;' /><br />Crossing<br />Point: ][</label>
 				</td>
 				<td style='text-align: center; padding: 0 30px;'>
-					<input type="text" id="c_angle" class="knob" value="45"><br /><label for="c_angle">Label angle</label>
+					<input type="text" id="c_angle" class="knob" value="45"><br /><label for="c_angle" id='anglelabel'>Number<br />position</label>
 				</td>
 			</tr>
 			</table>
@@ -320,5 +321,26 @@
 				<tr><th></th></tr>
 			</table>
 		</div>
+		<div id="welcome" title="OpenOrienteeringMap: Global Edition">
+			<h2>Welcome to OpenOrienteeringMap, the easy Street-O map creation tool.</h2>		 
+			You can quickly and easily set a map, add controls, and create a print-ready, high quality vector PDF. If you have any comments, leave them at the end <a href="http://blog.oomap.co.uk/oom/#commentform">here</a>. 
+			You can also <a href="http://blog.oomap.co.uk/oom/">find out more</a> about OpenOrienteeringMap, and keep an eye on <a href="http://blog.oomap.co.uk/">my blog</a> for news on updates.
+			<br /><br />
+			<img src="../images/orienteeringfoundation.png" style='width: 300px; height: 135px; margin: 0 213px;' alt="The Orienteering Foundation" />
+			<div style='margin: 20px 0; font-size: 12px;'>Development for the current version was part-funded by a grant from <a href="https://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>, more details about the new features are <a href="http://blog.oomap.co.uk/2017/10/openorienteeringmap-version-3/">here</a>. 
+			OpenOrienteeringMap remains completely free. If you really want to, you could please <a href="http://www.amazon.co.uk/gp/registry/wishlist/2WLZDJ7S00ERD/ref=cm_wl_huc_view">buy me something</a>. Or <a href="http://www.amazon.co.uk/ref=as_sl_pc_wdgt_ex?&linkCode=wey&tag=yepsport-21">buy yourself something</a>. Thank you in advance!</i>
+			</div>
+			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+			<!-- OpenOrienteeringMap LB -->
+			<ins class="adsbygoogle"
+				 style="display:inline-block;width:728px;height:90px"
+				 data-ad-client="ca-pub-3486529756444295"
+				 data-ad-slot="8518177961"></ins>
+			<script>
+			(adsbygoogle = window.adsbygoogle || []).push({});
+			</script>			
+			<div style='font-size: 12px; margin: 20px 0;'>OpenOrienteeringMap's data is obtained from <a href="http://osm.org/">OpenStreetMap</a>, &copy; OSM contributors. Contours (UK edition) are Crown Copyright &amp; Database Right Ordnance Survey 2014.
+			</div>
+		</div>			
 	</body>
 </html>

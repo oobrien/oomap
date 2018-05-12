@@ -107,6 +107,10 @@ if ($controls != null)
 		{
 			$label = mysql_real_escape_string($control['id']);
 		}
+		if ($type == "c_crossingpoint")
+		{
+			$label = mysql_real_escape_string($control['id']);
+		}
 		$score = mysql_real_escape_string($control['score']);
 		$lat = mysql_real_escape_string($control['wgs84lat']);
 		$lon = mysql_real_escape_string($control['wgs84lon']);

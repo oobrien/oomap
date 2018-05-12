@@ -31,6 +31,7 @@ var select;
 
 var controlsSF = [];
 var controlsX = [];
+var controlsCP = [];
 var controls = [];
 
 //OpenLayers single-instance objects
@@ -45,6 +46,7 @@ var layerMapTitle;
 var layerMapContent;
 var layerSF;
 var layerX;
+var layerCP;
 var layerControls;
 var titleFeature;
 var dragControl;
@@ -123,6 +125,28 @@ var xStyle = new ol.style.Style({
           offsetY: 0
     })
 });
+
+function cpStyle(feature, resolution)
+{
+	return [
+		new ol.style.Style({
+			image: new ol.style.Circle({
+				stroke: new ol.style.Stroke({color: 'rgba(255,0,0,0)', width: 0.5}),
+				radius: 1
+			}),
+			text: new ol.style.Text({
+				  textAlign: "center",
+				  baseAlign: "middle",
+				  font: "18px arial, verdana, sans-serif",
+				  text: "][",
+				  fill: new ol.style.Fill({color: 'rgba(255,0,0,1)'}),
+				  offsetX: 0,
+				  offsetY: 0,
+				  rotation: feature.get('angle')*Math.PI/180
+			})
+		})
+	]
+}
 
 var marginStyle = new ol.style.Style({ 
 	fill: new ol.style.Fill({ color: [255, 255, 255, 1]})
@@ -303,6 +327,7 @@ function init()
 	layerMapContent = new ol.layer.Vector({ title: "mapcontent", style: contentStyle, source: new ol.source.Vector({}) });
 	layerSF = new ol.layer.Vector({ title: "controlsSF", style: [ sfStyle, sfStyleOuter], source: new ol.source.Vector({}) });
 	layerX = new ol.layer.Vector({ title: "controlsX", style: xStyle, source: new ol.source.Vector({}) });
+	layerCP = new ol.layer.Vector({ title: "controlsCP", style: cpStyle, source: new ol.source.Vector({}) });
 	layerControls = new ol.layer.Vector({ title: "controls", style: controlStyle, source: new ol.source.Vector({}) });
 
 	orienteeringAttribution = new ol.Attribution({ 'html': 'Copyright OpenStreetMap contributors and OS Crown Copyright & Database Right Ordnance Survey 2016.'});
@@ -349,7 +374,8 @@ function init()
 	  		layerMapTitle,
 	  		layerMapCentre, 
 	  		layerSF, 
-	  		layerX, 
+	  		layerX,
+	  		layerCP, 
 	  		layerControls		
 		],
 
@@ -413,7 +439,7 @@ function init()
       
     function checkNumber( o, n, type ) 
     {
-    	if (type == "c_startfinish" || type == "c_cross")
+    	if (type == "c_startfinish" || type == "c_cross" || type == "c_crossingpoint")
     	{
     		return true;
     	}
@@ -438,8 +464,8 @@ function init()
            
 	$( "#newcontroloptions" ).dialog({
 	  autoOpen: false,
-	  height: 350,
-	  width: 500,
+	  height: 370,
+	  width: 550,
 	  modal: true,
 	  buttons: {
 		OK: function() {
@@ -501,6 +527,23 @@ function init()
 						if (currentID == controlsX[i].id)
 						{
 							controlsX[i] = control;
+						} 
+					}
+				}
+  			}
+  			else if (control.type == "c_crossingpoint")
+  			{
+  				if (controloptstate == "new")
+  				{
+  					controlsCP.push(control);	  			
+				}
+				else if (controloptstate == "edit")
+				{
+					for (var i = 0; i < controlsCP.length; i++)
+					{
+						if (currentID == controlsCP[i].id)
+						{
+							controlsCP[i] = control;
 						} 
 					}
 				}
@@ -714,6 +757,18 @@ function init()
 		}
 	  }
 	});
+	$( "#welcome" ).dialog({
+	  autoOpen: true,
+	  height: 670,
+	  width: 765,
+	  modal: true,
+	  buttons: {
+		OK: function() {
+		  $( this ).dialog( "close" );
+		}
+	  }
+	});	
+	
 	
 	$("#search").submit(function() { handleSearchPostcode(); return false });
 	$("#load").submit(function() { handleLoadMap(); return false; });
@@ -793,25 +848,41 @@ function resetControlAddDialog(pid)
 function handleControlTypeChange()
 {
 	var type = $("#c_type :radio:checked").attr("id");
+
 	if (type == "c_startfinish" || type == "c_cross")
 	{
+		$("#anglelabel").html('<br />&nbsp;');
 		$("#c_angle").val(45).trigger('change');
+		$("#c_angle").trigger('configure', { "readOnly":true });
+	
+	}
+	else if (type == "c_crossingpoint")
+	{
+		$("#anglelabel").html('Crossing<br />angle');
+		$("#c_angle").trigger('configure', { "readOnly":false });		
+	}
+	else
+	{
+		$("#anglelabel").html('Number<br />position');
+		$("#c_angle").trigger('configure', { "readOnly":false });	
+	}
+
+
+	if (type == "c_startfinish" || type == "c_cross" || type == "c_crossingpoint")
+	{
 		//$("#c_score").val(10); //Don't change this - useful to keep current value.
 		$("#c_number").val("");
 		$("#c_description").val("");
 
-		$("#c_angle").trigger('configure', { "readOnly":true });
 		$("#c_score input[type=radio]").button("disable");
 		$("#c_number").attr('disabled','disabled');
 		$("#c_description").attr('disabled','disabled');
 	}
 	else
 	{
-		$("#c_angle").trigger('configure', { "readOnly":false });
 		$("#c_score input[type=radio]").button("enable");
 		$("#c_number").removeAttr('disabled');
 		$("#c_description").removeAttr('disabled');
-
 	}
 }
 
@@ -838,7 +909,7 @@ function handleZoom()
 	$( "#getPostboxes" ).button("disable");	
 	$( "#getOpenplaques" ).button("disable");	
 
-	if (controlsX.length > 0)
+	if (controlsX.length > 0 || controlsCP.length > 0)
 	{
 		$( "#deleteXs" ).button("enable");
 	}
@@ -946,6 +1017,14 @@ function handleControlDelete(pid)
 			break;
 		} 
 	}
+	for (var i = 0; i < controlsCP.length; i++)
+	{	
+		if (currentID == controlsCP[i].id)
+		{
+			controlsCP.splice(i, 1);
+			break;
+		} 
+	}
 
 	if (mapID != "new")
 	{
@@ -968,6 +1047,7 @@ function handleDeleteSheet()
 	controls = [];
 	controlsSF = [];
 	controlsX = [];
+	controlsCP = [];
 	
 	topID = 0;
 	topNumber = 1;
@@ -997,6 +1077,7 @@ function handleDeleteXs()
 		updateUrl();
 	}
 	controlsX = []; 
+	controlsCP = [];
 	rebuildMapControls();
 	$( "#deleteXs" ).button("disable");
 
@@ -1063,7 +1144,7 @@ function validate()
 	for (var i = 0; i < controls.length; i++)
 	{
 		var control = controls[i];
-		if ($.inArray(control.number, controlNumbers) > -1 && control.type != "c_startfinish" && control.type != "c_cross")
+		if ($.inArray(control.number, controlNumbers) > -1 && control.type != "c_startfinish" && control.type != "c_cross" &&  control.type != "c_crossingpoint")
 		{		
 			validationMsg += "Two or more controls have the same number.<br />";	
 			if (debug) { console.log(controlNumbers); console.log(control.number); }
@@ -1305,7 +1386,7 @@ function saveMap()
 		$( "#generating" ).dialog( "open" );
 		generateMap("pdf");
 	}
-	var controlsForDB = controls.concat(controlsSF).concat(controlsX);
+	var controlsForDB = controls.concat(controlsSF).concat(controlsX).concat(controlsCP);
 
 	var json = {"data":{
 		"action": "savemap",
@@ -1337,6 +1418,7 @@ function generateMap(type)
 
 	var startText = ""
 	var xText = "";
+	var cpText = "";
 	if (controlsSF.length > 0)
 	{
 		startText = controlsSF[0].lat.toFixed(0) + "," + controlsSF[0].lon.toFixed(0);
@@ -1349,6 +1431,15 @@ function generateMap(type)
 			xText += control.lat.toFixed(0) + "," + control.lon.toFixed(0) + ",";
 		}
 		xText  = xText.substring(0, xText.length - 1);
+	}
+	if (controlsCP.length > 0)
+	{
+		for (var i = 0; i < controlsCP.length; i++)
+		{
+			var control = controlsCP[i]
+			cpText += control.angle + "," + control.lat.toFixed(0) + "," + control.lon.toFixed(0) + ",";
+		}
+		cpText = cpText.substring(0, cpText.length - 1);
 	}
 	
 	url = prefix1 + type
@@ -1365,6 +1456,7 @@ function generateMap(type)
 	} 
 	url	+= "|start=" + startText
 		+ "|crosses=" + xText
+		+ "|cps=" + cpText
 		+ "|controls=";
 		
 	if (controls.length > 0)
@@ -1424,6 +1516,7 @@ function loadMap(data)
 	if (debug) { console.log(sheetCentreLL); }
 	controlsSF = [];
 	controlsX = [];
+	controlsCP = [];
 	controls = [];
 
 	for (var i = 0; i < data.controls.length; i++)
@@ -1451,6 +1544,10 @@ function loadMap(data)
 		else if (control.type == "c_cross")
 		{
 			controlsX.push(control);
+		}
+		else if (control.type == "c_crossingpoint")
+		{
+			controlsCP.push(control);
 		}
 		else
 		{
@@ -1566,12 +1663,13 @@ function rebuildMapControls()
 	layerSF.getSource().clear();
 	layerControls.getSource().clear();
 	layerX.getSource().clear();
+	layerCP.getSource().clear();
 	
 	for (var i = 0; i < controlsSF.length; i++)
 	{
 		var control = controlsSF[i];	
-		var controlX = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
-		layerSF.getSource().addFeatures([controlX]);
+		var controlSF = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
+		layerSF.getSource().addFeatures([controlSF]);
 	}
 
 	for (var i = 0; i < controlsX.length; i++)
@@ -1581,6 +1679,13 @@ function rebuildMapControls()
 		layerX.getSource().addFeatures([controlX]);
 	}
 
+	for (var i = 0; i < controlsCP.length; i++)
+	{
+		var control = controlsCP[i];	
+		var controlCP = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
+		controlCP.set('angle', control.angle);
+		layerCP.getSource().addFeatures([controlCP]);
+	}
 	
 	for (var i = 0; i < controls.length; i++)
 	{
@@ -1594,7 +1699,7 @@ function rebuildMapControls()
 		layerControls.getSource().addFeatures([controlPoint]);		
 	}
 	
-	if (controlsX.length > 0)
+	if (controlsX.length > 0 || controlsCP.length > 0)
 	{
 		$( "#deleteXs" ).button("enable");
 	}
