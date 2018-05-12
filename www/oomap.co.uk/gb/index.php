@@ -15,7 +15,7 @@
 
 		<title>OpenOrienteeringMap: The easy Street-O map creation tool</title>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4.js'></script>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/openlayers/v3.18.2-dist/ol-debug.js'></script>
+		<script type='text/javascript' src='http://lib.oomap.co.uk/openlayers/v4.6.5-dist/ol-debug.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-1.11.3.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.js'></script>
 		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.knob.js'></script>
@@ -38,7 +38,7 @@
 		</script>
 		<script type='text/javascript' src="/main.js?t=<?php echo time(); ?>"></script>
 		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.css'>
-		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/openlayers/v3.18.2-dist/ol.css'>
+		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/openlayers/v4.6.5-dist/ol.css'>
 		<link rel='stylesheet' type='text/css' href='/style.css'>
 	</head>
 	<body>
@@ -66,7 +66,7 @@
 			<form id='load'>Map ID: <input type='text' size='10' id='savedMapID' />
 				<button id='loadButton' type="submit">Load</button>
 			</form>
-			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.1</span></div>
+			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.2</span></div>
 		</div>
 		<div id='editions'>
 			<div id='messagePanelHolder'>
@@ -79,7 +79,8 @@
 			<div id='global' class='editionbutton'><a href="/global/">&nbsp;  Global  &nbsp;</a></div></td><td>
 			<div id='uk' class='editionbutton currentedition'><a href="/gb/">&nbsp;  UK  &nbsp;</a></div></td><td>
 			<div id='ireland' class='editionbutton'><a href="/ie/">&nbsp;  Ireland  &nbsp;</a></div></td><td>
-			<div id='wishlist' style='padding-top: 2px;'>Was this a useful service? Want to tip?<br />Here's a link to <a href="http://www.amazon.co.uk/registry/wishlist/2WLZDJ7S00ERD">my Amazon wish list</a>.</div></td><td>
+			<div id='denmark' class='editionbutton'><a href="/dk/">&nbsp;  Denmark  &nbsp;</a></div></td><td>
+			<div id='wishlist'>Was this useful for your event? Want to say thanks?<br />Here's my <a href="http://www.amazon.co.uk/registry/wishlist/2WLZDJ7S00ERD">my Amazon wish list</a> or <a href='https://ko-fi.com/oobrien'>Buy Me a Coffee</a>.</div></td><td>
 			<div class="fb-like" data-href="http://oomap.co.uk/uk.php" data-send="false"  data-layout="button_count" data-width="150" data-show-faces="false" data-share="true" data-font="arial"></div></td><td>
 			<div id='social'><a href="https://twitter.com/share" class="twitter-share-button" data-count="horizontal" data-via="oobr">Tweet</a></div></td>
 			</tr></table>
@@ -176,8 +177,8 @@
 			</div>	
 
 			<div id='attribution'>
-				<div>Created by <a href="http://blog.oomap.co.uk/">Oliver O'Brien</a> <a href="http://blog.oomap.co.uk/oom/">Comments?</a><br /><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are Crown Copyright and Database Right Ordnance Survey 2012-5. Postboxes from dracos.co.uk Locating Postboxes service. Plaques from Open Plaques project.'); return false;">Attribution</a> (OSM, Ordnance Survey, Dracos) <a href="http://blog.oomap.co.uk/oom/">About</a><br />
-				Supported by <a href="http://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>.</div>
+				<div><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are Crown Copyright and Database Right Ordnance Survey 2012-5. Postboxes from dracos.co.uk Locating Postboxes service. Plaques from Open Plaques project.'); return false;">Credit</a> <a href="http://blog.oomap.co.uk/oom/">About</a> Support: <a href="http://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>.</div>
+				<script type='text/javascript' src='https://ko-fi.com/widgets/widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script> 
 			</div>
 			<div id='map'></div>
 		</div>

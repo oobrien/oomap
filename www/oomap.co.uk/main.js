@@ -274,6 +274,11 @@ function init()
 		minZoom = 7;
 		mapStyleID = "streeto_ioa";	
 	}	
+	if (country == "dk")
+	{
+		minZoom = 7;
+		mapStyleID = "streeto_dk";	
+	}	
 	if (country == "bof")
 	{
 		minZoom = 7;
@@ -290,7 +295,7 @@ function init()
 	}
 	else
 	{
-		if (country == "ioa" || country == "bof")
+		if (country == "ioa" || country == "bof" || country == "dk")
 		{
 			currentZoom = 8;
 		}	
@@ -307,6 +312,11 @@ function init()
 			currentLat = 52.9;
 			currentLon = -8.3;
 		}
+		else if (country == "dk")
+		{
+			currentLat = 56.1;
+			currentLon = 10.8;		
+		}	
 		else if (country == "bof")
 		{
 			currentLat = 51.8;
@@ -318,7 +328,7 @@ function init()
 		reqMapID = args['mapID'];
 	}
 
- 	layerMapnik = new ol.layer.Tile({ title: "OpenStreetMap", source: new ol.source.OSM()});
+ 	layerMapnik = new ol.layer.Tile({ title: "OpenStreetMap", source: new ol.source.OSM({ "wrapX": true})});
 	layerOrienteering = new ol.layer.Tile();
 	layerMapBorder = new ol.layer.Vector({ title: "mapborder", style: marginStyle, source: new ol.source.Vector({}) });
 	layerMapCentre = new ol.layer.Vector({ title: "mapcentre", style: centreStyle, source: new ol.source.Vector({}) });
@@ -343,6 +353,10 @@ function init()
  	if (country == "ioa" || country == "bof")
 	{
  		theRestrictedExtent = ol.proj.transformExtent([-12, 47, 8, 63], "EPSG:4326", "EPSG:3857");
+	}
+ 	if (country == "dk")
+	{
+ 		theRestrictedExtent = ol.proj.transformExtent([7, 53, 13, 59], "EPSG:4326", "EPSG:3857");
 	}
 
 	if (country == "blueprint")
@@ -914,11 +928,11 @@ function handleZoom()
 		$( "#deleteXs" ).button("enable");
 	}
 	
-	if (olMap.getView().getZoom() != parseInt(olMap.getView().getZoom()))
+/*	if (olMap.getView().getZoom() != parseInt(olMap.getView().getZoom()))
 	{
 		olMap.getView().setZoom(Math.round(olMap.getView().getZoom()));
 	}
-	
+*/	
 	if (olMap.getView().getZoom() < 12)
 	{
 		if (state == "placepaper")
@@ -970,7 +984,15 @@ function handleZoom()
 
 		if (mapStyleIDOnSource != mapStyleID)
 		{
-			layerOrienteering.setSource(new ol.source.XYZ({ urls: [prefix1 + mapStyleID + "/{z}/{x}/{y}.png", prefix2 + mapStyleID + "/{z}/{x}/{y}.png", prefix3 + mapStyleID + "/{z}/{x}/{y}.png"], attributions: [ orienteeringAttribution ]}));
+			layerOrienteering.setSource(
+				new ol.source.XYZ(
+					{ 
+						urls: [prefix1 + mapStyleID + "/{z}/{x}/{y}.png", prefix2 + mapStyleID + "/{z}/{x}/{y}.png", prefix3 + mapStyleID + "/{z}/{x}/{y}.png"], 
+						attributions: [ orienteeringAttribution ],
+						"wrapX": true
+					}
+				)
+			);
 			mapStyleIDOnSource = mapStyleID;	
 		}
 		layerMapnik.setVisible(false);
@@ -1619,7 +1641,7 @@ function rebuildMapSheet()
 	var sheet = new ol.Feature({ geometry: ol.geom.Polygon.fromExtent(paperBound) });
 	
 	var titleSizeArr = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 9, 18, 36, 72, 144, 288];
-	fontSizeFromArr = (titleSizeArr[olMap.getView().getZoom()]*(scale/10000)).toFixed(0);
+	fontSizeFromArr = (titleSizeArr[parseInt(olMap.getView().getZoom())]*(scale/10000)).toFixed(0);
 	mapTitleDisplay = mapTitle.toUpperCase();
 	if (country == "blueprint")
 	{
@@ -1943,6 +1965,18 @@ function handleGetOpenplaquesCallback(result)
 
 function updateUrl()
 {
+	var lon = olMap.getView().getCenter()[0];
+	var lat = olMap.getView().getCenter()[1];
+	var change = false;
+	var metres180deg = 20037508.34;
+	while (lon < -metres180deg) { lon = lon + 2*metres180deg; change = true; }
+	while (lon > metres180deg) { lon = lon - 2*metres180deg; change = true; }
+	
+	if (change)
+	{
+		olMap.getView().setCenter([lon, lat]);
+	}
+	
 	if (debug) { console.log('updateUrl'); }
 	var centre = ol.proj.transform(olMap.getView().getCenter(), "EPSG:3857", "EPSG:4326");  	
 	window.location.hash = "/" + mapID + "/" + mapStyleID + "/" + olMap.getView().getZoom() + "/" + centre[0].toFixed(4) + "/" + centre[1].toFixed(4) + "/"; 

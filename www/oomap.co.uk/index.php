@@ -87,10 +87,11 @@
 		 
 		<!--	<div style='color: black; background-color: yellow; padding: 5px; margin-bottom: 10px;'>[WARNING: SERVICE UNAVAILABLE FROM 1700 GMT ON FRIDAY 20 FEBRUARY TO 1200 GMT (AT RISK TO 1700 GMT) ON MONDAY 23 FEBRUARY DUE TO BUILDING POWER UPGRADE]</div>
 		-->
-		There are four editions of OpenOrienteeringMap currently:
+		There are five editions of OpenOrienteeringMap currently:
 		<ul>
 		<li>UK (BOF) edition (with contours and daily updating from OpenStreetMap)</li>
 		<li>Ireland (IOA) edition (with daily updating from OpenStreetMap)</li>
+		<li>Denmark edition (with daily updating from OpenStreetMap)</li>
 		<li>Global edition (with OpenStreetMap data updated annually) <!-- as of early August 2017. --></li>
 		<li>Blueprint (a simplified version of the Global edition, showcasing the Blueprint style map)</li>
 		</ul>	
@@ -99,7 +100,8 @@
 		<div style='margin: 50px auto 50px auto;'>
 			<a href="/global/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Global</a>
 			<a href="/gb/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>UK</a>
-			<a href="/ie/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Ireland</a>
+			<a href="/ie/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>IE</a>
+			<a href="/dk/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>DK</a>
 			<a href="/blueprint/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Blueprint</a>
 		</div>
 	</div>		

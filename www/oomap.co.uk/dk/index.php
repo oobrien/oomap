@@ -7,7 +7,7 @@
 		<meta property="og:title" content="OpenOrienteeringMap: The easy Street-O map creation tool" />
 		<meta property="og:type" content="article" />
 		<meta property="og:url" content="http://oomap.co.uk/" />
-		<meta property="og:description" content="Create orienteering maps of anywhere in Ireland with just a few clicks. Add controls and print high-quality vector PDFs, suitable for training events." />
+		<meta property="og:description" content="Create orienteering maps of anywhere in Denmark with just a few clicks. Add controls and print high-quality vector PDFs, suitable for training events." />
 		<meta property="og:image" content="http://oomap.co.uk/images/oom_screenshot.png" />
 		<meta property="og:site_name" content="OpenOrienteeringMap: The easy Street-O map creation tool" />    
 		<meta property="fb:admins" content="507348039" />    
@@ -34,14 +34,14 @@
 		  })();
 		</script>
 		<script type='text/javascript'>
-			var country = "ioa";
+			var country = "dk";
 		</script>
 		<script type='text/javascript' src="/main.js?t=<?php echo time(); ?>"></script>
 		<link rel="canonical" href="http://oomap.co.uk/">
 		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.css'>
 		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/openlayers/v4.6.5-dist/ol.css'>
 		<link rel='stylesheet' type='text/css' href='/style.css'>
-		<link rel='stylesheet' type='text/css' href='style_ioa.css'>
+		<link rel='stylesheet' type='text/css' href='style.css'>
 	</head>
 
 	<body>
@@ -78,10 +78,10 @@
 			<div id='blueprint' class='editionbutton'><a href="/blueprint/">&nbsp;  Blueprint  &nbsp;</a></div></td><td>
 			<div id='global' class='editionbutton'><a href="/global/">&nbsp;  Global  &nbsp;</a></div></td><td>
 			<div id='uk' class='editionbutton'><a href="/gb/">&nbsp;  UK  &nbsp;</a></div></td><td>
-			<div id='ireland' class='editionbutton currentedition'><a href="/ie/">&nbsp;  Ireland  &nbsp;</a></div></td><td>
-			<div id='denmark' class='editionbutton'><a href="/dk/">&nbsp;  Denmark  &nbsp;</a></div></td><td>
+			<div id='ireland' class='editionbutton'><a href="/ie/">&nbsp;  Ireland  &nbsp;</a></div></td><td>
+			<div id='denmark' class='editionbutton currentedition'><a href="/dk/">&nbsp;  Denmark  &nbsp;</a></div></td><td>
 			<div id='wishlist'>Was this useful for your event? Want to say thanks?<br />Here's my <a href="http://www.amazon.co.uk/registry/wishlist/2WLZDJ7S00ERD">my Amazon wish list</a> or <a href='https://ko-fi.com/oobrien'>Buy Me a Coffee</a>.</div></td><td>
-			<div class="fb-like" data-href="http://oomap.co.uk/ioa.php" data-send="false"  data-layout="button_count" data-width="150" data-show-faces="false" data-share="true" data-font="arial"></div></td><td>
+			<div class="fb-like" data-href="http://oomap.co.uk/dk/" data-send="false"  data-layout="button_count" data-width="150" data-show-faces="false" data-share="true" data-font="arial"></div></td><td>
 			<div id='social'><a href="https://twitter.com/share" class="twitter-share-button" data-count="horizontal" data-via="oobr">Tweet</a></div></td>
 			</tr></table>
 		</div>
@@ -91,12 +91,12 @@
 					<tr>
 						<td rowspan='3' style='vertical-align: top;'>
 							<div id="mapstyle" class="buttonset">
-								<input type="radio" id="streeto_ioa" name="mapstyle" checked="checked" />
-									<label for="streeto_ioa"><img src='/images/oom_s.png' alt='Street-O' style='width: 60px; height: 60px;' /><br />StreetO</label>
-								<input type="radio" id="streeto_norail_ioa" name="mapstyle" />
-									<label for="streeto_norail_ioa"><img src='/images/oom_snr.png' alt='Street-O xrail' style='width: 60px; height: 60px;' /><br />StreetO xrail</label>
-								<input type="radio" id="oterrain_ioa" name="mapstyle" />
-									<label for="oterrain_ioa"><img src='/images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
+								<input type="radio" id="streeto_dk" name="mapstyle" checked="checked" />
+									<label for="streeto_dk"><img src='/images/oom_s.png' alt='Street-O' style='width: 60px; height: 60px;' /><br />StreetO</label>
+								<input type="radio" id="streeto_norail_dk" name="mapstyle" />
+									<label for="streeto_norail_dk"><img src='/images/oom_snr.png' alt='Street-O xrail' style='width: 60px; height: 60px;' /><br />StreetO xrail</label>
+								<input type="radio" id="oterrain_dk" name="mapstyle" />
+									<label for="oterrain_dk"><img src='/images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
 							</div>
 						</td>
 						<td colspan='3'> 
@@ -170,10 +170,6 @@
 				</script>	
 			</div>	
 
-		<!--	<div id='sponsor'>
-                               <div>In association with</div>
-                                <a href="http://www.orienteering.ie/"><img src='images/ioa2013.png' alt='Irish Orienteering Association' style='width: 156px; height: 55px; border-width: 0;' /></a><br />
-			</div> -->
 			<div id='attribution'>
 				<div>Created by <a href="http://blog.oomap.co.uk/">Oliver O'Brien</a>. <a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. Plaques from Open Plaques project.'); return false;">Attribution</a> (OSM) <a href="http://blog.oomap.co.uk/oom/">About</a></div>
 				<script type='text/javascript' src='https://ko-fi.com/widgets/widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script> 
@@ -313,7 +309,7 @@
 				<tr><th></th></tr>
 			</table>
 		</div>
-		<div id="welcome" title="OpenOrienteeringMap: Ireland Edition">
+		<div id="welcome" title="OpenOrienteeringMap: Denmark Edition">
 			<h2>Welcome to OpenOrienteeringMap, the easy Street-O map creation tool.</h2>		 
 			You can quickly and easily set a map, add controls, and create a print-ready, high quality vector PDF. If you have any comments, leave them at the end <a href="http://blog.oomap.co.uk/oom/#commentform">here</a>. 
 			You can also <a href="http://blog.oomap.co.uk/oom/">find out more</a> about OpenOrienteeringMap, and keep an eye on <a href="http://blog.oomap.co.uk/">my blog</a> for news on updates.
