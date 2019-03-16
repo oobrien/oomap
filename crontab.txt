@@ -7,5 +7,5 @@
 54 7 * * * /bin/rm -rf /home/ollie/www/tilecache/pngs/street/streeto_norail_ioa/
 
 # In user crontab
-0 7 * * * /usr/bin/wget -O /home/ollie/production/osmdb/british-isles-latest.osm.pbf -N http://download.geofabrik.de/europe/british-isles-latest.osm.pbf
-5 7 * * * /usr/bin/osm2pgsql -c -d osm -m -p uk_osm -C 30000 -U ollie --number-processes 20 /home/ollie/production/osmdb/british-isles-latest.osm.pbf
+1 6 * * * /usr/bin/wget -O /home/ollie/production/osmdb/british-isles-latest.osm.pbf -N http://download.geofabrik.de/europe/british-isles-latest.osm.pbf && /usr/bin/osm2pgsql -c -d osm -m -p uk_osm -C 30000 -U ollie --number-processes 20 /home/ollie/production/osmdb/british-isles-latest.osm.pbf && /usr/bin/psql osm -f /home/ollie/production/osmdb/vacuum_analyse_british-isles.sql
+1 4 * * * /usr/bin/wget -O /home/ollie/production/osmdb/denmark-latest.osm.pbf -N http://download.geofabrik.de/europe/denmark-latest.osm.pbf && /usr/bin/osm2pgsql -c -d osm -m -p dk_osm -C 30000 -U ollie --number-processes 20 /home/ollie/production/osmdb/denmark-latest.osm.pbf && /usr/bin/psql osm -f /home/ollie/production/osmdb/vacuum_analyse_denmark.sql
