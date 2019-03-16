@@ -24,7 +24,7 @@ These can then be put into a PostgreSQL/PostGIS database using shp2pgsql with co
 Scripts
 ---
 
-Once the data is ready, Mapnik (including its python bindings) needs to be installed. I'm using 2.3.0-dev (i.e. the current nightly builds) but 2.2.0 should work OK for creating PNGs at least.
+Once the data is ready, Mapnik (including its python bindings) needs to be installed. I'm using mapnik 3.0.19 and python-mapnik built against this version and with pycairo. These are the latest versions on Ubuntu bionic's package manager.
 
 The script at https://github.com/openstreetmap/mapnik-stylesheets/blob/master/generate_tiles.py to generate sets of tiles from the stylesheets.
 
