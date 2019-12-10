@@ -170,7 +170,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
+            (select way,barrier,"natural",man_made,leisure from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
         </Parameter>
     </Datasource>
 </Layer>
@@ -180,7 +180,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,barrier,"natural" from &prefix;_polygon where barrier is not null or "natural"='hedge') as barriers
+            (select way,barrier,"natural",leisure from &prefix;_polygon where barrier is not null or "natural"='hedge') as barriers
         </Parameter>
     </Datasource>
 </Layer>

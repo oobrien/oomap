@@ -281,7 +281,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'garden' or [leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational'</Filter>
+        <Filter>[leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
     </Rule>
     <Rule>
@@ -316,7 +316,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[landuse] = 'allotments' or [landuse] = 'military' or [landuse] = 'railway' or [landuse] = 'garden' or [tourism] = 'zoo'</Filter>
+        <Filter>[leisure] = 'garden' or [landuse] = 'allotments' or [landuse] = 'military' or [landuse] = 'railway' or [tourism] = 'zoo'</Filter>
         <PolygonSymbolizer fill="&olive100;" gamma="0.6" />
     </Rule>
     <Rule>
@@ -514,8 +514,8 @@
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>[barrier] = 'fence'</Filter>
-        <MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.4" max-error="0.5" transform="scale(0.8)"  />
+        <Filter>([barrier] = 'fence' and not ([leisure] ='garden'))</Filter>
+        <MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.4" max-error="0.5" transform="scale(0.7)"  />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
 </Style>
