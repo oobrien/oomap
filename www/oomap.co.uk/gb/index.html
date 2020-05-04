@@ -6,21 +6,21 @@
 
 		<meta property="og:title" content="OpenOrienteeringMap: The easy Street-O map creation tool" />
 		<meta property="og:type" content="article" />
-		<meta property="og:url" content="http://oomap.co.uk/" />
+		<meta property="og:url" content="https://oomap.co.uk/" />
 		<meta property="og:description" content="Create orienteering maps of anywhere in the UK with just a few clicks. Add controls and print high-quality vector PDFs, suitable for training events." />
-		<meta property="og:image" content="http://oomap.co.uk/images/oom_screenshot.png" />
+		<meta property="og:image" content="https://oomap.co.uk/images/oom_screenshot.png" />
 		<meta property="og:site_name" content="OpenOrienteeringMap: The easy Street-O map creation tool" />    
 		<meta property="fb:admins" content="507348039" />    
 		<meta property="fb:app_id" content="1592343544404355" />    
 
 		<title>OpenOrienteeringMap: The easy Street-O map creation tool</title>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/proj4.js'></script>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/openlayers/v4.6.5-dist/ol-debug.js'></script>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-1.11.3.js'></script>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.js'></script>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.knob.js'></script>
-		<script type='text/javascript' src='http://lib.oomap.co.uk/jquery.jqprint-0.3.js'></script>
-		<script src="http://code.jquery.com/jquery-migrate-1.2.1.js"></script>
+		<script type='text/javascript' src='https://lib.oomap.co.uk/proj4.js'></script>
+		<script type='text/javascript' src='https://lib.oomap.co.uk/openlayers/v4.6.5-dist/ol-debug.js'></script>
+		<script type='text/javascript' src='https://lib.oomap.co.uk/jquery-1.11.3.js'></script>
+		<script type='text/javascript' src='https://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.js'></script>
+		<script type='text/javascript' src='https://lib.oomap.co.uk/jquery.knob.js'></script>
+		<script type='text/javascript' src='https://lib.oomap.co.uk/jquery.jqprint-0.3.js'></script>
+		<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>
 		<script src="//platform.twitter.com/widgets.js"></script>			
 		<script type="text/javascript">
 		  var _gaq = _gaq || [];
@@ -29,16 +29,16 @@
 		  _gaq.push(['_trackPageview']);
 		  (function() {
 		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'https://www') + '.google-analytics.com/ga.js';
 		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 		  })();
 		</script>
 		<script type='text/javascript'>
 			var country = "bof";
 		</script>
-		<script type='text/javascript' src="/main.js?t=<?php echo time(); ?>"></script>
-		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.css'>
-		<link rel='stylesheet' type='text/css' href='http://lib.oomap.co.uk/openlayers/v4.6.5-dist/ol.css'>
+		<script type='text/javascript' src="/main.js"></script>
+		<link rel='stylesheet' type='text/css' href='https://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.css'>
+		<link rel='stylesheet' type='text/css' href='https://lib.oomap.co.uk/openlayers/v4.6.5-dist/ol.css'>
 		<link rel='stylesheet' type='text/css' href='/style.css'>
 	</head>
 	<body>
@@ -66,22 +66,22 @@
 			<form id='load'>Map ID: <input type='text' size='10' id='savedMapID' />
 				<button id='loadButton' type="submit">Load</button>
 			</form>
-			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.2</span></div>
-		</div>
-		<div id='editions'>
 			<div id='messagePanelHolder'>
 				<div class='messagePanel' id='messageZoom'>Tip: zoom in to see the orienteering map, before setting options or adding controls.</div>
 				<div class='messagePanel' id='messageCentre'>Tip: click where you want the centre of your sheet to be. Don't forget you can drag the map to move it.</div>
 				<div class='messagePanel' id='messageAdd'>Tip: click to add controls, To move the map, select and then drag the blue marker. Once done, click "Save" to get PDF.</div>
 			</div>
+			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.3</span></div>
+		</div>
+		<div id='editions'>
 			<table><tr><td>
 			<div id='blueprint' class='editionbutton'><a href="/blueprint/">&nbsp;  Blueprint  &nbsp;</a></div></td><td>
 			<div id='global' class='editionbutton'><a href="/global/">&nbsp;  Global  &nbsp;</a></div></td><td>
 			<div id='uk' class='editionbutton currentedition'><a href="/gb/">&nbsp;  UK  &nbsp;</a></div></td><td>
 			<div id='ireland' class='editionbutton'><a href="/ie/">&nbsp;  Ireland  &nbsp;</a></div></td><td>
 			<div id='denmark' class='editionbutton'><a href="/dk/">&nbsp;  Denmark  &nbsp;</a></div></td><td>
-			<div id='wishlist'>Was this useful for your event? Want to say thanks?<br />Here's my <a href="http://www.amazon.co.uk/registry/wishlist/2WLZDJ7S00ERD">my Amazon wish list</a> or <a href='https://ko-fi.com/oobrien'>Buy Me a Coffee</a>.</div></td><td>
-			<div class="fb-like" data-href="http://oomap.co.uk/uk.php" data-send="false"  data-layout="button_count" data-width="150" data-show-faces="false" data-share="true" data-font="arial"></div></td><td>
+			<div id='wishlist'>Was this useful for your event? Want to say thanks? <a href='https://ko-fi.com/oobrien'>Feed me caffeine!</a></div></td><td>
+			<div class="fb-like" data-href="https://oomap.co.uk/gb/" data-send="false"  data-layout="button_count" data-width="150" data-show-faces="false" data-share="true" data-font="arial"></div></td><td>
 			<div id='social'><a href="https://twitter.com/share" class="twitter-share-button" data-count="horizontal" data-via="oobr">Tweet</a></div></td>
 			</tr></table>
 		</div>
@@ -107,6 +107,7 @@
 								<input type="radio" id="s12500" value="12500" name="mapscale" /><label for="s12500">12500</label>
 								<input type="radio" id="s15000" value="15000" name="mapscale" /><label for="s15000">15k</label>
 								<input type="radio" id="s20000" value="20000" name="mapscale" /><label for="s20000">20k</label>
+								<input type="radio" id="s40000" value="40000" name="mapscale" /><label for="s40000">40k</label>
 							</div>
 						</td>
 					</tr>
@@ -139,10 +140,11 @@
 				</table>  	
 			</div>	
 			<div id='create' class="ui-widget-header ui-corner-all">
-				<button id='createmap'>Save & get PDF map</button>				
-				<button id='getraster'>Get JPG</button>				
-				<button id='getworldfile'>Get Worldfile</button>				
-				<button id='createclue'>Show clue sheet</button>						
+				<button id='createmap'>Save & get PDF map</button><br />				
+				Get: <button id='getraster'>JPG</button>				
+				<button id='getworldfile'>JGW</button>			
+				<button id='createclue'>Clues</button><br />					
+				MapRunF: <button id='getkmz'>KMZ</button> <a href='#' id='getkml'>KML</a>				
 			</div>	
 		</div>
 		<div id='mainpanel'>
@@ -150,21 +152,18 @@
 				<table id='controldescriptions'>
 					<tr id='spacerrow'><th style='width: 40px;'></th><th style='width: 30px;'></th><th></th><th></th><th style='width:64px;'></th></tr>
 					<tr><th colspan='4' id='maptitle'></th><th><span class="edit" id="edittitle">Edit</span></th></tr>
+					<!--
 					<tr>
 						<th colspan='3' id='eventdate_holder'>Event Date<br /><input type="text" id="eventdate">&nbsp;<input type="text" id="eventdate_alternate" size="30"></th>
 						<th colspan='2' id='club'>Club<br /><select id="club"><option value="none">None</option></select></th>
 					</tr>
+					-->
 					<tr><th colspan='3' id='scalecaption'></th><th colspan='2'>10m&nbsp;contours</th></tr>
 					<tr><td colspan='4' id='racedescription'></td><th><span class="edit" id="editinstructions">Edit</span></th></tr>
 					<tr><th colspan='3' id='controlcaption'>0 controls</th><th colspan='2' id='pointscaption'>0 points</th></tr>
 				</table>
 			</div>
-			<!-- <div id='supported'>
-			Outside the UK? Try the <a href="http://oomap.co.uk/global.php">Global version</a>.
-                               <div>OOMap.co.uk is supported by</div>
-                                <a href="http://www.britishorienteering.org.uk/"><img src='images/bof2011.png' alt='British Orienteering' style='width: 156px; height: 74px; border-width: 0;' /></a>
-			</div> -->
-						<div id='sponsor'>
+			<div id='sponsor'>
 				<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 				<!-- OpenOrienteeeringMap -->
 				<ins class="adsbygoogle"
@@ -177,7 +176,7 @@
 			</div>	
 
 			<div id='attribution'>
-				<div><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are Crown Copyright and Database Right Ordnance Survey 2012-5. Postboxes from dracos.co.uk Locating Postboxes service. Plaques from Open Plaques project.'); return false;">Credit</a> <a href="http://blog.oomap.co.uk/oom/">About</a> Support: <a href="http://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>.</div>
+				<div><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are Crown Copyright and Database Right Ordnance Survey 2012-5. Postboxes from dracos.co.uk Locating Postboxes service. Plaques from Open Plaques project.'); return false;">Credit</a> <a href="https://blog.oomap.co.uk/oom/">About</a> Support: <a href="https://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>.</div>
 				<script type='text/javascript' src='https://ko-fi.com/widgets/widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script> 
 			</div>
 			<div id='map'></div>
@@ -283,7 +282,12 @@
 			<table>
 				<tr><td class="ui-icon ui-icon-check" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top'>Your map and descriptions have been successfully saved. The map is now being generated and will automatically download to your computer in the next few seconds.</td></tr>
 				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top' id='saved_mapid'></td></tr>
+				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='vertical-align: top'>
+					OpenOrienteeringMap receives no ongoing funding, but it has hosting costs and takes time to maintain. If this map is being used for an event, we would encourage you to support the project, simply by buying the creator a coffee:
+						<div style='text-align: center; padding: 10px;'><script type='text/javascript' src='https://ko-fi.com/widgets/widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script></div> 
+				</td></tr>
 			</table>
+			<div style='clear: both;'></div>
 		</div>
 		<div id="loaderror" title="Load Error" style='display: none;'>
 			<table>
@@ -338,14 +342,9 @@
 			</table>
 		</div>
 		<div id="welcome" title="OpenOrienteeringMap: UK Edition">
-			<h2>Welcome to OpenOrienteeringMap, the easy Street-O map creation tool.</h2>		 
-			You can quickly and easily set a map, add controls, and create a print-ready, high quality vector PDF. If you have any comments, leave them at the end <a href="http://blog.oomap.co.uk/oom/#commentform">here</a>. 
-			You can also <a href="http://blog.oomap.co.uk/oom/">find out more</a> about OpenOrienteeringMap, and keep an eye on <a href="http://blog.oomap.co.uk/">my blog</a> for news on updates.
-			<br /><br />
-			<img src="../images/orienteeringfoundation.png" style='width: 300px; height: 135px; margin: 0 213px;' alt="The Orienteering Foundation" />
-			<div style='margin: 20px 0; font-size: 12px;'>Development for the current version was part-funded by a grant from <a href="https://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>, more details about the new features are <a href="http://blog.oomap.co.uk/2017/10/openorienteeringmap-version-3/">here</a>. 
-			OpenOrienteeringMap remains completely free. If you really want to, you could please <a href="http://www.amazon.co.uk/gp/registry/wishlist/2WLZDJ7S00ERD/ref=cm_wl_huc_view">buy me something</a>. Or <a href="http://www.amazon.co.uk/ref=as_sl_pc_wdgt_ex?&linkCode=wey&tag=yepsport-21">buy yourself something</a>. Thank you in advance!</i>
-			</div>
+			<h2>OpenOrienteeringMap, the easy Street-O map creation tool.</h2>		 
+			You can quickly and easily set a map, add controls, and create a print-ready, high quality vector PDF. If you have any comments, leave them at the end <a href="https://blog.oomap.co.uk/oom/#commentform">here</a>. 
+			You can also <a href="https://blog.oomap.co.uk/oom/">find out more</a> about OpenOrienteeringMap, and keep an eye on <a href="https://blog.oomap.co.uk/">my blog</a> for news on updates.<br /><br />
 			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 			<!-- OpenOrienteeringMap LB -->
 			<ins class="adsbygoogle"
@@ -355,7 +354,7 @@
 			<script>
 			(adsbygoogle = window.adsbygoogle || []).push({});
 			</script>			
-			<div style='font-size: 12px; margin: 20px 0;'>OpenOrienteeringMap's data is obtained from <a href="http://osm.org/">OpenStreetMap</a>, &copy; OSM contributors. Contours (UK edition) are Crown Copyright &amp; Database Right Ordnance Survey 2014.
+			<div style='font-size: 12px; margin: 20px 0;'>OpenOrienteeringMap's data is obtained from <a href="https://osm.org/">OpenStreetMap</a>, &copy; OSM contributors. Contours are Crown Copyright Ordnance Survey.
 			</div>
 		</div>		
 	</body>

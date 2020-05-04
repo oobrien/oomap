@@ -1,7 +1,7 @@
 body
 {
 	margin: 0;
-	font-family: "Trebuchet MS", Tahoma, Arial, Verdana, sans-serif;
+	font-family: "Gill Sans", Tahoma, Arial, Verdana, sans-serif;
 	font-size: 13px;
 }
 
@@ -22,6 +22,11 @@ a:active, a:hover { color: #cc0032; }
 	background-color: #fff;
 	color: #666;
 	height: 37px;
+}
+
+h1, h2
+{
+	font-weight: lighter;
 }
 
 #title
@@ -118,7 +123,7 @@ a:active, a:hover { color: #cc0032; }
   
   #create {
 	float: right;
-	width: 182px;
+	width: 200px;
 	margin-right: 10px;
     padding: 5px 1px 5px 10px;
     display: inline-block;
@@ -146,11 +151,13 @@ a:active, a:hover { color: #cc0032; }
 
 #messagePanelHolder
 {
+	font-family: Arial Narrow, sans-serif;
 	float: right;
 	opacity: 0.8;
 	text-align: center;
 	color: #000;
-	font-size: 14px;
+	margin-top: 5px;
+	font-size: 10px;
 }
 
 .messagePanel
@@ -179,7 +186,10 @@ a:active, a:hover { color: #cc0032; }
 	display: none;
 }
 
-
+#generating
+{
+	height: 290px;
+}
 
 
 /* 3. Main Panel */
@@ -216,7 +226,7 @@ a:active, a:hover { color: #cc0032; }
 	width: 302px;
 	bottom: 325px;
 	margin: 0 7px 0 0;
-	padding: 0 1px;
+	padding: 0 1px 12px 1px;
 	overflow: auto;
 }
 
@@ -252,10 +262,10 @@ a:active, a:hover { color: #cc0032; }
 {
 	position: absolute;
 	right: 0;
-	margin: 10px 10px 0 10px;
+	margin: 0 10px;
 	width: 300px;
 	height: 250px;
-	bottom: 65px;
+	bottom: 85px;
 	//-moz-border-top-left-radius: 150px;
 	//border-top-left-radius: 150px;
 	//border: 1px solid #006699;
@@ -289,13 +299,13 @@ a:active, a:hover { color: #cc0032; }
         margin: 10px;
 		padding: 5px 10px;
         width: 278px;
-        height: 35px;
+        height: 70px;
         bottom: 0;
         border: 1px solid #006699;
         text-align: center;
 }
 
-#attribution div { color: #006699; font-style: italic; font-size: 11px; clear: both; }
+#attribution div { color: #006699; font-style: italic; font-size: 11px; clear: both; margin-bottom: 5px; }
 
 /* Dialog - Add/Edit Control */
 
@@ -380,12 +390,12 @@ a:active, a:hover { color: #cc0032; }
 .olControlPermalink { position: absolute; left: 0; bottom: 50px; margin: 30px 10px; }
 .olControlPermalink a { font-weight: normal; color: black; font-size: 10px; text-decoration: underline; }
 
-@media screen and (min-width: 0px) and (max-width: 1050px) 
+@media screen and (min-width: 0px) and (max-width: 800px) 
 {
 	#wishlist { display: none; }	
 }
 
-@media screen and (min-width: 0px) and (max-width: 980px) 
+@media screen and (min-width: 0px) and (max-width: 930px) 
 {
   #create {
 	float: right;
@@ -409,7 +419,7 @@ a:active, a:hover { color: #cc0032; }
 }
 
 
-@media screen and (min-width: 0px) and (max-width: 820px) 
+@media screen and (min-width: 0px) and (max-width: 950px) 
 {
 	#messagePanelHolder { display: none; }	
 }

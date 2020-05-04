@@ -3,9 +3,9 @@ proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=4
 var debug = false;
 
 //Constants
-var prefix1 = "http://tiler1.oobrien.com/";
-var prefix2 = "http://tiler2.oobrien.com/";
-var prefix3 = "http://tiler3.oobrien.com/";
+var prefix1 = "https://tiler4.oobrien.com/";
+var prefix2 = "https://tiler5.oobrien.com/";
+var prefix3 = "https://tiler6.oobrien.com/";
 var defaultMapTitle = "OpenOrienteeringMap";
 var defaultRaceDescription = "Race instructions";
 
@@ -236,6 +236,8 @@ function init()
 	$( "#createmap" ).button({ icons: { primary: "ui-icon-disk" } }).click(function() { handleGenerateMap(); });
 	$( "#getraster" ).button().click(function() { generateMap("jpg"); });
 	$( "#getworldfile" ).button().click(function() {generateMap("jgw"); });
+	$( "#getkmz" ).button().click(function() {generateMap("kmz"); });
+	$( "#getkml" ).button().click(function() {generateKML(); });
 	$( "#createclue" ).button().click(function() { handleGenerateClue(); });
 	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteSheet(); });
 	$( "#deleteXs" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteXs(); });
@@ -245,6 +247,8 @@ function init()
 	$( "#createmap" ).button("disable");
 	$( "#getraster" ).button("disable");
 	$( "#getworldfile" ).button("disable");
+	$( "#getkmz" ).button("disable");
+	$( "#getkml" ).button("disable");
 	$( "#createclue" ).button("disable");
 	$( "#deletesheet" ).button("disable");
 	$( "#deleteXs" ).button("disable");
@@ -586,6 +590,10 @@ function init()
 				updateUrl();
 			}
 
+			$( "#getraster" ).button("disable");
+			$( "#getworldfile" ).button("disable");
+			$( "#getkmz" ).button("disable");
+
 		  	rebuildMapControls();
 		  	rebuildDescriptions();
 		  		  
@@ -616,6 +624,10 @@ function init()
 					updateUrl();
 				}
 
+				$( "#getraster" ).button("disable");
+				$( "#getworldfile" ).button("disable");
+				$( "#getkmz" ).button("disable");
+
 				rebuildMapSheet();	
 			}			
 		  		  
@@ -641,6 +653,10 @@ function init()
 				updateUrl();
 			}
 
+			$( "#getraster" ).button("disable");
+			$( "#getworldfile" ).button("disable");
+			$( "#getkmz" ).button("disable");
+
 		    raceDescription = $("#s_racedescription").val();		  	
 		  	initDescriptions();		  		  
 			$( this ).dialog( "close" );
@@ -664,6 +680,11 @@ function init()
 	  buttons: {
 		"Create anyway": function() {
 		  	mapID = "new";
+
+			$( "#getraster" ).button("disable");
+			$( "#getworldfile" ).button("disable");
+			$( "#getkmz" ).button("disable");
+	
 			generateMap("pdf");
 			$( this ).dialog( "close" );
 		},
@@ -689,7 +710,7 @@ function init()
 	});
 	$( "#generating" ).dialog({
 	  autoOpen: false,
-	  height: 300,
+	  height: 410,
 	  width: 500,
 	  modal: true,
 	  buttons: {
@@ -773,11 +794,10 @@ function init()
 	});
 	$( "#welcome" ).dialog({
 	  autoOpen: true,
-	  height: 670,
-	  width: 765,
+	  width: 760,
 	  modal: true,
 	  buttons: {
-		OK: function() {
+		"      OK      ": function() {
 		  $( this ).dialog( "close" );
 		}
 	  }
@@ -918,6 +938,7 @@ function handleZoom()
 	$( "#createmap" ).button("disable");
 	$( "#getraster" ).button("disable");
 	$( "#getworldfile" ).button("disable");
+	$( "#getkmz" ).button("disable");
 	$( "#deletesheet" ).button("disable");
 	$( "#deleteXs" ).button("disable");
 	$( "#getPostboxes" ).button("disable");	
@@ -1053,6 +1074,10 @@ function handleControlDelete(pid)
 		mapID = "new";
 		updateUrl();
 	}
+
+	$( "#getraster" ).button("disable");
+	$( "#getworldfile" ).button("disable");
+	$( "#getkmz" ).button("disable");
 	
 	rebuildMapControls();
 	rebuildDescriptions();
@@ -1085,7 +1110,10 @@ function handleDeleteSheet()
 	}
 	updateUrl();
 
-
+	$( "#getraster" ).button("disable");
+	$( "#getworldfile" ).button("disable");
+	$( "#getkmz" ).button("disable");
+	
 	$( "#deletesheet" ).button("disable");
 	$( "#getPostboxes" ).button("disable");	
 	$( "#getOpenplaques" ).button("disable");	
@@ -1102,7 +1130,10 @@ function handleDeleteXs()
 	controlsCP = [];
 	rebuildMapControls();
 	$( "#deleteXs" ).button("disable");
-
+	
+	$( "#getraster" ).button("disable");
+	$( "#getworldfile" ).button("disable");
+	$( "#getkmz" ).button("disable");
 }
 
 function handleTitleEdit()
@@ -1216,6 +1247,7 @@ function handleSaveCallback(json)
 	}
 	$( "#getraster" ).button("enable");
 	$( "#getworldfile" ).button("enable");
+	$( "#getkmz" ).button("enable");
 }
 
 function handleLoadCallback(json)
@@ -1329,6 +1361,10 @@ function handleOptionChange()
 			updateUrl();
 		}
 
+		$( "#getraster" ).button("disable");
+		$( "#getworldfile" ).button("disable");
+		$( "#getkmz" ).button("disable");
+	
 		rebuildMapSheet();	
 		return;
 	}			
@@ -1391,6 +1427,10 @@ function handleClick(evt)
 			updateUrl();
 		}
 
+		$( "#getraster" ).button("disable");
+		$( "#getworldfile" ).button("disable");
+		$( "#getkmz" ).button("disable");
+
 		sheetCentreLL = evt.coordinate;
 		rebuildMapSheet();	
 		state = "addcontrols";
@@ -1430,8 +1470,6 @@ function saveMap()
 	$.post('/save.php', json, handleSaveCallback);
 	$( "#saving" ).dialog( "open" );
 }
-
-
 	
 function generateMap(type)
 {
@@ -1476,23 +1514,186 @@ function generateMap(type)
 	{
 		url += mapID;
 	} 
-	url	+= "|start=" + startText
-		+ "|crosses=" + xText
-		+ "|cps=" + cpText
-		+ "|controls=";
-		
-	if (controls.length > 0)
-	{
-		for (var i = 0; i < controls.length; i++)
-		{
-			var control = controls[i]
-			url += control.number + "," + control.angle + "," + control.lat.toFixed(0) + "," + control.lon.toFixed(0) + ",";
-		}
-		url  = url.substring(0, url.length - 1);
-	}
 	
+	if (type == 'kmz')
+	{
+		url	+= "|start="
+			+ "|crosses=" + xText
+			+ "|cps=" + cpText
+			+ "|controls=";	
+	}
+	else
+	{
+		url	+= "|start=" + startText
+			+ "|crosses=" + xText
+			+ "|cps=" + cpText
+			+ "|controls=";	
+
+		if (controls.length > 0)
+		{
+			for (var i = 0; i < controls.length; i++)
+			{
+				var control = controls[i]
+				url += control.number + "," + control.angle + "," + control.lat.toFixed(0) + "," + control.lon.toFixed(0) + ",";
+			}
+			url  = url.substring(0, url.length - 1);
+		}
+	}
+			
 	if (debug) { console.log(url); }
 	self.location=url;	
+}
+/*
+function getCrosspointStyleKML(angle)
+{
+	return '<Style id="crossingpoint' 
+		+ angle 
+		+ '"><IconStyle><color>ffff00ff</color><heading>' 
+		+ angle 
+		+ '</heading><scale>1.0</scale><Icon><href>https://oomap.co.uk/images/kml_crossingpoint.png</href></Icon></IconStyle><BalloonStyle></BalloonStyle><ListStyle></ListStyle></Style>';
+}
+
+function getCrosspointKML(control)
+{
+	return '<Placemark><styleUrl>#crossingpoint'
+		+ control.angle 
+		+ '</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
+		+ control.wgs84lon
+		+ "," 
+		+ control.wgs84lat
+		+ ',0</coordinates></Point></Placemark>';
+}
+
+function getDoNotCrossKML(control)
+{
+	return '<Placemark><styleUrl>#donotcross</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
+		+ control.wgs84lon
+		+ "," 
+		+ control.wgs84lat
+		+ ',0</coordinates></Point></Placemark>';
+}
+*/
+
+function getStartKML(control, i)
+{
+	return '<Placemark><name>S'
+		+ (i+1) 
+		+ '</name><styleUrl>#startfinish</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
+		+ control.wgs84lon
+		+ "," 
+		+ control.wgs84lat
+		+ ',0</coordinates></Point></Placemark>';
+}
+
+function getFinishKML(control, i)
+{
+	return '<Placemark><name>F'
+		+ (i+1)
+		+ '</name><styleUrl>#startfinish</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
+		+ control.wgs84lon
+		+ "," 
+		+ control.wgs84lat
+		+ ',0</coordinates></Point></Placemark>';
+}
+
+function getControlKML(control)
+{
+	//var geom = ol.proj.transform(feature.getGeometry().getCoordinates(), "EPSG:3857", "EPSG:4326")
+	return '<Placemark><name>' 
+		+ control.number
+		+ '</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
+		+ control.wgs84lon
+		+ "," 
+		+ control.wgs84lat
+		+ ',0</coordinates></Point></Placemark>';
+}
+
+
+function generateKML()
+{
+	var kml = '';
+
+	var kmlintro = '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">\n';
+	kmlintro += '<Document>\n<name>oom_' + mapID + '_controls</name>\n<open>1</open>\n';
+	kmlintro += '<Style id="startfinish"><IconStyle><color>ffff00ff</color><scale>1.8</scale><Icon><href>http://maps.google.com/mapfiles/kml/paddle/wht-stars.png</href></Icon><hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/></IconStyle><LabelStyle><color>ffff00ff</color></LabelStyle><BalloonStyle></BalloonStyle><ListStyle></ListStyle></Style>\n';
+	kmlintro += '<Style id="control"><IconStyle><color>ffff00ff</color><scale>1.0</scale><Icon><href>http://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href></Icon><hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/></IconStyle><LabelStyle><color>ffff00ff</color><scale>1.0</scale></LabelStyle><BalloonStyle></BalloonStyle><ListStyle></ListStyle></Style>\n';
+	//kmlintro += '<Style id="donotcross"><IconStyle><color>ffff00ff</color><scale>1.0</scale><Icon><href>https://oomap.co.uk/images/kml_donotcross.png</href></Icon></IconStyle><BalloonStyle></BalloonStyle><ListStyle></ListStyle></Style>\n';
+	var kmlheader = '<Folder>\n<name>Controls</name>\n<open>1</open>\n';
+	var kmlfooter = '</Folder>\n</Document>\n</kml>';
+
+	kml += kmlintro;
+	
+/*
+	var angles = [];
+	for (var i = 0 ; i < controlsCP.length; i++)
+	{
+		angles.push(controlsCP[i].angle);
+	}
+	
+	var anglesUniq = Array.from(new Set(angles));
+	
+	console.log(angles);
+	console.log(anglesUniq);
+	
+	for (var i = 0; i < anglesUniq.length; i++)
+	{
+		kml += getCrosspointStyleKML(anglesUniq[i]);
+	}
+*/
+
+	kml += kmlheader;
+
+	for (var i = 0; i < controlsSF.length; i++)
+	{
+		kml += getStartKML(controlsSF[i], i);
+		kml += '\n';
+	}
+
+	for (var i = 0; i < controls.length; i++)
+	{
+		kml += getControlKML(controls[i]);
+		kml += '\n';
+	}
+/*
+	for (var i = 0; i < controlsCP.length; i++)
+	{
+		kml += getCrosspointKML(controlsCP[i]);
+	}
+
+	for (var i = 0; i < controlsX.length; i++)
+	{
+		kml += getDoNotCrossKML(controlsX[i]);
+	}
+*/
+	for (var i = 0; i < controlsSF.length; i++)
+	{
+		kml += getFinishKML(controlsSF[i], i);
+		kml += '\n';
+	}
+
+	kml += kmlfooter;
+
+	// Data URI
+	var kmlData = 'data:application/vnd.google-earth.kml+xml,' + encodeURIComponent(kml);
+
+	var filename = 'oom_' + mapID + '.kml'
+
+	// For IE
+	if (window.navigator.msSaveOrOpenBlob) {
+		var blob = new Blob([decodeURIComponent(encodeURI(kml))], {
+			type: "application/vnd.google-earth.kml+xml;"
+		});
+		navigator.msSaveBlob(blob, filename);
+	} 
+	else 
+	{
+		$('#getkml')
+			.attr({
+				'download': filename, 
+				'href': kmlData
+		});
+	}			
+
 }
 
 function loadMap(data)
@@ -1580,6 +1781,10 @@ function loadMap(data)
 	rebuildMapControls();
 	handleZoom();	
 	updateUrl();
+	
+	$( "#getraster" ).button("enable");
+	$( "#getworldfile" ).button("enable");
+	$( "#getkmz" ).button("enable");
 }
 
 function rebuildMapSheet()
@@ -1675,6 +1880,7 @@ function rebuildMapSheet()
 	$( "#createmap" ).button("enable");
 	$( "#getraster" ).button("disable");
 	$( "#getworldfile" ).button("disable");
+	$( "#getkmz" ).button("disable");
 	$( "#deletesheet" ).button("enable");
 	$( "#getPostboxes" ).button("enable");	
 	$( "#getOpenplaques" ).button("enable");
@@ -1729,10 +1935,12 @@ function rebuildMapControls()
 	if (controls.length > 0)
 	{
 		$( "#createclue" ).button("enable");
+		$( "#getkml" ).button("enable");
 	}
 	else
 	{
 		$( "#createclue" ).button("disable");		
+		$( "#getkml" ).button("disable");
 		$( "#getPostboxes" ).button("enable");	
 		$( "#getOpenplaques" ).button("enable");	
 	}	
@@ -1882,6 +2090,10 @@ function handleGetPostboxesCallback(result)
 				mapID = "new";
 				updateUrl();
 			}
+
+			$( "#getraster" ).button("disable");
+			$( "#getworldfile" ).button("disable");
+			$( "#getkmz" ).button("disable");
 		}
 	}	
 	else
@@ -1953,12 +2165,15 @@ function handleGetOpenplaquesCallback(result)
 				mapID = "new";
 				updateUrl();
 			}
+			$( "#getraster" ).button("disable");
+			$( "#getworldfile" ).button("disable");
+			$( "#getkmz" ).button("disable");
 		}
 	}	
 	else
 	{
 		$( "#openplaques_error" ).dialog( "open" );
-		$( "#openplaques_error_text" ).html("There are no plaques in this area recorded on the Open Plaques database, or a system error is preventing retrieval of plaques for this area. Open Plaques has a high number of plaques in the UK, USA and Germany. Check the Open Plaques website at http://openplaques.org/places/");
+		$( "#openplaques_error_text" ).html("There are no plaques in this area recorded on the Open Plaques database, or a system error is preventing retrieval of plaques for this area. Open Plaques has a high number of plaques in the UK, USA and Germany. Check the Open Plaques website at https://openplaques.org/places/");
 	}
 
 }

@@ -23,33 +23,33 @@ if (isset($_SERVER['REMOTE_HOST']))
 	$created_by_domain = $_SERVER['REMOTE_HOST'];
 }
 
-$conn = @mysql_connect($dbhost, $dbuser, $dbpass); //Change to 127.0.0.1 for local dev
+$conn = @mysqli_connect($dbhost, $dbuser, $dbpass); //Change to 127.0.0.1 for local dev
 if (!$conn) 
 {
-	$returnData = array('success'=>false, 'message'=>mysql_error());
+	$returnData = array('success'=>false, 'message'=>mysqli_error($conn));
 	echo json_encode($returnData);
 	return;
 }
 
-mysql_select_db($dbdb, $conn);
+mysqli_select_db($conn, $dbdb);
 
 $idquery = "select max(id) as max_id from map";
 
-$result = mysql_query($idquery, $conn);
+$result = mysqli_query($conn, $idquery);
 if (!$result)
 {
-	$returnData = array('success'=>false, 'message'=>mysql_error());
+	$returnData = array('success'=>false, 'message'=>mysqli_error($conn));
 	echo json_encode($returnData);
-	mysql_close($conn);
+	mysqli_close($conn);
 	return;
 }
 
-$result = mysql_fetch_assoc($result);
+$result = mysqli_fetch_assoc($result);
 if (!$result)
 {
-	$returnData = array('success'=>false, 'message'=>mysql_error());
+	$returnData = array('success'=>false, 'message'=>mysqli_error($conn));
 	echo json_encode($returnData);
-	mysql_close($conn);
+	mysqli_close($conn);
 	return;
 }
 
@@ -65,25 +65,33 @@ $next_id = ++$max_id;
 $shortcode = uniqid();
 
 //Don't forget safety stripping
-$action = mysql_real_escape_string($inData['action']);
-$title =  mysql_real_escape_string($inData['title']);
-$race_instructions = mysql_real_escape_string($inData['race_instructions']);
-$eventdate = mysql_real_escape_string($inData['eventdate']);
-$club = mysql_real_escape_string($inData['club']);
-$style = mysql_real_escape_string($inData['style']);
-$scale = mysql_real_escape_string($inData['scale']);
-$papersize = mysql_real_escape_string($inData['papersize']);
-$paperorientation = mysql_real_escape_string($inData['paperorientation']);
-$centre_lat = mysql_real_escape_string($inData['centre_wgs84lat']);
-$centre_lon = mysql_real_escape_string($inData['centre_wgs84lon']);
+$action = mysqli_real_escape_string($conn, $inData['action']);
+$title =  mysqli_real_escape_string($conn, $inData['title']);
+$race_instructions = mysqli_real_escape_string($conn, $inData['race_instructions']);
+$eventdate = '';//mysqli_real_escape_string($conn, $inData['eventdate']);
+if ($eventdate === '')
+{
+	$eventdate = "null";
+}
+else
+{
+	$eventdate = "'" . $eventdate . "'";
+}
+$club = '';//club';//mysqli_real_escape_string($conn, $inData['club']);
+$style = mysqli_real_escape_string($conn, $inData['style']);
+$scale = mysqli_real_escape_string($conn, $inData['scale']);
+$papersize = mysqli_real_escape_string($conn, $inData['papersize']);
+$paperorientation = mysqli_real_escape_string($conn, $inData['paperorientation']);
+$centre_lat = mysqli_real_escape_string($conn, $inData['centre_wgs84lat']);
+$centre_lon = mysqli_real_escape_string($conn, $inData['centre_wgs84lon']);
 
-$writequery = "insert into map values($next_id, '$shortcode', '$action', '$title', '$race_instructions', '$eventdate', '$club', '$style', '$scale', '$papersize', '$paperorientation', $centre_lat, $centre_lon, '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now())";
-$result = mysql_query($writequery, $conn);
+$writequery = "insert into map values($next_id, '$shortcode', '$action', '$title', '$race_instructions', $eventdate, '$club', '$style', '$scale', '$papersize', '$paperorientation', $centre_lat, $centre_lon, '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now())";
+$result = mysqli_query($conn, $writequery);
 if (!$result)
 {
-	$returnData = array('success'=>false, 'message'=>mysql_error(), 'data'=>$writequery);
+	$returnData = array('success'=>false, 'message'=>mysqli_error($conn), 'data'=>$writequery);
 	echo json_encode($returnData);
-	mysql_close($conn);
+	mysqli_close($conn);
 	return;
 }
 
@@ -99,30 +107,30 @@ if ($controls != null)
 	foreach($controls as $control)
 	{
 
-		$type = mysql_real_escape_string($control['type']);
-		$label = mysql_real_escape_string($control['number']);
-		$label_angle = mysql_real_escape_string($control['angle']);
+		$type = mysqli_real_escape_string($conn, $control['type']);
+		$label = mysqli_real_escape_string($conn, $control['number']);
+		$label_angle = mysqli_real_escape_string($conn, $control['angle']);
 
 		if ($type == "c_cross")
 		{
-			$label = mysql_real_escape_string($control['id']);
+			$label = mysqli_real_escape_string($conn, $control['id']);
 		}
 		if ($type == "c_crossingpoint")
 		{
-			$label = mysql_real_escape_string($control['id']);
+			$label = mysqli_real_escape_string($conn, $control['id']);
 		}
-		$score = mysql_real_escape_string($control['score']);
-		$lat = mysql_real_escape_string($control['wgs84lat']);
-		$lon = mysql_real_escape_string($control['wgs84lon']);
-		$description = mysql_real_escape_string($control['description']);
+		$score = mysqli_real_escape_string($conn, $control['score']);
+		$lat = mysqli_real_escape_string($conn, $control['wgs84lat']);
+		$lon = mysqli_real_escape_string($conn, $control['wgs84lon']);
+		$description = mysqli_real_escape_string($conn, $control['description']);
 
 		$writequery = "insert into control values($next_id, '$type', '$label', $label_angle, '$score', $lat, $lon, '$description')";
-		$result = mysql_query($writequery, $conn);
+		$result = mysqli_query($conn, $writequery);
 		if (!$result)
 		{
-			$returnData = array('success'=>false, 'message'=>mysql_error(), 'data'=>$writequery);
+			$returnData = array('success'=>false, 'message'=>mysqli_error($conn), 'data'=>$writequery);
 			echo json_encode($returnData);
-			@mysql_close($conn);
+			@mysqli_close($conn);
 			return;
 		}
 	}
@@ -131,5 +139,5 @@ if ($controls != null)
 $returnData = array('success'=>true, 'message'=>$shortcode, 'data'=>'Successfully saved.');
 echo json_encode($returnData);
 
-mysql_close($conn);
+mysqli_close($conn);
 ?>
