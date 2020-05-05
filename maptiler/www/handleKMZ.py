@@ -50,11 +50,28 @@ def processRequest(req):
 		return req
 
 def createKMZ(path):
-	import tempfile
-
+		import tempfile
+        import zipfile
         from handlePDF import createImage
-        import simplekml
+        from simplekml import Kml, Folder
+        from simplekml.base import Kmlable
 
+        class PermKml(Kml):
+            def savekmz(self, path, format=True):
+                Kmlable._currentroot = self
+                self._outputkmz = True
+                out = self._genkml(format).encode('utf-8')
+                kmz = zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED)
+                info = zipfile.ZipInfo("doc.kml")
+                info.external_attr = 0100775 << 16
+                info.date_time = time.localtime()
+                kmz.writestr(info, out)
+                for image in self._images:
+                    kmz.write(image, os.path.join('files', os.path.split(image)[1]))
+                for image in self._foundimages:
+                    kmz.write(image, os.path.join('files', os.path.split(image)[1]))
+                kmz.close()
+        
         jpgf = createImage(path, 'jpg')
         
         global MAP_NM, MAP_EM, MAP_SM, MAP_WM
@@ -98,16 +115,16 @@ def createKMZ(path):
         south =  mapnik.Coord(XMax, YMin).inverse(projection).y
         east = mapnik.Coord(XMax, YMin).inverse(projection).x
 
-        kml = simplekml.Kml()
-        kml.document = simplekml.Folder(name="")
+        kml = PermKml()
+        kml.document = Folder(name="")
 
-        jpgfile = tempfile.NamedTemporaryFile(prefix='oom_',suffix='.jpg')
+        jpgfilename = '/tmp/tile_0_0.jpg'
+        jpgfile = open(jpgfilename, 'wb')
         jpgfile.write(jpgf.read())
         jpgfile.flush()
-        jpgfilename = jpgfile.name
-        jpgfilepath = kml.addfile(jpgfile.name)
+        jpgfilepath = kml.addfile(jpgfilename)
 
-        ground = kml.newgroundoverlay(name=jpgfilename)
+        ground = kml.newgroundoverlay(name=os.path.split(jpgfilename)[1])
         ground.draworder = 75
         ground.icon.href = jpgfilepath
         ground.icon.viewboundscale = 0.75
@@ -127,7 +144,7 @@ def test(path):
         if isStr(outf):
                 print outf
         else:
-                fd = open('oom_7b123kns.kmz', 'wb')
+                fd = open('oom_test.kmz', 'wb')
                 fd.write(outf.read())
                 fd.close()
 
