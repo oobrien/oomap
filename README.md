@@ -1,4 +1,4 @@
-OOMap
+OpenOrienteeringMap
 =====
 
 Mapnik stylesheets for OOMap (as used at http://oomap.co.uk/ when zoomed in) and other raster tile layers (e.g. the "futurecity" stylesheet is used at http://bikes.oobrien.com/london/). 
