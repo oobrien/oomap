@@ -1,7 +1,7 @@
 OpenOrienteeringMap
 =====
 
-Mapnik stylesheets for OOMap (as used at http://oomap.co.uk/global/ when zoomed in) and other raster tile layers (e.g. the "futurecity" stylesheet is used at http://bikesharemap.com/london/). 
+Mapnik stylesheets for OOMap (as used at https://oomap.co.uk/global/ when zoomed in) and other raster tile layers (e.g. the "futurecity" stylesheet is used at https://bikesharemap.com/london/). 
 
 The stylesheets are based on the "old" (pre-2012) osm.xml stylesheet at http://svn.openstreetmap.org/applications/rendering/mapnik/osm.xml that used to be used for the "main" map rendering on http://osm.org/
 
@@ -49,6 +49,6 @@ The example images, using the XYZ map tile convention, have x=16090, y=10213, z=
 
 ![oterrain](https://raw.github.com/oobrien/oomap/master/examples/oterrain_z15.png "oterrain") streeto (oterrain_global and oterrain_ioa are similar but with no contours)
 
-![blueprint](https://raw.github.com/oobrien/oomap/master/examples/blueprint_z15.png "blueprint") blueprint (only on OOMap Global edition)
+![blueprint](https://raw.github.com/oobrien/oomap/master/examples/blueprint_z15.png "blueprint") blueprint (only on it's own edition which uses the Global edition database)
 
 ![urban_skeleton](https://raw.github.com/oobrien/oomap/master/examples/urban_skeleton_z15.png "urban_skeleton") urban_skeleton (not currently on OOMap)
