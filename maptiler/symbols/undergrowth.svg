@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="12.0000" height="12.0000">
+        <rect x="0.0000" y="0.0000" width="12.0000" height="12.0000" fill="#FFFFFF" opacity="0.0" style='opacity: 0;' />
+        <line x1="1.5000" y1="0.0000" x2="1.5000" y2="12.0000" style="stroke:#2FB457; stroke-width:1.0000"/>
+        <line x1="4.5000" y1="0.0000" x2="4.5000" y2="12.0000" style="stroke:#2FB457; stroke-width:1.0000"/>
+        <line x1="7.5000" y1="0.0000" x2="7.5000" y2="12.0000" style="stroke:#2FB457; stroke-width:1.0000"/>
+        <line x1="10.5000" y1="0.0000" x2="10.5000" y2="12.0000" style="stroke:#2FB457; stroke-width:1.0000"/>
+</svg>

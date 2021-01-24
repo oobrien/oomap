@@ -1,0 +1,11 @@
+<!ENTITY grass "#AACCAA">
+<!ENTITY water "#6688BB">
+<!ENTITY background "#CFCBBE">
+<!ENTITY words "#FFFFFF">
+<!ENTITY roads "#E5E5E5">
+<!ENTITY roadwords "#777777">
+<!ENTITY halo "#888888">
+<!ENTITY roadhalo "#E5E5E5">
+<!ENTITY bridgeedge "#666666">
+<!ENTITY raildark "#999999">
+<!ENTITY raillight "#FFFFFF">

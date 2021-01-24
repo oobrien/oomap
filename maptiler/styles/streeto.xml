@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Map [
+<!ENTITY % settings SYSTEM "inc/settings.xml.inc">
+<!ENTITY % colours SYSTEM "inc/colours_oom.xml.inc">
+<!ENTITY % types SYSTEM "inc/types_withrail.xml.inc">
+<!ENTITY styles-contours SYSTEM "inc/styles_contours.xml.inc">
+<!ENTITY layers-contours SYSTEM "inc/layers_contours_lidar.xml.inc">
+<!ENTITY styles-basic SYSTEM "inc/styles_streeto_basic.xml.inc">
+<!ENTITY layers-belowcontour SYSTEM "inc/layers_streeto_belowcontour.xml.inc">
+<!ENTITY layers-abovecontour SYSTEM "inc/layers_streeto_abovecontour.xml.inc">
+%settings;
+%colours;
+%types;
+]>
+
+<Map srs="&srs900913;">
+&fontset-settings;
+
+&styles-basic;
+&styles-contours;
+
+&layers-belowcontour;
+&layers-contours;
+&layers-abovecontour;
+</Map>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Map [
+<!ENTITY % settings SYSTEM "inc/settings_dk.xml.inc">
+<!ENTITY % colours SYSTEM "inc/colours_oom.xml.inc">
+<!ENTITY % types SYSTEM "inc/types_withrail.xml.inc">
+<!ENTITY styles-basic SYSTEM "inc/styles_oterrain_basic.xml.inc">
+<!ENTITY layers-belowcontour SYSTEM "inc/layers_oterrain_belowcontour.xml.inc">
+<!ENTITY layers-abovecontour SYSTEM "inc/layers_oterrain_abovecontour.xml.inc">
+%settings;
+%colours;
+%types;
+]>
+
+<Map srs="&srs900913;">
+&fontset-settings;
+
+&styles-basic;
+
+&layers-belowcontour;
+&layers-abovecontour;
+</Map>
