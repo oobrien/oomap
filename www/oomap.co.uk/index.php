@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">	
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<meta name="viewport" content="minimal-ui, initial-scale=0.5, user-scalable=no, width=device-width">
-
+<!--
 		<meta property="og:title" content="OpenOrienteeringMap: The easy Street-O map creation tool" />
 		<meta property="og:type" content="article" />
 		<meta property="og:url" content="https://oomap.co.uk/" />
 		<meta property="og:description" content="Create orienteering maps of anywhere in the world with just a few clicks. Add controls and print high-quality vector PDFs, suitable for training events." />
 		<meta property="og:image" content="https://oomap.co.uk/images/oom_screenshot.png" />
-		<meta property="og:site_name" content="OpenOrienteeringMap: The easy Street-O map creation tool" />    
-		<meta property="fb:admins" content="507348039" />    
-		<meta property="fb:app_id" content="1592343544404355" />    
-
+		<meta property="og:site_name" content="OpenOrienteeringMap: The easy Street-O map creation tool" />
+		<meta property="fb:admins" content="507348039" />
+		<meta property="fb:app_id" content="1592343544404355" />
+-->
 		<title>OpenOrienteeringMap: The easy Street-O map creation tool</title>
 		<script type='text/javascript' src='https://lib.oomap.co.uk/proj4js/proj4js-compressed.js'></script>
 		<script type='text/javascript' src='https://lib.oomap.co.uk/proj4js/defs/EPSG27700.js'></script>
@@ -21,7 +21,8 @@
 		<script type='text/javascript' src='https://lib.oomap.co.uk/jquery-ui-1.9.2.custom.js'></script>
 		<script type='text/javascript' src='https://lib.oomap.co.uk/jquery.knob.js'></script>
 		<script type='text/javascript' src='https://lib.oomap.co.uk/jquery.jqprint-0.3.js'></script>
-		<script src="//platform.twitter.com/widgets.js"></script>			
+<!--
+		<script src="//platform.twitter.com/widgets.js"></script>
 		<script type="text/javascript">
 		  var _gaq = _gaq || [];
 		  _gaq.push(['_setAccount', 'UA-424605-5']);
@@ -34,10 +35,12 @@
 		  })();
 		</script>
 		<link rel="canonical" href="https://oomap.co.uk/">
+-->
 		<link rel='stylesheet' type='text/css' href='https://lib.oomap.co.uk/jquery-ui-1.11.4.custom/jquery-ui.css'>
 		<link rel='stylesheet' type='text/css' href='style.css'>
 	</head>
 	<body style='background-color: #f4f2f1;'>
+<!--
 		<script>
 		  window.fbAsyncInit = function() {
 			FB.init({
@@ -55,7 +58,9 @@
 			 fjs.parentNode.insertBefore(js, fjs);
 		   }(document, 'script', 'facebook-jssdk'));
 		</script>
+-->
 <h1 style='margin: 40px 0 0 50px; font-size: 48px;'>OOMap</h1>
+<!--
 	<div style='float: left; width: 600px; height: 300px;  padding: 10px 30px 0 30px; margin: 30px 10px 30px 50px; border: 1px solid #aaa; background-color: white; opacity: 0.9;'>
 		<h2>Mapping and Data Consultancy</h2>
 		OOMap provides bespoke consultancy services, including data analysis, web development and digital cartography, as well as website hosting and management. Some of OOMap's recent public-facing projects include:
@@ -81,30 +86,36 @@
 			<a href="https://bikes.oobrien.com/newyork/" style='width: 30px; height: 30px; background-color: #08d; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>NYC</a>
 		</div>
 	</div>
-
+-->
 	<div style='float: left; width: 600px; height: 300px; padding: 10px 30px 0 30px;margin: 30px 10px 30px 50px; border: 1px solid #aaa; background-color: white; opacity: 0.9;'>
 		<h2>OpenOrienteeringMap: The easy Street-O map creation tool</h2>
-		 
+
 		<!--	<div style='color: black; background-color: yellow; padding: 5px; margin-bottom: 10px;'>[WARNING: SERVICE UNAVAILABLE FROM 1700 GMT ON FRIDAY 20 FEBRUARY TO 1200 GMT (AT RISK TO 1700 GMT) ON MONDAY 23 FEBRUARY DUE TO BUILDING POWER UPGRADE]</div>
 		-->
-		There are five editions of OpenOrienteeringMap currently:
+		This adaptation of OpenOrienteeringMap has a single edition:
 		<ul>
 		<li>UK (BOF) edition (with contours and daily updating from OpenStreetMap)</li>
+<!--
 		<li>Ireland (IOA) edition (with daily updating from OpenStreetMap)</li>
 		<li>Denmark edition (with daily updating from OpenStreetMap)</li>
-		<li>Global edition (with OpenStreetMap data updated annually) <!-- as of early August 2017. --></li>
+		<li>Global edition (with OpenStreetMap data updated annually) </li>
 		<li>Blueprint (a simplified version of the Global edition, showcasing the Blueprint style map)</li>
-		</ul>	
-		
+-->
+		</ul>
+
 
 		<div style='margin: 50px auto 50px auto;'>
+<!--
 			<a href="/global/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Global</a>
+-->
 			<a href="/gb/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>UK</a>
+<!--
 			<a href="/ie/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>IE</a>
 			<a href="/dk/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>DK</a>
 			<a href="/blueprint/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Blueprint</a>
+-->
 		</div>
-	</div>		
+	</div>
 
 	<div style='float: left; width: 600px; height: 300px;  padding: 10px 30px 0 30px; margin: 30px 10px 30px 50px; border: 1px solid #aaa; background-color: white; opacity: 0.9;'>
 		<div style='margin: 50px auto 50px auto;'>
