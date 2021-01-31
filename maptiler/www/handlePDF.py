@@ -49,6 +49,10 @@ def createImage(path, fileformat, scalefactor=1):
     import cairo
     import urllib
 
+    import overpass #DPD
+    import geojson
+    import os
+
     EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
     C_SCALE_FACTOR = 1.4
     SCALE_FACTOR = scalefactor
@@ -149,6 +153,18 @@ def createImage(path, fileformat, scalefactor=1):
     mapELon = clon + (MAP_W/2)*scaleCorrected
 
     styleFile = home + "/styles/" + style + ".xml"
+
+#DPD additions:
+    styleFile = home + "/styles/" + "streeto2.xml"
+
+    bbox2=mapnik.Box2d(mapWLon, mapSLat, mapELon, mapNLat).inverse(projection)
+    api = overpass.API()
+    MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
+    response = api.get(MapQuery, verbosity='geom', responseformat="xml")
+    with open("/home/bob/test4.osm",mode="w") as f:
+           f.write(response.encode("utf-8"))
+    os.system("osmtogeojson /home/bob/test4.osm > /home/bob/test4.geojson")
+
     cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
 
     # Limit the size of map we are prepared to produce to roughly A2 size.

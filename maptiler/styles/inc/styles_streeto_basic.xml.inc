@@ -3,7 +3,7 @@
         &maxscale_zoom12;
         <PolygonSymbolizer fill="&blue50;" />
     </Rule>
-</Style>  
+</Style>
 
 <Style name="coast-poly">
     <Rule>
@@ -15,26 +15,27 @@
 <Style name="water_areas">
     <Rule>
         &maxscale_zoom12;
-        <Filter>&water_area;</Filter>
+        <Filter>[mapnik::geometry_type]=polygon and &water_area;</Filter>
+
         <PolygonSymbolizer fill="&blue50;" gamma="0.8" />
     </Rule>
 </Style>
 
 <Style name="water_lines">
     <Rule>
-	    <Filter>not &tunnel;</Filter>
+	    <Filter>not &tunnel; and &water_line;</Filter>
         &maxscale_zoom12;
         &minscale_zoom12;
         <LineSymbolizer stroke="&blue50;" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
-    <Rule> 
-	    <Filter>not &tunnel;</Filter>
+    <Rule>
+    <Filter>not &tunnel; and &water_line;</Filter>
         &maxscale_zoom13;
         &minscale_zoom16;
         <LineSymbolizer stroke="&blue50;" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
- 	    <Filter>not &tunnel;</Filter>
+    <Filter>not &tunnel; and &water_line;</Filter>
        &maxscale_zoom17;
         <LineSymbolizer stroke="&blue50;" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
@@ -43,22 +44,22 @@
 <Style name="bridges-casing">
     <Rule>
         &maxscale_zoom13;
-        <Filter>&major_road;</Filter>
+        <Filter>&major_road; and &bridge;</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="7.5" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>&minor_road; or &service_road;</Filter>
+        <Filter>(&minor_road; or &service_road;) and &bridge;</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="5" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>&track; or &path;</Filter>  
+        <Filter>(&track; or &path;)  and &bridge;</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="4.25" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>&railway; or &tram;</Filter>
+        <Filter>(&railway; or &tram;)  and &bridge;</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="6" />
     </Rule>
 </Style>
@@ -66,22 +67,22 @@
 <Style name="bridges-core">
     <Rule>
         &maxscale_zoom13;
-        <Filter>&major_road;</Filter>
+        <Filter>&major_road; and &bridge;</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="6" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>&minor_road; or &service_road;</Filter>
+        <Filter>(&minor_road; or &service_road;) and &bridge;</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="3.5" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>&track; or &path;</Filter>
+        <Filter>(&track; or &path;) and &bridge;</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="2.75" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>&railway; or &tram;</Filter>
+        <Filter>(&railway; or &tram;) and &bridge;</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="4.5" />
     </Rule>
 </Style>
@@ -229,10 +230,141 @@
         <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2" />
     </Rule>
 </Style>
+<Style name="trams-br-casing">
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&tram; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="1.5" stroke-linejoin="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&tram; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="3" stroke-linejoin="round" />
+    </Rule>
+</Style>
+
+<Style name="roads-br-casing">
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&major_road; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="2" stroke-linejoin="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&major_road; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="4" stroke-linejoin="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&railway; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="1.5" stroke-linejoin="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&railway; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="2.3" stroke-linejoin="round" />
+    </Rule>
+ </Style>
+
+<Style name="trams-br-core">
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&tram; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&white;" stroke-width="0.9" stroke-linejoin="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linejoin="round" stroke-dasharray="0,2,4,1" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&tram; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&white;" stroke-width="1.8" stroke-linejoin="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="0,5,8,1" />
+    </Rule>
+</Style>
+
+<Style name="roads-br-core">
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&major_road; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&brown;" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&major_road; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&brown;" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&minor_road; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&minor_road; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&service_road; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&service_road; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&railway; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&white;" stroke-width="0.9" stroke-linejoin="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linejoin="round" stroke-dasharray="0,2,4,1" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&railway; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&white;" stroke-width="1.3" stroke-linejoin="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="2.0" stroke-linejoin="round" stroke-dasharray="0,3,5,1" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&track; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="0.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2,1" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&track; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom12;
+        <Filter>&path; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="0.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2,1" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom13;
+        <Filter>&path; and not &tunnel; and &bridge;</Filter>
+        <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2" />
+    </Rule>
+</Style>
 
 <Style name="pavedareas">
     <Rule>
         &maxscale_zoom12;
+        <Filter>[mapnik::geometry_type]=polygon and (&minor_road; or &service_road; or &track;)</Filter>
+        <PolygonSymbolizer fill="&brown;" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[amenity]='parking'</Filter>
         <PolygonSymbolizer fill="&brown;" />
     </Rule>
 </Style>
@@ -240,6 +372,8 @@
 <Style name="islands">
     <Rule>
         &maxscale_zoom12;
+        <Filter>[mapnik::geometry_type]=polygon and ([natural]='land' or [natural]='island' or [man_made]='pier')</Filter>
+
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
     </Rule>
 </Style>
@@ -291,7 +425,7 @@
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
     </Rule>
     <Rule>
-        &maxscale_zoom12; 
+        &maxscale_zoom12;
         <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
     </Rule>
@@ -313,6 +447,7 @@
 <Style name="power">
     <Rule>
         &maxscale_zoom13;
+        <Filter>[mapnik::geometry_type]=linestring and [power] = 'line'</Filter>
         <MarkersSymbolizer file="&symbols;/power.svg" placement="line" spacing="30" max-error="0.5" transform="scale(1.2)" />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
@@ -360,13 +495,13 @@
     <Rule>
         &maxscale_zoom13;
         <Filter>[barrier] = 'citywall' or [barrier] = 'wall' or [barrier] = 'retaining_wall' or [barrier] = 'jersey_barrier' or [barrier] = 'yes'</Filter>
-	<MarkersSymbolizer file="&symbols;/wall.svg" placement="line" spacing="8" max-error="0.5" transform="scale(0.6)" /> 
+	<MarkersSymbolizer file="&symbols;/wall.svg" placement="line" spacing="8" max-error="0.5" transform="scale(0.6)" />
         <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linecap="square" />
     </Rule>
     <!-- <Rule>
         &maxscale_zoom13;
         <Filter>[barrier] = 'fence'</Filter>
-	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />	
+	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />
         <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linecap="square" />
     </Rule> -->
 </Style>
@@ -442,4 +577,3 @@
         <PointSymbolizer file="&symbols;/cross.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
 </Style>
-
