@@ -998,7 +998,7 @@ function handleZoom()
 
 		if (mapStyleIDOnSource != mapStyleID)
 		{
-			layerOrienteering.setSource(
+/*			layerOrienteering.setSource(
 				new ol.source.XYZ(
 					{
 						urls: [prefix1 + mapStyleID + "/{z}/{x}/{y}.png", prefix2 + mapStyleID + "/{z}/{x}/{y}.png", prefix3 + mapStyleID + "/{z}/{x}/{y}.png"],
@@ -1008,9 +1008,12 @@ function handleZoom()
 				)
 			);
 			mapStyleIDOnSource = mapStyleID;
+			*/
 		}
-		layerMapnik.setVisible(false);
-		layerOrienteering.setVisible(true);
+//		layerMapnik.setVisible(false);
+//		layerOrienteering.setVisible(true);
+		layerMapnik.setVisible(true);	//Use standard slippy map for all zoom levels; keep old code for now.
+		layerOrienteering.setVisible(false);
 	}
 	//updateUrl();
 }

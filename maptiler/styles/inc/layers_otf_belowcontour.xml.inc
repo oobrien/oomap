@@ -35,3 +35,12 @@
       &datasource-settings-otf;
     </Datasource>
 </Layer>
+<!-- <Layer name="below_contour2" status="on" srs="+proj=latlong +datum=WGS84">
+
+  <StyleName>main-roads-casing</StyleName>
+  <StyleName>main-roads-core</StyleName>
+
+    <Datasource>
+      &datasource-settings-otf;
+    </Datasource>
+</Layer> -->

@@ -27,7 +27,7 @@ CREATE TABLE map(
 
 ```sql
 CREATE TABLE control(
-	id INT,
+	map_id INT,
 	type VARCHAR(255),
 	label VARCHAR(255),
 	label_angle REAL,

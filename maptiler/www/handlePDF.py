@@ -155,16 +155,16 @@ def createImage(path, fileformat, scalefactor=1):
     styleFile = home + "/styles/" + style + ".xml"
 
 #DPD additions:
-    styleFile = home + "/styles/" + "streeto2.xml"
+#    styleFile = home + "/styles/" + "streeto2.xml"
 
     bbox2=mapnik.Box2d(mapWLon, mapSLat, mapELon, mapNLat).inverse(projection)
     api = overpass.API()
     MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
-    response = api.get(MapQuery, verbosity='geom', responseformat="xml")
+    response = api.get(MapQuery, responseformat="xml")
     with open("/home/bob/test4.osm",mode="w") as f:
            f.write(response.encode("utf-8"))
-    os.system("osmtogeojson /home/bob/test4.osm > /home/bob/test4.geojson")
-
+#    os.system("osmtogeojson /home/bob/test4.osm > /home/bob/test4.geojson")
+    os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1 --tag-transform-script /home/osm/openstreetmap-carto/openstreetmap-carto.lua --style /home/osm/openstreetmap-carto/openstreetmap-carto.style -C 100 -U osm /home/bob/test4.osm")
     cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
 
     # Limit the size of map we are prepared to produce to roughly A2 size.
