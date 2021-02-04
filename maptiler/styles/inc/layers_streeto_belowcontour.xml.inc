@@ -6,14 +6,14 @@
             wkt|name
             POLYGON((-20037508.34 -20037508.34, -20037508.34 20037508.34, 20037508.34 20037508.34, 20037508.34 -20037508.34, -20037508.34 -20037508.34))|bounds
         </Parameter>
-    </Datasource> 
+    </Datasource>
 </Layer>
 
 <Layer name="coast-poly" status="on" srs="&srs900913;">
     <StyleName>coast-poly</StyleName>
     <Datasource>
         <Parameter name="type">shape</Parameter>
-        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter> 
+        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter>
     </Datasource>
 </Layer>
 
@@ -142,6 +142,21 @@
             where "natural" in ('land', 'island')
                 or "man_made" in ('pier')
             order by z_order,way_area desc) as land
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="buildings" status="on" srs="&srs900913;">
+    <StyleName>buildings-core</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select way,building,leisure,railway,amenity,landuse from &prefix;_polygon
+            where building is not null
+                or landuse='building'
+                or railway='station'
+                or amenity='place_of_worship'
+            order by z_order,way_area desc) as buildings
         </Parameter>
     </Datasource>
 </Layer>

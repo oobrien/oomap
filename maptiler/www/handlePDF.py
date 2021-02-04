@@ -49,9 +49,8 @@ def createImage(path, fileformat, scalefactor=1):
     import cairo
     import urllib
 
-    import overpass #DPD
-    import geojson
-    import os
+    import overpass #For real-time data query
+    import time
 
     EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
     C_SCALE_FACTOR = 1.4
@@ -154,19 +153,37 @@ def createImage(path, fileformat, scalefactor=1):
 
     styleFile = home + "/styles/" + style + ".xml"
 
-#DPD additions:
-#    styleFile = home + "/styles/" + "streeto2.xml"
-
     bbox2=mapnik.Box2d(mapWLon, mapSLat, mapELon, mapNLat).inverse(projection)
     api = overpass.API()
     MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
     response = api.get(MapQuery, responseformat="xml")
-    with open("/home/bob/test4.osm",mode="w") as f:
+    tmpid = "h" + hex(int(time.time()))[2:10] + hex(int(time.time()*1000000) % 0x100000)[2:7]
+    tmpname = "/tmp/" + tmpid + ".osm"
+    with open(tmpname,mode="w") as f:
            f.write(response.encode("utf-8"))
-#    os.system("osmtogeojson /home/bob/test4.osm > /home/bob/test4.geojson")
-    os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1 --tag-transform-script /home/osm/openstreetmap-carto/openstreetmap-carto.lua --style /home/osm/openstreetmap-carto/openstreetmap-carto.style -C 100 -U osm /home/bob/test4.osm")
-    cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
+    # Populate Postgres db with data, using tables with temporary id prefix
+    # (with "h" at the start - postgres tables can't start with a number)
+    os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
+        " -p " + tmpid + \
+        " --tag-transform-script /home/osm/openstreetmap-carto/openstreetmap-carto.lua" + \
+        " --style /home/osm/openstreetmap-carto/openstreetmap-carto.style -C 100 -U osm "+ tmpname)
+    os.unlink(tmpname)  #Finished with temporary osm data file - delete.
 
+    # Need a custom Mapnik style file to find tables with temo id prefix.
+    # Therefore inject "prefix" entity into appropriate base style definition and save using temp id as name.
+    import re
+    insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">"
+    searchstring="\%settings;"
+    with open(styleFile, mode="r") as f:
+               styleString = f.read()
+    styleString = re.sub(searchstring,insertstring,styleString)
+
+    styleFile = home + "/styles/" + tmpid + ".xml"
+
+    with open(styleFile, mode="w") as f:
+               f.write(styleString)
+
+    cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
     # Limit the size of map we are prepared to produce to roughly A2 size.
     if PAPER_W * PAPER_H > 0.25 and style != "adhoc":
         return "Map too large. Try increasing the scale value or using a smaller paper size."
@@ -531,6 +548,11 @@ def createImage(path, fileformat, scalefactor=1):
         bg.save(file.name, 'JPEG', quality=95)
     else:
         surface.finish()
+
+    #Delete temporary style file and postgres tables (everything beginning with "h"):
+    os.unlink(styleFile)
+    dropTables = 'psql -U osm otf1 -t -c "select \'drop table \\"\' || tablename || \'\\" cascade;\' from pg_tables where schemaname = \'public\' and tablename like \'h%\'"  | psql -U osm otf1'
+    os.system(dropTables)
     return file
 
 def test(path):

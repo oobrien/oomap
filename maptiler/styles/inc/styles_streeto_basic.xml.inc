@@ -3,7 +3,7 @@
         &maxscale_zoom12;
         <PolygonSymbolizer fill="&blue50;" />
     </Rule>
-</Style>  
+</Style>
 
 <Style name="coast-poly">
     <Rule>
@@ -27,7 +27,7 @@
         &minscale_zoom12;
         <LineSymbolizer stroke="&blue50;" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
-    <Rule> 
+    <Rule>
 	    <Filter>not &tunnel;</Filter>
         &maxscale_zoom13;
         &minscale_zoom16;
@@ -53,7 +53,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>&track; or &path;</Filter>  
+        <Filter>&track; or &path;</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="4.25" />
     </Rule>
     <Rule>
@@ -291,7 +291,7 @@
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
     </Rule>
     <Rule>
-        &maxscale_zoom12; 
+        &maxscale_zoom12;
         <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
     </Rule>
@@ -360,13 +360,13 @@
     <Rule>
         &maxscale_zoom13;
         <Filter>[barrier] = 'citywall' or [barrier] = 'wall' or [barrier] = 'retaining_wall' or [barrier] = 'jersey_barrier' or [barrier] = 'yes'</Filter>
-	<MarkersSymbolizer file="&symbols;/wall.svg" placement="line" spacing="8" max-error="0.5" transform="scale(0.6)" /> 
+	<MarkersSymbolizer file="&symbols;/wall.svg" placement="line" spacing="8" max-error="0.5" transform="scale(0.6)" />
         <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linecap="square" />
     </Rule>
     <!-- <Rule>
         &maxscale_zoom13;
         <Filter>[barrier] = 'fence'</Filter>
-	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />	
+	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />
         <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linecap="square" />
     </Rule> -->
 </Style>
@@ -442,4 +442,9 @@
         <PointSymbolizer file="&symbols;/cross.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
 </Style>
-
+<Style name="buildings-core">
+    <Rule>
+        &maxscale_zoom12;
+        <PolygonSymbolizer fill="#FEFEFE" gamma="0.0" />
+    </Rule>
+</Style>
