@@ -152,36 +152,41 @@ def createImage(path, fileformat, scalefactor=1):
     mapELon = clon + (MAP_W/2)*scaleCorrected
 
     styleFile = home + "/styles/" + style + ".xml"
-
-    bbox2=mapnik.Box2d(mapWLon, mapSLat, mapELon, mapNLat).inverse(projection)
-    api = overpass.API()
-    MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
-    response = api.get(MapQuery, responseformat="xml")
-    tmpid = "h" + hex(int(time.time()))[2:10] + hex(int(time.time()*1000000) % 0x100000)[2:7]
-    tmpname = "/tmp/" + tmpid + ".osm"
-    with open(tmpname,mode="w") as f:
-           f.write(response.encode("utf-8"))
-    # Populate Postgres db with data, using tables with temporary id prefix
-    # (with "h" at the start - postgres tables can't start with a number)
-    os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
-        " -p " + tmpid + \
-        " --tag-transform-script /home/osm/openstreetmap-carto/openstreetmap-carto.lua" + \
-        " --style /home/osm/openstreetmap-carto/openstreetmap-carto.style -C 100 -U osm "+ tmpname)
-    os.unlink(tmpname)  #Finished with temporary osm data file - delete.
-
-    # Need a custom Mapnik style file to find tables with temo id prefix.
-    # Therefore inject "prefix" entity into appropriate base style definition and save using temp id as name.
-    import re
-    insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">"
-    searchstring="\%settings;"
     with open(styleFile, mode="r") as f:
                styleString = f.read()
-    styleString = re.sub(searchstring,insertstring,styleString)
 
+    bbox2=mapnik.Box2d(mapWLon, mapSLat, mapELon, mapNLat).inverse(projection)
+    if len(mapid) == 13:    #If existing id, use that, otherwise generate new one.
+        tmpid = "h" + mapid #Add "h" prefix - postgres tables can't start with a number
+    else:
+        tmpid = "h" + hex(int(time.time()))[2:10] + hex(int(time.time()*1000000) % 0x100000)[2:7]
     styleFile = home + "/styles/" + tmpid + ".xml"
+    #If stylefile exists, data has been recently fetched - can use existing style file and DB tables
+    if not os.path.isfile(styleFile):
+        api = overpass.API()
+        MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
+        response = api.get(MapQuery, responseformat="xml")
 
-    with open(styleFile, mode="w") as f:
-               f.write(styleString)
+        tmpname = "/tmp/" + tmpid + ".osm"
+        with open(tmpname,mode="w") as f:
+               f.write(response.encode("utf-8"))
+        # Populate Postgres db with data, using tables with temporary id prefix
+
+        os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
+            " -p " + tmpid + \
+            " --tag-transform-script /home/osm/openstreetmap-carto/openstreetmap-carto.lua" + \
+            " --style /home/osm/openstreetmap-carto/openstreetmap-carto.style -C 100 -U osm "+ tmpname)
+        os.unlink(tmpname)  #Finished with temporary osm data file - delete.
+
+        # Need a custom Mapnik style file to find tables with temo id prefix.
+        # Therefore inject "prefix" entity into appropriate base style definition and save using temp id as name.
+        import re
+        insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">"
+        searchstring="\%settings;"
+        styleString = re.sub(searchstring,insertstring,styleString)
+
+        with open(styleFile, mode="w") as f:
+                   f.write(styleString)
 
     cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
     # Limit the size of map we are prepared to produce to roughly A2 size.
@@ -550,9 +555,10 @@ def createImage(path, fileformat, scalefactor=1):
         surface.finish()
 
     #Delete temporary style file and postgres tables (everything beginning with "h"):
-    os.unlink(styleFile)
-    dropTables = 'psql -U osm otf1 -t -c "select \'drop table \\"\' || tablename || \'\\" cascade;\' from pg_tables where schemaname = \'public\' and tablename like \'h%\'"  | psql -U osm otf1'
-    os.system(dropTables)
+    #BUT - don't delete here as may be needed for related query.  Periodically clean out with cron job instead
+    #os.unlink(styleFile)
+    #dropTables = 'psql -U osm otf1 -t -c "select \'drop table \\"\' || tablename || \'\\" cascade;\' from pg_tables where schemaname = \'public\' and tablename like \'h%\'"  | psql -U osm otf1'
+    #os.system(dropTables)
     return file
 
 def test(path):
