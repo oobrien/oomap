@@ -268,17 +268,17 @@ function init()
 
 	if (country == "ioa")
 	{
-		minZoom = 7;
+		minZoom = 1;
 		mapStyleID = "streeto_ioa";
 	}
 	if (country == "dk")
 	{
-		minZoom = 7;
+		minZoom = 1;
 		mapStyleID = "streeto_dk";
 	}
 	if (country == "bof")
 	{
-		minZoom = 7;
+		minZoom = 1;
 		mapStyleID = "streeto";
 	}
 	if (country == "blueprint")
@@ -349,7 +349,7 @@ function init()
  	var theRestrictedExtent = undefined;
  	if (country == "ioa" || country == "bof")
 	{
- 		theRestrictedExtent = ol.proj.transformExtent([-12, 47, 8, 63], "EPSG:4326", "EPSG:3857");
+ 		//theRestrictedExtent = ol.proj.transformExtent([-12, 47, 8, 63], "EPSG:4326", "EPSG:3857");
 	}
  	if (country == "dk")
 	{
@@ -396,7 +396,7 @@ function init()
 		]),
 		view: new ol.View({
 			projection: "EPSG:3857",
-			maxZoom: 17,
+			maxZoom: 20,
 			minZoom: minZoom,
 			zoom: currentZoom,
 			center: ol.proj.transform([currentLon, currentLat], "EPSG:4326", "EPSG:3857"),

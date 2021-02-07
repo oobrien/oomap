@@ -175,7 +175,7 @@ def createImage(path, fileformat, scalefactor=1):
         os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
             " -p " + tmpid + \
             " --tag-transform-script /home/osm/openstreetmap-carto/openstreetmap-carto.lua" + \
-            " --style /home/osm/openstreetmap-carto/openstreetmap-carto.style -C 100 -U osm "+ tmpname)
+            " --style /home/osm/openstreetmap-carto/openstreetmap-carto.style -C 200 -U osm "+ tmpname)
         os.unlink(tmpname)  #Finished with temporary osm data file - delete.
 
         # Need a custom Mapnik style file to find tables with temo id prefix.

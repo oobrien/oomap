@@ -1,14 +1,14 @@
-<Style name="ocean">
+<Style name="land">
     <Rule>
         &maxscale_zoom12;
-        <PolygonSymbolizer fill="&blue50;" />
+        <PolygonSymbolizer fill="&white;" />
     </Rule>
 </Style>
 
 <Style name="coast-poly">
     <Rule>
         &maxscale_zoom12;
-        <PolygonSymbolizer fill="&white;" />
+        <PolygonSymbolizer fill="&blue50;" />
     </Rule>
 </Style>
 

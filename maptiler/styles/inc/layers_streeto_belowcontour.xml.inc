@@ -1,19 +1,20 @@
-<Layer name="ocean" status="on" srs="&srs900913;">
-    <StyleName>ocean</StyleName>
+<Layer name="land" status="on" srs="&srs900913;">
+    <StyleName>land</StyleName>
     <Datasource>
-        <Parameter name="type">csv</Parameter>
-        <Parameter name="inline">
-            wkt|name
-            POLYGON((-20037508.34 -20037508.34, -20037508.34 20037508.34, 20037508.34 20037508.34, 20037508.34 -20037508.34, -20037508.34 -20037508.34))|bounds
-        </Parameter>
+        &datasource-settings;
+        <Parameter name="table">
+            (SELECT ST_Intersection(way, !bbox!) as way from ocean) as ocean
+      </Parameter>
     </Datasource>
 </Layer>
 
 <Layer name="coast-poly" status="on" srs="&srs900913;">
     <StyleName>coast-poly</StyleName>
     <Datasource>
-        <Parameter name="type">shape</Parameter>
-        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter>
+        &datasource-settings;
+        <Parameter name="table">
+            (SELECT ST_Intersection(way, !bbox!) as way from water) as coastline
+      </Parameter>
     </Datasource>
 </Layer>
 
@@ -22,7 +23,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
+            (select ST_Intersection(way, !bbox!) as way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
             from &prefix;_polygon
             where landuse is not null
                 or leisure is not null

@@ -1,11 +1,10 @@
 <Layer name="ocean" status="on" srs="&srs900913;">
     <StyleName>ocean</StyleName>
     <Datasource>
-        <Parameter name="type">csv</Parameter>
-        <Parameter name="inline">
-            wkt|name
-            POLYGON((-20037508.34 -20037508.34, -20037508.34 20037508.34, 20037508.34 20037508.34, 20037508.34 -20037508.34, -20037508.34 -20037508.34))|bounds
-        </Parameter>
+        &datasource-settings;
+        <Parameter name="table">
+            (SELECT ST_Intersection(way, !bbox!) as way from ocean) as ocean
+      </Parameter>
     </Datasource>
 </Layer>
 
@@ -214,4 +213,3 @@
         </Parameter>
     </Datasource>
 </Layer>
-
