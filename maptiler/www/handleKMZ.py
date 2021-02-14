@@ -2,7 +2,8 @@ import os, os.path, platform, mapnik
 import math
 import time
 
-home = "/home/osm/maptiler"
+home_base = os.getenv('OOM_HOME')
+home=home_base + "/maptiler"
 EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
 
 MAP_NM = 0.014
@@ -38,15 +39,15 @@ def processRequest(req):
         outHTML = "<html><head><title>OpenOrienteeringMap: Error</title></head><body><h1>Error</h1><p>" + outf + "</p></body></html>"
         req.write(outHTML)
 #        with open(home + "/logs/oommakerlog-kmz-error.txt", "a") as fe:
-#            fe.write(time.strftime('%x %X') + " : " + req.get_remote_host() + " : " + outf + " : " + path + "\n")        
+#            fe.write(time.strftime('%x %X') + " : " + req.get_remote_host() + " : " + outf + " : " + path + "\n")
         return req
-    else:            
+    else:
         outfsize = os.fstat(outf.fileno()).st_size
         req.status = apache.HTTP_OK
         req.content_type = 'application/vnd.google-earth.kmz'
         req.headers_out["Content-Disposition"] = "attachment; filename=\"oom_" + mapid + ".kmz\""
         req.set_content_length(outfsize)
-        req.write(outf.read())        
+        req.write(outf.read())
         return req
 
 def createKMZ(path):
@@ -71,9 +72,9 @@ def createKMZ(path):
 			for image in self._foundimages:
 				kmz.write(image, os.path.join('files', os.path.split(image)[1]))
 			kmz.close()
-	
+
 	jpgf = createImage(path, 'jpg', 2)
-	
+
 	global MAP_NM, MAP_EM, MAP_SM, MAP_WM
 
 	if path.count("|") < 9 or path.count("|") > 10 or  len(path) < 30:
@@ -133,7 +134,7 @@ def createKMZ(path):
 	ground.latlonbox.east = east
 	ground.latlonbox.west = west
 	ground.latlonbox.rotation = 0
- 
+
 	kmzfile = tempfile.NamedTemporaryFile()
 	kml.savekmz(kmzfile.name)
 
@@ -150,4 +151,3 @@ def test(path):
 
 if __name__ == '__main__':
     test("style=streeto|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=|start=6801344,-86261|crosses=|cps=|controls=")
-    

@@ -1,3 +1,18 @@
+<Layer name="water_areas" status="on" srs="&srs900913;">
+    <StyleName>water_areas</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select way,"natural",waterway,landuse,way_area
+            from &prefix;_polygon
+                    where landuse in ('reservoir','water','basin')
+                or "natural" in ('lake','water')
+            order by z_order,way_area desc
+            ) as water_areas
+        </Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="line features" status="on" srs="&srs900913;">
     <StyleName>cliffs</StyleName>
     <Datasource>
@@ -47,4 +62,3 @@
         </Parameter>
     </Datasource>
 </Layer>
-

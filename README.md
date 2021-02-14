@@ -3,6 +3,8 @@ OpenOrienteeringMap
 
 This is a stripped-down version of [oomap](https://github.com/oobrien/oomap) for UK data, utilising LIDAR-derived contours.
 
+Also now pulls in contours worldwide (from 60N to 60S) from SRTM data.  This requires the helper program phyghtmap from http://katze.tfiu.de/projects/phyghtmap/, along with its dependencies.
+
 Mapnik stylesheets for OOMap (as used at https://oomap.co.uk/global/ when zoomed in) and other raster tile layers (e.g. the "futurecity" stylesheet is used at https://bikesharemap.com/london/).
 
 The stylesheets are based on the "old" (pre-2012) osm.xml stylesheet at http://svn.openstreetmap.org/applications/rendering/mapnik/osm.xml that used to be used for the "main" map rendering on http://osm.org/

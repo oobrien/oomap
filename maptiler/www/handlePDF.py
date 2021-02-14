@@ -4,7 +4,11 @@ import os, os.path, platform, mapnik
 import math
 import time
 
-home = "/home/osm/maptiler"
+#Get environment vars (set in /etc/apache2/envvar )
+home_base = os.getenv('OOM_HOME')
+ee_user = os.getenv('OOM_EE_USR')
+ee_pw = os.getenv('OOM_EE_PW')
+home=home_base + "/maptiler"
 
 def isStr(x):
     try:
@@ -186,7 +190,21 @@ def createImage(path, fileformat, scalefactor=1):
         styleString = re.sub(searchstring,insertstring,styleString)
 
         with open(styleFile, mode="w") as f:
-                   f.write(styleString)
+                f.write(styleString)
+
+        #Now get SRTM contours using phyghtmap:
+        phyString="/usr/bin/phyghtmap --area="+str(bbox2.minx)+":"+str(bbox2.miny)+":"+ \
+            str(bbox2.maxx)+":"+str(bbox2.maxy)+" --step=5 --source=srtm1 --srtm-version=3 " + \
+            "--earthexplorer-user=" + ee_user + " --earthexplorer-password=" + ee_pw + \
+            " --no-zero-contour --hgtdir=" + home_base + "/hgt -o " + home_base + "/"+tmpid + " >> " + home_base + "/phy.log"
+        os.system(phyString)   #writes .osm file containing contours
+        os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
+            " -p " + tmpid + "_srtm" + \
+            " --tag-transform-script " + home_base + "/openstreetmap-carto/srtm.lua" + \
+            " --style " + home_base + "/openstreetmap-carto/srtm.style -C 200 -U osm " + home_base + "/"+tmpid+"*.osm")
+        import glob
+        for i in glob.glob(home_base +'/'+tmpid+'*.osm'):
+            os.unlink(i)  #Finished with temporary osm data file - delete.
 
     cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
     # Limit the size of map we are prepared to produce to roughly A2 size.
@@ -571,4 +589,4 @@ def test(path):
         fd.close()
 
 if __name__ == '__main__':
-    test("style=streeto|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631")
+    test("style=streeto|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=h6027f5271d3db|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631")
