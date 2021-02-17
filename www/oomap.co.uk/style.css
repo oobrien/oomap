@@ -5,7 +5,7 @@ body
 	font-size: 13px;
 }
 
-/* * { border: 1px solid red !IMPORTANT; } 
+/* * { border: 1px solid red !IMPORTANT; }
 */
 
 
@@ -63,7 +63,7 @@ h1, h2
 #editions
 {
 	clear: both;
-	margin: 0 7px;	
+	margin: 0 7px;
 	height: 35px;
 }
 
@@ -75,7 +75,7 @@ h1, h2
 #uk, #ireland, #global, .editionbutton
 {
 	border-radius: 3px;
-	padding: 5px 0 5px 0; 
+	padding: 5px 0 5px 0;
 	margin: 0 7px 0 0;
 	font-size: 10px;
 	background-color: #08d;
@@ -120,7 +120,7 @@ h1, h2
   *+html #toolbar {
     display: inline;
   }
-  
+
   #create {
 	float: right;
 	width: 200px;
@@ -128,7 +128,7 @@ h1, h2
     padding: 5px 1px 5px 10px;
     display: inline-block;
     font-size: 10px;
-	height: 88px;
+	height: 108px;
   }
   #create button
 {
@@ -140,10 +140,10 @@ h1, h2
 	clear: both;
 }
 
-#mapstyle 
-{ 
-	font-size: 8px; 
-	margin: 0 15px 0 7px; 
+#mapstyle
+{
+	font-size: 8px;
+	margin: 0 15px 0 7px;
 }
 
 #spacerrow th { padding: 0 !IMPORTANT; border-width: 0 !IMPORTANT; }
@@ -197,7 +197,7 @@ h1, h2
 #mainpanel
 {
 	position: absolute;
-	top: 182px;
+	top: 202px;
 	bottom: 0;
 	width: 100%;
 }
@@ -207,7 +207,7 @@ h1, h2
 
 #map
 {
-	position: absolute;	
+	position: absolute;
 	top: 0;
 	bottom: 10px;
 	left: 10px;
@@ -235,7 +235,7 @@ h1, h2
 
 #controldescriptions
 {
-	border-collapse: collapse;	
+	border-collapse: collapse;
 	table-layout: fixed;
 	width: 286px;
 }
@@ -329,7 +329,7 @@ h1, h2
 #cs_fillinbox
 {
 	float: right;
-	border-collapse: collapse;	
+	border-collapse: collapse;
 	margin-left: 10px;
 	margin-bottom: 10px;
 }
@@ -364,7 +364,7 @@ h1, h2
 #cs_controls
 {
 	width: 100%;
-	border-collapse: collapse;	
+	border-collapse: collapse;
 	border-spacing: 1px;
 }
 
@@ -377,7 +377,7 @@ h1, h2
 
 #cs_controls th
 {
-	height: 25px;	
+	height: 25px;
 }
 
 .cs_spacer td
@@ -390,12 +390,12 @@ h1, h2
 .olControlPermalink { position: absolute; left: 0; bottom: 50px; margin: 30px 10px; }
 .olControlPermalink a { font-weight: normal; color: black; font-size: 10px; text-decoration: underline; }
 
-@media screen and (min-width: 0px) and (max-width: 800px) 
+@media screen and (min-width: 0px) and (max-width: 800px)
 {
-	#wishlist { display: none; }	
+	#wishlist { display: none; }
 }
 
-@media screen and (min-width: 0px) and (max-width: 930px) 
+@media screen and (min-width: 0px) and (max-width: 930px)
 {
   #create {
 	float: right;
@@ -414,12 +414,12 @@ h1, h2
 	#toolbar { padding: 0px; font-size: 8px; }
 	#editions { height: 30px; }
 	#toppanel { height: 30px; }
-	#title { font-size: 14px; } 
-	
+	#title { font-size: 14px; }
+
 }
 
 
-@media screen and (min-width: 0px) and (max-width: 950px) 
+@media screen and (min-width: 0px) and (max-width: 950px)
 {
-	#messagePanelHolder { display: none; }	
+	#messagePanelHolder { display: none; }
 }

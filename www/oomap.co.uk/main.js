@@ -20,6 +20,7 @@ var fontSizeFromArr;
 var mapID = "new";
 var reqMapID = "new";
 var select;
+var contourSeparation;
 
 
 var controlsSF = [];
@@ -214,6 +215,8 @@ function init()
 	$( "#papersize" ).buttonset();
 	$( "#paperorientation" ).buttonset();
 
+	$( "#contours" ).buttonset();
+
 	$("#portrait").button( { icons: {primary:'ui-icon-document'} } );
 	$("#landscape").button( { icons: {primary:'ui-icon-document-b'} } );
 
@@ -225,6 +228,8 @@ function init()
 	$( "#papersize input[type=radio]" ).change(handleOptionChange);
 	$( "#paperorientation input[type=radio]" ).change(handleOptionChange);
 	$( "#c_type input[type=radio]" ).change(handleControlTypeChange);
+
+	$( "#contours input[type=radio]" ).change(handleOptionChange);
 
 	$( "#createmap" ).button({ icons: { primary: "ui-icon-disk" } }).click(function() { handleGenerateMap(); });
 	$( "#getraster" ).button().click(function() { generateMap("jpg"); });
@@ -1498,8 +1503,9 @@ function generateMap(type)
 		cpText = cpText.substring(0, cpText.length - 1);
 	}
 
+	var contours= $("#contours :radio:checked").attr("id");
 	url = prefix1 + type
-		+ "/?style=" + mapStyleID
+		+ "/?style=" + mapStyleID + "-" + contours
    		+ "|paper=" + paper
 		+ "|scale=" + scale
 		+ "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
@@ -1721,6 +1727,8 @@ function loadMap(data)
 	$papersizeL.click();
 	$paperorientation.click();
 	$paperorientationL.click();
+	$contour.click();
+	$contourL.click();
 
 	sheetCentreLL = ol.proj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
 	olMap.getView().setCenter(sheetCentreLL);
@@ -1958,6 +1966,8 @@ function rebuildDescriptions()
 	var controlnum = controls.length;
 	var maxscore = 0;
 
+  contourSeparation = $("#contours :radio:checked").attr("id").split("-")[1];
+
 	for (var i = 0; i < controls.length; i++)
 	{
 		maxscore += controls[i].score;
@@ -1966,6 +1976,7 @@ function rebuildDescriptions()
 	$("#scalecaption").text('1:' + scale);
 	$("#controlcaption").text('' + controlnum + " control" + (controlnum == 1 ? "" : "s"));
 	$("#pointscaption").text('' + maxscore + " points");
+	$("#contourcaption").text(contourSeparation + 'm contours');
 
 	for (var i = 0; i < controls.length; i++)
 	{

@@ -12,6 +12,17 @@
         </Parameter>
     </Datasource>
 </Layer>
+<Layer name="piers" status="on" srs="&srs900913;">
+    <StyleName>islands</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select way,"natural" from &prefix;_polygon
+            where "man_made" in ('pier')
+            order by z_order,way_area desc) as land
+        </Parameter>
+    </Datasource>
+</Layer>
 
 <Layer name="line features" status="on" srs="&srs900913;">
     <StyleName>cliffs</StyleName>

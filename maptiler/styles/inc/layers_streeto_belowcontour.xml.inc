@@ -72,7 +72,10 @@
         &datasource-settings;
         <Parameter name="table">
             (select way,highway,tunnel from &prefix;_polygon
-            where highway in ('residential','unclassified','pedestrian','service','footway','track')
+            where highway in ('residential','unclassified','pedestrian','service')
+            or (highway in ('footway','track')
+            and (foot not in ('no', 'private','destination','customer'))
+            and (access not in ('no', 'private','destination','customer') and foot is null))
             order by z_order,way_area desc) as roads
         </Parameter>
     </Datasource>
@@ -100,6 +103,21 @@
         &datasource-settings;
         <Parameter name="table">
             (select way,highway,amenity from &prefix;_line where tunnel in ('yes','true','1') order by z_order) as roads
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="buildings" status="on" srs="&srs900913;">
+    <StyleName>buildings-core</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select way,building,leisure,railway,amenity,landuse from &prefix;_polygon
+            where building is not null
+                or landuse='building'
+                or railway='station'
+                or amenity='place_of_worship'
+            order by z_order,way_area desc) as buildings
         </Parameter>
     </Datasource>
 </Layer>
@@ -141,23 +159,7 @@
         <Parameter name="table">
             (select way,"natural" from &prefix;_polygon
             where "natural" in ('land', 'island')
-                or "man_made" in ('pier')
             order by z_order,way_area desc) as land
-        </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="buildings" status="on" srs="&srs900913;">
-    <StyleName>buildings-core</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select way,building,leisure,railway,amenity,landuse from &prefix;_polygon
-            where building is not null
-                or landuse='building'
-                or railway='station'
-                or amenity='place_of_worship'
-            order by z_order,way_area desc) as buildings
         </Parameter>
     </Datasource>
 </Layer>

@@ -28,7 +28,8 @@ def processRequest(req):
         return "Incorrectly formatted string."
     if path.count("|") == 9:
         path = path + "|"
-    style, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
+    style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
+    style, contourSource, contourSeparation = style_full.split("-")
     mapid = mapid.split("=")[1]
 
     if isStr(outf):
@@ -94,7 +95,8 @@ def createImage(path, fileformat, scalefactor=1):
         return "Incorrectly formatted string."
     if path.count("|") == 9:
         path = path + "|"
-    style, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
+    style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
+    style, contourSource, contourSeparation = style_full.split("-")
     style = style.split("=")[1]
 
     if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "streeto_norail" and style != "adhoc" and style != "streeto_ioa" and style != "oterrain_ioa" and style != "streeto_norail_ioa" and style != "streeto_au" and style != "oterrain_au" and style != "streeto_norail_au" and style != "streeto_dk" and style != "oterrain_dk" and style != "streeto_norail_dk" and style != 'streeto_global' and style != 'streeto_norail_global' and style != 'oterrain_global':
@@ -185,26 +187,30 @@ def createImage(path, fileformat, scalefactor=1):
         # Need a custom Mapnik style file to find tables with temo id prefix.
         # Therefore inject "prefix" entity into appropriate base style definition and save using temp id as name.
         import re
-        insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">"
+        insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">" + \
+            "\n<!ENTITY contourSeparation \"" + contourSeparation + "\">" + \
+            "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + contourSource + ".xml.inc\">"
         searchstring="\%settings;"
         styleString = re.sub(searchstring,insertstring,styleString)
 
         with open(styleFile, mode="w") as f:
                 f.write(styleString)
 
-        #Now get SRTM contours using phyghtmap:
-        phyString="/usr/bin/phyghtmap --area="+str(bbox2.minx)+":"+str(bbox2.miny)+":"+ \
-            str(bbox2.maxx)+":"+str(bbox2.maxy)+" --step=5 --source=srtm1 --srtm-version=3 " + \
-            "--earthexplorer-user=" + ee_user + " --earthexplorer-password=" + ee_pw + \
-            " --no-zero-contour --hgtdir=" + home_base + "/hgt -o " + home_base + "/"+tmpid + " >> " + home_base + "/phy.log"
-        os.system(phyString)   #writes .osm file containing contours
-        os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
-            " -p " + tmpid + "_srtm" + \
-            " --tag-transform-script " + home_base + "/openstreetmap-carto/srtm.lua" + \
-            " --style " + home_base + "/openstreetmap-carto/srtm.style -C 200 -U osm " + home_base + "/"+tmpid+"*.osm")
-        import glob
-        for i in glob.glob(home_base +'/'+tmpid+'*.osm'):
-            os.unlink(i)  #Finished with temporary osm data file - delete.
+        if contourSource == "SRTM":
+            #Now get SRTM contours using phyghtmap:
+            phyString="phyghtmap --area="+str(bbox2.minx)+":"+str(bbox2.miny)+":"+ \
+                str(bbox2.maxx)+":"+str(bbox2.maxy)+" --step=" + contourSeparation + " --source=srtm1 --srtm-version=3 " + \
+                "--earthexplorer-user=" + ee_user + " --earthexplorer-password=" + ee_pw + \
+                " --scale=4 --smooth=0.85" + \
+                " --no-zero-contour --hgtdir=" + home_base + "/hgt -o " + home_base + "/"+tmpid + " >> " + home_base + "/phy.log"
+            os.system(phyString)   #writes .osm file containing contours
+            os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
+                " -p " + tmpid + "_srtm" + \
+                " --tag-transform-script " + home_base + "/openstreetmap-carto/srtm.lua" + \
+                " --style " + home_base + "/openstreetmap-carto/srtm.style -C 200 -U osm " + home_base + "/"+tmpid+"*.osm")
+            import glob
+            for i in glob.glob(home_base +'/'+tmpid+'*.osm'):
+                os.unlink(i)  #Finished with temporary osm data file - delete.
 
     cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
     # Limit the size of map we are prepared to produce to roughly A2 size.
@@ -400,7 +406,7 @@ def createImage(path, fileformat, scalefactor=1):
     text = "scale 1:" + str(scale)
 
     if style == "oterrain" or style == "streeto" or style == "streeto_norail":
-        text = "scale 1:" + str(scale) + ", contours 5m"
+        text = "scale 1:" + str(scale) + ", contours " + contourSeparation + "m"
     ctx.set_source_rgb(0, 0, 0)
     if style == 'blueprint':
         ctx.set_source_rgb(0, 0.5, 0.8)
@@ -513,7 +519,15 @@ def createImage(path, fileformat, scalefactor=1):
         ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_source_rgb(0.12, 0.5, 0.65)
         ctx.set_font_size(7*SCALE_FACTOR)
-        text = "Contours from LIDAR  © Environment Agency copyright and/or database right 2015. All rights reserved."
+
+        if contourSource=="SRTM":
+            text = "Contours from SRTM, NASA data. DOI number: /10.5066/F7PR7TFT"
+        elif contourSource=="OS":
+            text = "Contains OS data © Crown copyright & database right OS 2013-2017."
+        elif contourSource=="LIDAR":
+            text = "Contours from LIDAR  © Environment Agency copyright and/or database right 2015. All rights reserved."
+        else:
+            text="" 
         ctx.translate((MAP_WM)*S2P, (MAP_NM+MAP_H+ADORN_ATTRIB_NM+0.002)*S2P)
         ctx.show_text(text)
 
