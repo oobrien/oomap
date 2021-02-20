@@ -186,12 +186,12 @@
         &maxscale_zoom12;
         &minscale_zoom12;
         <Filter>&service_road; and not &tunnel;</Filter>
-        <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="0.38" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
         <Filter>&service_road; and not &tunnel;</Filter>
-        <LineSymbolizer stroke="&black;" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+        <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
         &maxscale_zoom12;

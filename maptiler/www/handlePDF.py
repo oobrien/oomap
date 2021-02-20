@@ -30,6 +30,7 @@ def processRequest(req):
         path = path + "|"
     style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
     style, contourSource, contourSeparation = style_full.split("-")
+    contourSeparation = contourSeparation.replace("p",".")  #For 2.5 m contours, string comes as "2p5"
     mapid = mapid.split("=")[1]
 
     if isStr(outf):
@@ -97,6 +98,7 @@ def createImage(path, fileformat, scalefactor=1):
         path = path + "|"
     style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
     style, contourSource, contourSeparation = style_full.split("-")
+    contourSeparation = contourSeparation.replace("p",".")  #For 2.5 m contours, string comes as "2p5"
     style = style.split("=")[1]
 
     if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "streeto_norail" and style != "adhoc" and style != "streeto_ioa" and style != "oterrain_ioa" and style != "streeto_norail_ioa" and style != "streeto_au" and style != "oterrain_au" and style != "streeto_norail_au" and style != "streeto_dk" and style != "oterrain_dk" and style != "streeto_norail_dk" and style != 'streeto_global' and style != 'streeto_norail_global' and style != 'oterrain_global':
@@ -527,7 +529,7 @@ def createImage(path, fileformat, scalefactor=1):
         elif contourSource=="LIDAR":
             text = "Contours from LIDAR  © Environment Agency copyright and/or database right 2015. All rights reserved."
         else:
-            text="" 
+            text=""
         ctx.translate((MAP_WM)*S2P, (MAP_NM+MAP_H+ADORN_ATTRIB_NM+0.002)*S2P)
         ctx.show_text(text)
 

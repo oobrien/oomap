@@ -10,7 +10,7 @@ var topNumber = 1;
 var mapTitle = defaultMapTitle;
 var mapTitleDisplay = mapTitle;
 var raceDescription = defaultRaceDescription;
-var mapStyleID = "streeto_global";
+var mapStyleID = "streeto-NONE-0";
 var mapStyleIDOnSource;
 var paper;
 var scale;
@@ -229,7 +229,7 @@ function init()
 	$( "#paperorientation input[type=radio]" ).change(handleOptionChange);
 	$( "#c_type input[type=radio]" ).change(handleControlTypeChange);
 
-	$( "#contours input[type=radio]" ).change(handleOptionChange);
+	$( "#contours input[type=radio]" ).change(handleStyleChange);
 
 	$( "#createmap" ).button({ icons: { primary: "ui-icon-disk" } }).click(function() { handleGenerateMap(); });
 	$( "#getraster" ).button().click(function() { generateMap("jpg"); });
@@ -274,21 +274,21 @@ function init()
 	if (country == "ioa")
 	{
 		minZoom = 1;
-		mapStyleID = "streeto_ioa";
+		mapStyleID = "streeto-NONE-0";
 	}
 	if (country == "dk")
 	{
 		minZoom = 1;
-		mapStyleID = "streeto_dk";
+		mapStyleID = "streeto-NONE-0";
 	}
 	if (country == "bof")
 	{
 		minZoom = 1;
-		mapStyleID = "streeto";
+		mapStyleID = "streeto-OS-10";
 	}
 	if (country == "blueprint")
 	{
-		mapStyleID = "blueprint";
+		mapStyleID = "blueprint-NONE-0";
 	}
 
 	if (args['zoom'])
@@ -331,7 +331,7 @@ function init()
 	}
 
  	layerMapnik = new ol.layer.Tile({ title: "OpenStreetMap", source: new ol.source.OSM({ "wrapX": true})});
-	layerOrienteering = new ol.layer.Tile();
+	layerOrienteering = new ol.layer.Tile({opacity: 1, zIndex: 1});
 	layerMapBorder = new ol.layer.Vector({ title: "mapborder", style: marginStyle, source: new ol.source.Vector({}) });
 	layerMapCentre = new ol.layer.Vector({ title: "mapcentre", style: centreStyle, source: new ol.source.Vector({}) });
 	layerMapSheet = new ol.layer.Vector({ title: "mapsheet", style: sheetStyle, source: new ol.source.Vector({}) });
@@ -348,9 +348,10 @@ function init()
 	{
 		mapStyleID = args['mapStyleID'];
  	}
-	$('#' + mapStyleID).prop('checked', true);
+	$('#' + mapStyleID.split("-")[0]).prop('checked', true);
 	$('#mapstyle').buttonset('refresh');
-
+	$('#' + mapStyleID.split("-")[1]+"-"+mapStyleID.split("-")[2]).prop('checked', true);
+	$('#contours').buttonset('refresh');
  	var theRestrictedExtent = undefined;
  	if (country == "ioa" || country == "bof")
 	{
@@ -920,7 +921,7 @@ function handleControlTypeChange()
 
 function handleStyleChange()
 {
-	mapStyleID = $("#mapstyle :radio:checked").attr("id");
+	mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
 	handleZoom();
 	updateUrl();
 }
@@ -994,16 +995,16 @@ function handleZoom()
 		}
 		if (country == "blueprint")
 		{
-			mapStyleID = "blueprint";
+			mapStyleID = "blueprint-NONE-0";
 		}
 		else
 		{
-			mapStyleID = $("#mapstyle :radio:checked").attr("id");
+			mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
 		}
 
 		if (mapStyleIDOnSource != mapStyleID)
 		{
-/*			layerOrienteering.setSource(
+			layerOrienteering.setSource(
 				new ol.source.XYZ(
 					{
 						urls: [prefix1 + mapStyleID + "/{z}/{x}/{y}.png", prefix2 + mapStyleID + "/{z}/{x}/{y}.png", prefix3 + mapStyleID + "/{z}/{x}/{y}.png"],
@@ -1013,14 +1014,21 @@ function handleZoom()
 				)
 			);
 			mapStyleIDOnSource = mapStyleID;
-			*/
+
 		}
 //		layerMapnik.setVisible(false);
 //		layerOrienteering.setVisible(true);
 		layerMapnik.setVisible(true);	//Use standard slippy map for all zoom levels; keep old code for now.
-		layerOrienteering.setVisible(false);
-	}
+		if(mapStyleID.split("-")[1] == "SRTM" || mapStyleID.split("-")[1] == "NONE")
+		{
+			layerOrienteering.setVisible(false);
+	  }
+		else
+		{
+			layerOrienteering.setVisible(true);
+		}
 	//updateUrl();
+}
 }
 
 function handleControlEditOptions(pid)
@@ -1503,9 +1511,9 @@ function generateMap(type)
 		cpText = cpText.substring(0, cpText.length - 1);
 	}
 
-	var contours= $("#contours :radio:checked").attr("id");
+	//var contours= $("#contours :radio:checked").attr("id");
 	url = prefix1 + type
-		+ "/?style=" + mapStyleID + "-" + contours
+		+ "/?style=" + mapStyleID // + "-" + contours
    		+ "|paper=" + paper
 		+ "|scale=" + scale
 		+ "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
@@ -1705,14 +1713,16 @@ function loadMap(data)
 
 	mapTitle = data.title;
 	raceDescription = data.race_instructions;
-	var $style = $("#" + data.style);
-	var $styleL = $("[for=" + data.style + "]");
+	var $style = $("#" + data.style.split("-")[0]);
+	var $styleL = $("[for=" + data.style.split("-")[0] + "]");
 	var $scale = $("#" + data.scale);
 	var $scaleL = $("[for=" + data.scale + "]");
 	var $papersize = $("#" + data.papersize);
 	var $papersizeL = $("[for=" + data.papersize + "]");
 	var $paperorientation = $("#" + data.paperorientation);
 	var $paperorientationL = $("[for=" + data.paperorientation + "]");
+	var $contours = $("#" + data.style.split("-")[1] + "-" + data.style.split("-")[2]);
+	var $contoursL = $("[for=" + data.style.split("-")[1] + "-" + data.style.split("-")[2] + "]");
 
 	$('#eventdate_alternate').val(data.eventdate);
 	$('#eventdate').val(data.eventdate);
@@ -1727,8 +1737,8 @@ function loadMap(data)
 	$papersizeL.click();
 	$paperorientation.click();
 	$paperorientationL.click();
-	$contour.click();
-	$contourL.click();
+	$contours.click();
+	$contoursL.click();
 
 	sheetCentreLL = ol.proj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
 	olMap.getView().setCenter(sheetCentreLL);
@@ -1966,7 +1976,7 @@ function rebuildDescriptions()
 	var controlnum = controls.length;
 	var maxscore = 0;
 
-  contourSeparation = $("#contours :radio:checked").attr("id").split("-")[1];
+  contourSeparation = $("#contours :radio:checked").attr("id").split("-")[1].replace("p",".");
 
 	for (var i = 0; i < controls.length; i++)
 	{
