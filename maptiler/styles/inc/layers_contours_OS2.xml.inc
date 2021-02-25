@@ -3,7 +3,7 @@
         <Datasource>
             &datasource-settings-contours;
             <Parameter name="table">
-(SELECT ST_Intersection(way, !bbox!) as way, height, ST_Length(way) as length FROM lidar2  WHERE (height*2)::integer % (10* &contourSeparation; )::integer != 0 AND  (height*2)::integer % (2* &contourSeparation; )::integer = 0 AND ST_Intersects(way,!bbox!)) as "cntrs10"
+                (select way, prop_value, 500 as length from terr50_lns2 WHERE prop_value::integer % 50 != 0) as cntrs10
             </Parameter>
         </Datasource>
     </Layer>
@@ -13,7 +13,7 @@
         <Datasource>
             &datasource-settings-contours;
             <Parameter name="table">
-(SELECT ST_Intersection(way,!bbox!) as way, height, ST_Length(way) as length FROM lidar2 WHERE (height*2)::integer % (10* &contourSeparation; )::integer = 0  AND ST_Intersects(way,!bbox!)) as "cntrs50"
+                (select way, prop_value, 500 as length from terr50_lns2 WHERE prop_value::integer % 50 = 0) as cntrs50
             </Parameter>
         </Datasource>
     </Layer>

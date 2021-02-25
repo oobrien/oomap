@@ -33,3 +33,15 @@
  <MarkersSymbolizer file="&symbols;/tick.svg" allow-overlap="false" placement="line" spacing="200" max-error="0.5" transform="translate(0 -1.5) scale(1.0 0.4)" />
     </Rule>
 </Style>
+
+<Style name="contours_simple_style" comp-op="darken">
+    <Rule>
+        <LineSymbolizer stroke="&contour;" stroke-width="0.5" />
+    </Rule>
+</Style>
+
+<Style name="contours_simple_style_major" comp-op="darken">
+    <Rule>
+        <LineSymbolizer stroke="&contour;" stroke-width="1.0" />
+    </Rule>
+</Style>
