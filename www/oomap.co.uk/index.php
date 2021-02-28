@@ -94,7 +94,7 @@
 		-->
 		This adaptation of OpenOrienteeringMap has a single edition:
 		<ul>
-		<li>UK (BOF) edition (with contours and daily updating from OpenStreetMap)</li>
+		<li>Global edition (with contours and daily updating from OpenStreetMap)</li>
 <!--
 		<li>Ireland (IOA) edition (with daily updating from OpenStreetMap)</li>
 		<li>Denmark edition (with daily updating from OpenStreetMap)</li>
@@ -108,7 +108,7 @@
 <!--
 			<a href="/global/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Global</a>
 -->
-			<a href="/gb/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>UK</a>
+			<a href="/gb/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>Global</a>
 <!--
 			<a href="/ie/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>IE</a>
 			<a href="/dk/" style='width: 30px; height: 30px; background-color: #c00; margin: 0 20px 10px 0; padding: 15px 20px; color: white; text-align: center; vertical-align: middle; text-decoration: none; font-size: 24px;'>DK</a>

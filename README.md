@@ -51,11 +51,11 @@ The example images, using the XYZ map tile convention, have x=16090, y=10213, z=
 
 ![futurecity_unicode](https://raw.github.com/oobrien/oomap/master/examples/futurecity_unicode_z15.png "futurecity_unicode") futurecity_unicode
 
-![streeto](https://raw.github.com/oobrien/oomap/master/examples/streeto_z15.png "streeto") streeto (streeto_global and streeto_ioa are similar but with no contours)
+![streeto](https://raw.github.com/oobrien/oomap/master/examples/streeto_z15.png "streeto") streeto
 
-![streeto_norail](https://raw.github.com/oobrien/oomap/master/examples/streeto_norail_z15.png "streeto_norail") streeto_norail (streeto_norail_global and streeto_norail_ioa are similar but with no contours)
+![streeto_norail](https://raw.github.com/oobrien/oomap/master/examples/streeto_norail_z15.png "streeto_norail") streeto_norail
 
-![oterrain](https://raw.github.com/oobrien/oomap/master/examples/oterrain_z15.png "oterrain") streeto (oterrain_global and oterrain_ioa are similar but with no contours)
+![oterrain](https://raw.github.com/oobrien/oomap/master/examples/oterrain_z15.png "oterrain") oterrain 
 
 ![blueprint](https://raw.github.com/oobrien/oomap/master/examples/blueprint_z15.png "blueprint") blueprint (only on it's own edition which uses the Global edition database)
 

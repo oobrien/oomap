@@ -1,14 +1,14 @@
-<Style name="ocean">
+<Style name="land">
 	<Rule>
 		&maxscale_zoom12;
-		<PolygonSymbolizer fill="&blue50;" />
+		<PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
 	</Rule>
 </Style>
 
 <Style name="coast-poly">
 	<Rule>
 		&maxscale_zoom12;
-	    <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+	    <PolygonSymbolizer fill="&blue50;" />
 	</Rule>
 </Style>
 
@@ -323,7 +323,7 @@
         &maxscale_zoom12;
         <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/blackdot.png" />
+        <!-- <PolygonPatternSymbolizer file="&symbols;/blackdot.png" /> -->
     </Rule>
     <Rule>
         &maxscale_zoom12;

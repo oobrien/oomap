@@ -332,15 +332,15 @@ function init()
 
  	layerMapnik = new ol.layer.Tile({ title: "OpenStreetMap", source: new ol.source.OSM({ "wrapX": true})});
 	layerOrienteering = new ol.layer.Tile({opacity: 1, zIndex: 1});
-	layerMapBorder = new ol.layer.Vector({ title: "mapborder", style: marginStyle, source: new ol.source.Vector({}) });
-	layerMapCentre = new ol.layer.Vector({ title: "mapcentre", style: centreStyle, source: new ol.source.Vector({}) });
-	layerMapSheet = new ol.layer.Vector({ title: "mapsheet", style: sheetStyle, source: new ol.source.Vector({}) });
-	layerMapTitle = new ol.layer.Vector({ title: "maptitle", style: titleStyle, source: new ol.source.Vector({}) });
+	layerMapBorder = new ol.layer.Vector({ title: "mapborder", style: marginStyle, source: new ol.source.Vector({}) , zIndex: 2});
+	layerMapCentre = new ol.layer.Vector({ title: "mapcentre", style: centreStyle, source: new ol.source.Vector({}) , zIndex: 2});
+	layerMapSheet = new ol.layer.Vector({ title: "mapsheet", style: sheetStyle, source: new ol.source.Vector({}), zIndex: 2});
+	layerMapTitle = new ol.layer.Vector({ title: "maptitle", style: titleStyle, source: new ol.source.Vector({}) , zIndex: 2});
 	layerMapContent = new ol.layer.Vector({ title: "mapcontent", style: contentStyle, source: new ol.source.Vector({}) });
 	layerSF = new ol.layer.Vector({ title: "controlsSF", style: [ sfStyle, sfStyleOuter], source: new ol.source.Vector({}) });
 	layerX = new ol.layer.Vector({ title: "controlsX", style: xStyle, source: new ol.source.Vector({}) });
 	layerCP = new ol.layer.Vector({ title: "controlsCP", style: cpStyle, source: new ol.source.Vector({}) });
-	layerControls = new ol.layer.Vector({ title: "controls", style: controlStyle, source: new ol.source.Vector({}) });
+	layerControls = new ol.layer.Vector({ title: "controls", style: controlStyle, source: new ol.source.Vector({})});
 
 	orienteeringAttribution = new ol.Attribution({ 'html': 'Copyright OpenStreetMap contributors and OS Crown Copyright & Database Right Ordnance Survey 2016.'});
 
@@ -1007,7 +1007,7 @@ function handleZoom()
 			layerOrienteering.setSource(
 				new ol.source.XYZ(
 					{
-						urls: [prefix1 + mapStyleID + "/{z}/{x}/{y}.png", prefix2 + mapStyleID + "/{z}/{x}/{y}.png", prefix3 + mapStyleID + "/{z}/{x}/{y}.png"],
+						urls: [prefix1 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix2 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix3 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png"],
 						attributions: [ orienteeringAttribution ],
 						"wrapX": true
 					}

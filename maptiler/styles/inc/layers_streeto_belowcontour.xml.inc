@@ -13,7 +13,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (SELECT ST_Intersection(way, !bbox!) as way from water) as coastline
+            (SELECT ST_Intersection(way, !bbox!) as way from water WHERE ST_Intersects(way,!bbox!)) as coastline
       </Parameter>
     </Datasource>
 </Layer>
@@ -43,7 +43,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural",waterway,landuse,way_area
+            (select ST_Intersection(way, !bbox!) as way,"natural",waterway,landuse,way_area
             from &prefix;_polygon
                     where waterway in ('dock','mill_pond','riverbank','canal','river')
                 or landuse in ('reservoir','water','basin')
@@ -59,7 +59,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,amenity from &prefix;_polygon
+            (select ST_Intersection(way, !bbox!) as way,amenity from &prefix;_polygon
             where amenity='parking'
             order by z_order,way_area desc) as roads
         </Parameter>
@@ -71,7 +71,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,tunnel from &prefix;_polygon
+            (select ST_Intersection(way, !bbox!) as way,highway,tunnel from &prefix;_polygon
             where highway in ('residential','unclassified','pedestrian','service')
             or (highway in ('footway','track')
             and (foot not in ('no', 'private','destination','customer'))
@@ -86,7 +86,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,waterway,
+            (select ST_Intersection(way, !bbox!) as way,waterway,
             case when tunnel in ('yes','true','1','culvert') then 'yes'::text else tunnel end as tunnel
             from &prefix;_line
             where waterway in ('weir','river','canal','derelict_canal','stream','drain')
@@ -102,7 +102,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,amenity from &prefix;_line where tunnel in ('yes','true','1') order by z_order) as roads
+            (select ST_Intersection(way, !bbox!) as way,highway,amenity from &prefix;_line where tunnel in ('yes','true','1') order by z_order) as roads
         </Parameter>
     </Datasource>
 </Layer>
@@ -112,7 +112,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,building,leisure,railway,amenity,landuse from &prefix;_polygon
+            (select ST_Intersection(way, !bbox!) as way,building,leisure,railway,amenity,landuse from &prefix;_polygon
             where building is not null
                 or landuse='building'
                 or railway='station'
@@ -127,7 +127,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
+            (select ST_Intersection(way, !bbox!) as way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
         </Parameter>
     </Datasource>
 </Layer>
@@ -140,7 +140,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,railway,amenity,
+            (select ST_Intersection(way, !bbox!) as way,highway,railway,amenity,
             case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
@@ -157,7 +157,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural" from &prefix;_polygon
+            (select ST_Intersection(way, !bbox!) as way,"natural" from &prefix;_polygon
             where "natural" in ('land', 'island')
             order by z_order,way_area desc) as land
         </Parameter>
