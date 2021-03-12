@@ -1,5 +1,5 @@
 oomap uses a mysql database - to store saved maps and controls, look up postcodes and track which postcodes were used.  The sql commands below will create the required tables.  You then need to add the database details (credentials and database name) to www/oomap.co.uk/db.php
-The postcodes table then needs to be popupated from the Ordnance Survey Code-Point open dataset from https://osdatahub.os.uk/downloads/open/CodePointOpen
+The postcodes table then needs to be populated from the Ordnance Survey Code-Point open dataset from https://osdatahub.os.uk/downloads/open/CodePointOpen
 
 ```sql
 CREATE TABLE map(

@@ -94,7 +94,7 @@
 		-->
 		This adaptation of OpenOrienteeringMap has a single edition:
 		<ul>
-		<li>Global edition (with contours and daily updating from OpenStreetMap)</li>
+		<li>Global edition (with contours; instant updates from OpenStreetMap)</li>
 <!--
 		<li>Ireland (IOA) edition (with daily updating from OpenStreetMap)</li>
 		<li>Denmark edition (with daily updating from OpenStreetMap)</li>

@@ -6,7 +6,7 @@
 %settings;
 <!ENTITY prefix "h602d8e6d16395">
 <!ENTITY contourSeparation "10">
-<!ENTITY layers-contours SYSTEM "inc/layers_contours_LIDAR2.xml.inc">
+<!ENTITY layers-contours SYSTEM "inc/layers_contours_LIDAR.xml.inc">
 %colours;
 ]>
 

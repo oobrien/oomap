@@ -4,7 +4,16 @@ import os, os.path, platform, mapnik
 import math
 import time
 
-#Get environment vars (set in /etc/apache2/envvar )
+try:
+    from PyPDF2 import PdfFileReader, PdfFileWriter
+    from PyPDF2.generic import (ArrayObject, DecodedStreamObject, DictionaryObject, FloatObject, NameObject,
+        NumberObject, TextStringObject)
+    HAS_PYPDF2 = True
+except ImportError:
+    HAS_PYPDF2 = False
+from geomag import WorldMagneticModel
+
+#Get environment vars (set in /etc/apache2/envvars)
 home_base = os.getenv('OOM_HOME')
 ee_user = os.getenv('OOM_EE_USR')
 ee_pw = os.getenv('OOM_EE_PW')
@@ -101,7 +110,7 @@ def createImage(path, fileformat, scalefactor=1):
     contourSeparation = contourSeparation.replace("p",".")  #For 2.5 m contours, string comes as "2p5"
     style = style.split("=")[1]
 
-    if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "streeto_norail" and style != "adhoc" and style != "streeto_ioa" and style != "oterrain_ioa" and style != "streeto_norail_ioa" and style != "streeto_au" and style != "oterrain_au" and style != "streeto_norail_au" and style != "streeto_dk" and style != "oterrain_dk" and style != "streeto_norail_dk" and style != 'streeto_global' and style != 'streeto_norail_global' and style != 'oterrain_global':
+    if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "streeto_norail" and style != "adhoc":
         return "Unknown style."
 
     paper = paper.split("=")[1]
@@ -143,8 +152,12 @@ def createImage(path, fileformat, scalefactor=1):
 
     projection = mapnik.Projection(EPSG900913)
     wgs84lat = mapnik.Coord(clon, clat).inverse(projection).y
+    wgs84lon = mapnik.Coord(clon, clat).inverse(projection).x
     scaleCorrectionFactor = math.cos(wgs84lat * math.pi/180)
     scaleCorrected = scale / scaleCorrectionFactor
+
+    wmm = WorldMagneticModel()
+    magdec = wmm.calc_mag_field(wgs84lat, wgs84lon).declination #look up magnetic declination for correct map North lines
 
     if style == "adhoc":
         MAP_EM = MAP_WM
@@ -222,6 +235,13 @@ def createImage(path, fileformat, scalefactor=1):
     if scale > 50000 and style != "adhoc":
         return "Scale too small. Try using a lower scale value."
 
+    # Calculate scale, for scale bar and grid lines
+    scaleBarMetres = 500
+    if scale < 10000:
+        scaleBarMetres = 200
+    scaleBarW = scaleBarMetres/float(scale)
+
+
     # Create map
     map = mapnik.Map(int(MAP_W*S2P), int(MAP_H*S2P))
 
@@ -295,6 +315,25 @@ def createImage(path, fileformat, scalefactor=1):
             surface.finish()
         return file
 
+    #  Add grid lines in same layer - allows darken comp-op
+    ctx.rectangle(0, 0, MAP_W * S2P,  MAP_H * S2P)
+    ctx.clip() #Clip to map area
+    ctx.set_line_width(0.5*SCALE_FACTOR)
+    ctx.set_source_rgb(0.5, 0.5, 1)
+    ctx.set_operator(cairo.Operator.DARKEN)
+    northSpacing = scaleBarW / math.cos(magdec*math.pi/180)
+    shift = MAP_H * S2P * math.tan(magdec*math.pi/180) * 0.5
+    lines = range(int(-northSpacing * S2P/2), int((MAP_W + northSpacing) * S2P), int(northSpacing * S2P))
+    for line in lines:
+        ctx.move_to (line + shift, 0)
+        ctx.line_to (line - shift, MAP_H * S2P)
+    ctx.stroke()
+
+    # Adornments - North lines
+    ctx = cairo.Context(surface)
+    ctx.translate(MAP_WM*S2P, MAP_NM*S2P)
+
+ 
     # Start control
     if slon != 0 and slat != 0:
         ctx = cairo.Context(surface)
@@ -421,9 +460,6 @@ def createImage(path, fileformat, scalefactor=1):
     # Adornments - Scale Bar and Caption
     ctx = cairo.Context(surface)
     ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-    scaleBarMetres = 500
-    if scale < 10000:
-        scaleBarMetres = 200
     text = str(scaleBarMetres) + "m"
     ctx.set_source_rgb(0, 0, 0)
     if style == 'blueprint':
@@ -435,7 +471,6 @@ def createImage(path, fileformat, scalefactor=1):
     ctx.show_text(text)
     ctx.set_line_width(0.5*SCALE_FACTOR)
 
-    scaleBarW = scaleBarMetres/float(scale)
     ctx.move_to((-scaleBarW-ADORN_SCALEBAR_PADDING)*S2P, 0)
     ctx.rel_line_to(0, -ADORN_SCALEBAR_LARGETICK*S2P)
     ctx.rel_line_to(0, ADORN_SCALEBAR_LARGETICK*S2P)
@@ -448,27 +483,28 @@ def createImage(path, fileformat, scalefactor=1):
 
     # Adornments - North Arrow
     ctx = cairo.Context(surface)
-    ctx.translate((MAP_WM+MAP_W-ADORN_LOGO_W)*S2P-width, CONTENT_NM*S2P)
+    ctx.translate((MAP_WM+MAP_W-ADORN_LOGO_W)*S2P-width, (CONTENT_NM + 0.004)*S2P)  #set to centre of symbol...
+    ctx.rotate(magdec*math.pi/180)   #so that rotation doesn't add translation.  Point to mag. N
     ctx.set_line_width(1*SCALE_FACTOR)
     ctx.set_source_rgb(0, 0, 0)
     if style == 'blueprint':
         ctx.set_source_rgb(0, 0.5, 0.8)
-    ctx.move_to(0, 0)
-    ctx.line_to(0.001*S2P, 0.002*S2P)
-    ctx.line_to(-0.001*S2P, 0.002*S2P)
+    ctx.move_to(0, -0.004*S2P)
+    ctx.line_to(0.001*S2P, -0.002*S2P)
+    ctx.line_to(-0.001*S2P, -0.002*S2P)
     ctx.close_path()
     ctx.fill()
-    ctx.move_to(0, 0.001*S2P)
-    ctx.line_to(0, 0.008*S2P)
+    ctx.move_to(0, -0.003*S2P)
+    ctx.line_to(0, 0.004*S2P)
     ctx.stroke()
     ctx.set_line_join(cairo.LINE_JOIN_ROUND)
     ctx.set_line_cap(cairo.LINE_CAP_ROUND)
-    ctx.move_to(-0.001*S2P, 0.005*S2P)
+    ctx.move_to(-0.001*S2P, 0.001*S2P)
     ctx.rel_line_to(0, -0.002*S2P)
     ctx.rel_line_to(0.002*S2P, 0.002*S2P)
     ctx.rel_line_to(0, -0.002*S2P)
     ctx.stroke()
-
+   
     # Adornments - Logo
     if style == "oterrain_ioa" or style == "streeto_ioa" or style == "streeto_norail_ioa":
         logoSurface = cairo.ImageSurface.create_from_png(home + "/images/ioalogo.png")
@@ -587,6 +623,15 @@ def createImage(path, fileformat, scalefactor=1):
         bg.save(file.name, 'JPEG', quality=95)
     else:
         surface.finish()
+        surface.flush()
+
+        # Add Geospatial PDF metadata - not quite working so omit for now
+        
+        #map_bounds = (MAP_WM/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H, MAP_WM/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H)
+        #file2 = tempfile.NamedTemporaryFile()
+        #wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]'
+        #add_geospatial_pdf_header(map, file, file2, map_bounds, wkt = wkt)
+        #file = file2
 
     #Delete temporary style file and postgres tables (everything beginning with "h"):
     #BUT - don't delete here as may be needed for related query.  Periodically clean out with cron job instead
@@ -595,14 +640,129 @@ def createImage(path, fileformat, scalefactor=1):
     #os.system(dropTables)
     return file
 
+def add_geospatial_pdf_header(m, f, f2, map_bounds, epsg=None, wkt=None):
+        """
+        Adds geospatial PDF information to the PDF file as per:
+            Adobe® Supplement to the ISO 32000 PDF specification
+            BaseVersion: 1.7
+            ExtensionLevel: 3
+            (June 2008)
+        Notes:
+            The epsg code or the wkt text of the projection must be provided.
+            Must be called *after* the page has had .finish() called.
+        """
+        if not HAS_PYPDF2:
+            raise RuntimeError("PyPDF2 not available; PyPDF2 required to add geospatial header to PDF")
+
+        if not any((epsg,wkt)):
+            raise RuntimeError("EPSG or WKT required to add geospatial header to PDF")
+
+        file_reader = PdfFileReader(f)
+        file_writer = PdfFileWriter()
+
+        # preserve OCProperties at document root if we have one
+        if file_reader.trailer['/Root'].has_key(NameObject('/OCProperties')):
+            file_writer._root_object[NameObject('/OCProperties')] = file_reader.trailer[
+                '/Root'].getObject()[NameObject('/OCProperties')]
+
+        for page in file_reader.pages:
+            gcs = DictionaryObject()
+            gcs[NameObject('/Type')] = NameObject('/PROJCS')
+
+            if epsg:
+                gcs[NameObject('/EPSG')] = NumberObject(int(epsg))
+            if wkt:
+                gcs[NameObject('/WKT')] = TextStringObject(wkt)
+
+            measure = get_pdf_measure(m, gcs, map_bounds)
+
+            """
+            Returns the PDF's VP array.
+            The VP entry is an array of viewport dictionaries. A viewport is basiscally
+            a rectangular region on the PDF page. The only required entry is the BBox which
+            specifies the location of the viewport on the page.
+            """
+            viewport = DictionaryObject()
+            viewport[NameObject('/Type')] = NameObject('/Viewport')
+
+            bbox = ArrayObject()
+            #for x in mapnik.Box2d(0,int(page.mediaBox[3]),int(page.mediaBox[2]),0): #in pts
+            for x in [0,595,841,0]: #in pts
+		    bbox.append(FloatObject(str(x)))  #Fixed
+
+            viewport[NameObject('/BBox')] = bbox
+            #viewport[NameObject('/Name')] = TextStringObject('OOMAP')
+            viewport[NameObject('/Measure')] = measure
+
+            vp_array = ArrayObject()
+            vp_array.append(viewport)
+            #print(vp_array)
+            page[NameObject('/VP')] = vp_array
+            file_writer.addPage(page)
+
+        file_writer.write(f2)
+
+
+def get_pdf_measure(m, gcs, bounds_default):
+    """
+    Returns the PDF Measure dictionary.
+    The Measure dictionary is used in the viewport array
+    and specifies the scale and units that apply to the output map.
+    """
+    measure = DictionaryObject()
+    measure[NameObject('/Type')] = NameObject('/Measure')
+    measure[NameObject('/Subtype')] = NameObject('/GEO')
+
+    bounds = ArrayObject()
+
+    # PDF specification's default for bounds (full unit square).  values as positions of map bounds relative to page size.
+    #bounds_default = (0.0, 0.0, 0.0, 1, 1, 1, 1, 0.0)
+    """
+    Returns the PDF BOUNDS array.
+    The PDF's bounds array is equivalent to the map's neatline, i.e.,
+    the border delineating the extent of geographic data on the output map.
+    """
+    #for x in bounds_default:
+    for x in [ 0, 1, 0, 0, 1, 0, 1, 1 ]:
+        bounds.append(FloatObject(str(x)))
+
+    measure[NameObject('/Bounds')] = bounds
+    measure[NameObject('/GPTS')] = get_pdf_gpts(m)
+    measure[NameObject('/LPTS')] = bounds
+    measure[NameObject('/GCS')] = gcs
+
+    return measure
+
+def get_pdf_gpts(m):
+    """
+    Returns the GPTS array object containing the four corners of the
+    map envelope in map projection.
+    The GPTS entry is an array of numbers, taken pairwise, defining
+    points as latitude and longitude.
+    """
+    gpts = ArrayObject()
+
+    proj = mapnik.Projection(m.srs)
+    env = m.envelope()
+    for x in ((env.minx, env.miny), (env.minx, env.maxy),
+              (env.maxx, env.maxy), (env.maxx, env.miny)):
+        latlon_corner = proj.inverse(mapnik.Coord(*x))
+        # these are in lat,lon order according to the specification
+        gpts.append(FloatObject(str(latlon_corner.y)))
+        gpts.append(FloatObject(str(latlon_corner.x)))
+
+    return gpts
+
+
 def test(path):
     outf = createImage(path, 'pdf')
     if isStr(outf):
         print outf
     else:
         fd = open('test.pdf', 'wb')
+        outf.seek(0)    #DPD
         fd.write(outf.read())
         fd.close()
 
 if __name__ == '__main__':
-    test("style=streeto|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=h6027f5271d3db|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631")
+    test("style=streeto-OS-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc82|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631")
