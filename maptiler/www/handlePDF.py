@@ -33,11 +33,11 @@ def processRequest(req):
 #    with open(home + "/logs/oommakerlog-access.txt", "a") as fa:
 #        fa.write(time.strftime('%x %X') + " : " + req.get_remote_host() + " : " + path + "\n")
     outf = createImage(path, 'pdf')
-    if path.count("|") < 9 or path.count("|") > 10  or  len(path) < 30:
+    if path.count("|") < 10 or path.count("|") > 11  or  len(path) < 30:
         return "Incorrectly formatted string."
     if path.count("|") == 9:
         path = path + "|"
-    style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
+    style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls, rotation  = path.split("|")
     style, contourSource, contourSeparation = style_full.split("-")
     contourSeparation = contourSeparation.replace("p",".")  #For 2.5 m contours, string comes as "2p5"
     mapid = mapid.split("=")[1]
@@ -101,11 +101,11 @@ def createImage(path, fileformat, scalefactor=1):
     ADORN_ARROW_W = 0.012
     ADORN_LOGO_W = 0.018
 
-    if path.count("|") < 9 or path.count("|") > 10 or  len(path) < 30:
+    if path.count("|") < 10 or path.count("|") > 11 or  len(path) < 30:
         return "Incorrectly formatted string."
-    if path.count("|") == 9:
+    if path.count("|") == 10:
         path = path + "|"
-    style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
+    style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls, rotation  = path.split("|")
     style, contourSource, contourSeparation = style_full.split("-")
     contourSeparation = contourSeparation.replace("p",".")  #For 2.5 m contours, string comes as "2p5"
     style = style.split("=")[1]
@@ -122,7 +122,7 @@ def createImage(path, fileformat, scalefactor=1):
     centre = centre.split("=")[1]
     clat = int(centre.split(",")[0])
     clon = int(centre.split(",")[1])
-
+    rotation = float(rotation.split("=")[1])
     title = title.split("=")[1]
 
     slon = 0
@@ -166,17 +166,20 @@ def createImage(path, fileformat, scalefactor=1):
 
     MAP_W = PAPER_W - MAP_WM - MAP_EM
     MAP_H = PAPER_H - MAP_NM - MAP_SM
+    EXTENT_W = MAP_W * math.cos(rotation) + MAP_H * abs(math.sin(rotation))
+    EXTENT_H = MAP_H * math.cos(rotation) + MAP_W * abs(math.sin(rotation))
 
-    mapSLat = clat - (MAP_H/2)*scaleCorrected
-    mapNLat = clat + (MAP_H/2)*scaleCorrected
-    mapWLon = clon - (MAP_W/2)*scaleCorrected
-    mapELon = clon + (MAP_W/2)*scaleCorrected
+    mapSLat = clat - (EXTENT_H/2)*scaleCorrected
+    mapNLat = clat + (EXTENT_H/2)*scaleCorrected
+    mapWLon = clon - (EXTENT_W/2)*scaleCorrected
+    mapELon = clon + (EXTENT_W/2)*scaleCorrected
 
     styleFile = home + "/styles/" + style + ".xml"
     with open(styleFile, mode="r") as f:
                styleString = f.read()
 
     bbox2=mapnik.Box2d(mapWLon, mapSLat, mapELon, mapNLat).inverse(projection)
+
     if len(mapid) == 13:    #If existing id, use that, otherwise generate new one.
         tmpid = "h" + mapid #Add "h" prefix - postgres tables can't start with a number
     else:
@@ -243,7 +246,7 @@ def createImage(path, fileformat, scalefactor=1):
 
 
     # Create map
-    map = mapnik.Map(int(MAP_W*S2P), int(MAP_H*S2P))
+    map = mapnik.Map(int(EXTENT_W*S2P), int(EXTENT_H*S2P))
 
     # Load map configuration
     mapnik.load_map(map, styleFile)
@@ -299,7 +302,14 @@ def createImage(path, fileformat, scalefactor=1):
     # Background map
     ctx = cairo.Context(surface)
     ctx.translate(MAP_WM*S2P, MAP_NM*S2P)
+    ctx.rectangle(0, 0, MAP_W * S2P,  MAP_H * S2P)
+    ctx.clip() #Clip to map area
+    ctx.save()
+    ctx.translate(MAP_W*S2P/2,MAP_H*S2P/2) # translate origin to the center
+    ctx.rotate(rotation)
+    ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
     mapnik.render(map, ctx, SCALE_FACTOR, 0, 0)
+    ctx.restore()
 
     if style == "adhoc":
         ctx = cairo.Context(surface)
@@ -321,26 +331,30 @@ def createImage(path, fileformat, scalefactor=1):
     ctx.set_line_width(0.5*SCALE_FACTOR)
     ctx.set_source_rgb(0.5, 0.5, 1)
     ctx.set_operator(cairo.Operator.DARKEN)
-    northSpacing = scaleBarW / math.cos(magdec*math.pi/180)
-    shift = MAP_H * S2P * math.tan(magdec*math.pi/180) * 0.5
+    northSpacing = scaleBarW / math.cos(magdec*math.pi/180+rotation)
+    shift = MAP_H * S2P * math.tan(magdec*math.pi/180+rotation) * 0.5
     lines = range(int(-northSpacing * S2P/2), int((MAP_W + northSpacing) * S2P), int(northSpacing * S2P))
     for line in lines:
         ctx.move_to (line + shift, 0)
         ctx.line_to (line - shift, MAP_H * S2P)
     ctx.stroke()
 
-    # Adornments - North lines
-    ctx = cairo.Context(surface)
-    ctx.translate(MAP_WM*S2P, MAP_NM*S2P)
-
- 
     # Start control
     if slon != 0 and slat != 0:
         ctx = cairo.Context(surface)
+
+        ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
+        ctx.rotate(rotation)
+        ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+
         ctx.set_line_width(SC_T*S2P)
         ctx.set_line_join(cairo.LINE_JOIN_ROUND)
         ctx.set_source_rgb(1, 0, 1)
-        ctx.translate((MAP_WM+((slon-mapWLon)/scaleCorrected))*S2P, (MAP_NM+((mapNLat-slat)/scaleCorrected))*S2P)
+        #ctx.translate((MAP_WM+((slon-mapWLon)/scaleCorrected))*S2P, (MAP_NM+((mapNLat-slat)/scaleCorrected))*S2P)
+        ctx.translate((slon-mapWLon)*EXTENT_W*S2P/(mapELon-mapWLon), (mapNLat-slat)*EXTENT_H*S2P/(mapNLat-mapSLat))
+        print((slon-mapWLon)*S2P*EXTENT_H/(mapELon-mapWLon))
+        print((mapNLat-slat)*S2P*EXTENT_H/(mapNLat-mapSLat))
+        ctx.rotate(-rotation)
         ctx.move_to(0, -0.577*SC_W*S2P)
         ctx.rel_line_to(-0.5*SC_W*S2P, 0.866*SC_W*S2P)
         ctx.rel_line_to(SC_W*S2P, 0)
@@ -350,6 +364,11 @@ def createImage(path, fileformat, scalefactor=1):
     # Controls and labels
     if len(controlsArr) > 0:
         ctx = cairo.Context(surface)
+        ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
+        ctx.rotate(rotation)
+        ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+
+
         ctx.set_source_rgb(1, 0, 1)
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(CTEXT_S*S2P)
@@ -359,8 +378,11 @@ def createImage(path, fileformat, scalefactor=1):
             labelAngle = float(controlsArr[4*i+1])
             controllat = float(controlsArr[4*i+2])
             controllon = float(controlsArr[4*i+3])
-            controllatP = MAP_NM+((mapNLat-controllat)/scaleCorrected)
-            controllonP = MAP_WM+((controllon-mapWLon)/scaleCorrected)
+            #controllatP = MAP_NM+((mapNLat-controllat)/scaleCorrected)
+            #controllonP = MAP_WM+((controllon-mapWLon)/scaleCorrected)
+            #ctx.move_to((controllonP+C_R)*S2P, controllatP*S2P)
+            controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
+            controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
             ctx.move_to((controllonP+C_R)*S2P, controllatP*S2P)
             ctx.set_line_width(C_T*S2P)
             ctx.arc(controllonP*S2P, controllatP*S2P, C_R*S2P, 0, 2*math.pi)
@@ -371,12 +393,17 @@ def createImage(path, fileformat, scalefactor=1):
             x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
             labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
             labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
-            ctx.move_to((controllonP+labelX)*S2P-width/2, (controllatP-labelY)*S2P+height/2)
+            ctx.save()
+            ctx.translate(controllonP*S2P, controllatP*S2P)
+            ctx.rotate(-rotation)
+            #ctx.move_to((controllonP+labelX)*S2P-width/2, (controllatP-labelY)*S2P+height/2)
+            ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
             ctx.show_text(text)
+            ctx.restore()
 
     # Crosses and labels
     if len(crossesArr) > 0:
-        ctx = cairo.Context(surface)
+        #ctx = cairo.Context(surface)
         ctx.set_source_rgb(1, 0, 1)
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
         ctx.set_font_size(CTEXT_S*S2P/1.5)
@@ -386,8 +413,8 @@ def createImage(path, fileformat, scalefactor=1):
             text = "X"
             controllat = float(crossesArr[2*i])
             controllon = float(crossesArr[2*i+1])
-            controllatP = MAP_NM+((mapNLat-controllat)/scaleCorrected)
-            controllonP = MAP_WM+((controllon-mapWLon)/scaleCorrected)
+            controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
+            controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
             #ctx.move_to((controllonP)*S2P, controllatP*S2P)
             x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
             #labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
@@ -397,7 +424,7 @@ def createImage(path, fileformat, scalefactor=1):
 
     #Crossing points and labels
     if len(cpsArr) > 0:
-        ctx = cairo.Context(surface)
+        #ctx = cairo.Context(surface)
         ctx.set_source_rgb(1, 0, 1)
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(CTEXT_S*S2P/1.1)
@@ -409,8 +436,8 @@ def createImage(path, fileformat, scalefactor=1):
             controllat = float(cpsArr[3*i+1])
             controllon = float(cpsArr[3*i+2])
             controlAngleRads = math.pi*controlAngle/180
-            controllatP = MAP_NM+((mapNLat-controllat)/scaleCorrected)
-            controllonP = MAP_WM+((controllon-mapWLon)/scaleCorrected)
+            controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
+            controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
             x_bearing, y_bearing, width, height, x_advance, y_advance = ctx.text_extents(text)[:6]
             #0.34375 -12.890625 9.38465881348 16.46875 10.019317627 0.0
             ctx.move_to((controllonP)*S2P, (controllatP)*S2P)
@@ -484,7 +511,7 @@ def createImage(path, fileformat, scalefactor=1):
     # Adornments - North Arrow
     ctx = cairo.Context(surface)
     ctx.translate((MAP_WM+MAP_W-ADORN_LOGO_W)*S2P-width, (CONTENT_NM + 0.004)*S2P)  #set to centre of symbol...
-    ctx.rotate(magdec*math.pi/180)   #so that rotation doesn't add translation.  Point to mag. N
+    ctx.rotate(magdec*math.pi/180+rotation)   #so that rotation doesn't add translation.  Point to mag. N
     ctx.set_line_width(1*SCALE_FACTOR)
     ctx.set_source_rgb(0, 0, 0)
     if style == 'blueprint':
@@ -504,7 +531,7 @@ def createImage(path, fileformat, scalefactor=1):
     ctx.rel_line_to(0.002*S2P, 0.002*S2P)
     ctx.rel_line_to(0, -0.002*S2P)
     ctx.stroke()
-   
+
     # Adornments - Logo
     if style == "oterrain_ioa" or style == "streeto_ioa" or style == "streeto_norail_ioa":
         logoSurface = cairo.ImageSurface.create_from_png(home + "/images/ioalogo.png")
@@ -626,7 +653,7 @@ def createImage(path, fileformat, scalefactor=1):
         surface.flush()
 
         # Add Geospatial PDF metadata - not quite working so omit for now
-        
+
         #map_bounds = (MAP_WM/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H, MAP_WM/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H)
         #file2 = tempfile.NamedTemporaryFile()
         #wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]'
@@ -765,4 +792,4 @@ def test(path):
         fd.close()
 
 if __name__ == '__main__':
-    test("style=streeto-OS-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc82|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631")
+    test("style=streeto-OS-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc82|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")

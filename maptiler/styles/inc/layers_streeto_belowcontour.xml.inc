@@ -8,16 +8,6 @@
     </Datasource>
 </Layer>
 
-<Layer name="coast-poly" status="on" srs="&srs900913;">
-    <StyleName>coast-poly</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (SELECT ST_Intersection(way, !bbox!) as way from water WHERE ST_Intersects(way,!bbox!)) as coastline
-      </Parameter>
-    </Datasource>
-</Layer>
-
 <Layer name="leisure" status="on" srs="&srs900913;">
     <StyleName>leisure</StyleName>
     <Datasource>
@@ -46,8 +36,7 @@
             (select ST_Intersection(way, !bbox!) as way,"natural",waterway,landuse,way_area
             from &prefix;_polygon
                     where waterway in ('dock','mill_pond','riverbank','canal','river')
-                or landuse in ('reservoir','water','basin')
-                or "natural" in ('lake','water','land','marsh','scrub','wetland','glacier')
+                or "natural" in ('land','marsh','scrub','wetland','glacier')
             order by z_order,way_area desc
             ) as water_areas
         </Parameter>

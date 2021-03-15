@@ -1,9 +1,23 @@
 OpenOrienteeringMap
 =====
 
-This is a stripped-down version of [oomap](https://github.com/oobrien/oomap) for UK data, utilising LIDAR-derived contours.
+This is a fork of [oomap](https://github.com/oobrien/oomap) with the following main changes:
 
-Also now pulls in contours worldwide (from 60N to 60S) from SRTM data.  This requires the helper program phyghtmap from http://katze.tfiu.de/projects/phyghtmap/, along with its dependencies.
+Global:  Mapping data is up-to-date, as required OpenStreetMap data is queried directly when producing the final map.
+Global: No large large mapping databases are required as data is fetched as needed.  This significantly reduces the overhead in running & updating an oomap server.
+Global:  The standard OpenStreetMap rendering is used at all scales for the web view; the custom rendering is only performed on PDF/JPG/KMZ download.
+Global:  Contours are available (60N to 60S) based on NASA SRTM data - a long way from perfect but better than nothing!
+Global:  Magnetic North lines are present.
+UK: Higher resolution contours (2.5m, 5m or 10m spacing) are available for most of England & Wales, derived from LIDAR data.
+
+Other changes:
+Unicode text is handled correctly.
+Minor rendering changes, including cropping objects to map window (generating smaller PDFs with fewer artefacts), showing building outlines in coloured areas.
+Postboxes are now retrieved from OpenStreetMap.
+
+SRTM contour generation requires the helper program phyghtmap from http://katze.tfiu.de/projects/phyghtmap/, along with its dependencies.
+
+Magnetic declination requires geomag from https://github.com/todd-dembrey/geomag
 
 Mapnik stylesheets for OOMap (as used at https://oomap.co.uk/global/ when zoomed in) and other raster tile layers (e.g. the "futurecity" stylesheet is used at https://bikesharemap.com/london/).
 

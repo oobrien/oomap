@@ -7,6 +7,9 @@ var currentNumber = null;
 var topID = 0;
 var topNumber = 1;
 
+var rotAngle = 0;
+var magDec;
+
 var mapTitle = defaultMapTitle;
 var mapTitleDisplay = mapTitle;
 var raceDescription = defaultRaceDescription;
@@ -47,6 +50,8 @@ var dragControl;
 var sheetCentreLL;
 var newControlLL = [0, 0];
 var mapBound;
+var mapPoly;
+var wgs84Poly;
 var orienteeringAttribution;
 
 //State
@@ -417,6 +422,8 @@ function init()
 	olMap.on("singleclick", function(evt) {
 		handleClick(evt);
 	});
+
+	olMap.getView().on('propertychange', handleRotate);
 
 	/* TODO - interactions here with both the sheetCentre control (drag it) and the controls themselves (bring up box)
 	dragControl = new OpenLayers.Control.DragFeature(layerMapCentre, {
@@ -814,6 +821,7 @@ function init()
 	{
 		$.post('/load.php', {"shortcode":reqMapID}, handleLoadCallback);
 	}
+
 }
 
 function updateTips( t ) {
@@ -924,6 +932,33 @@ function handleStyleChange()
 	mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
 	handleZoom();
 	updateUrl();
+}
+
+function handleRotate()
+{
+	console.log('handleRotate');
+	if (!olMap)
+	{
+		return;
+	}
+	try {
+		var angle = this.getRotation();
+  	if (angle != rotAngle) {
+			if (Math.abs(angle)>Math.PI/4){
+				var orient;
+				if ($("#portrait").prop('checked')) {orient="landscape"}
+				else {orient="portrait"}
+				$("#" + orient).click();
+				$("[for=" + orient + "]").click();
+				if(angle>0) {angle=angle-Math.PI/2}
+				else {angle=angle+Math.PI/2}
+				this.setRotation(angle);
+			}
+			rebuildMapSheet();
+			rebuildMapControls();
+		}
+	}
+	catch {}
 }
 
 function handleZoom()
@@ -1107,6 +1142,7 @@ function handleDeleteSheet()
 
 	topID = 0;
 	topNumber = 1;
+	magDec = undefined;
 
 	rebuildMapControls();
 	rebuildDescriptions();
@@ -1473,7 +1509,8 @@ function saveMap()
 		"centre_lon": sheetCentreLL[0],
 		"centre_wgs84lat": ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],
 		"centre_wgs84lon": ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0],
-		"controls": controlsForDB
+		"controls": controlsForDB,
+		"rotation": rotAngle
 	}};
 
 	$.post('/save.php', json, handleSaveCallback);
@@ -1549,6 +1586,7 @@ function generateMap(type)
 			url  = url.substring(0, url.length - 1);
 		}
 	}
+	url	+= "|rotation=" + rotAngle.toFixed(4)
 
 	if (debug) { console.log(url); }
 	self.location=url;
@@ -1795,6 +1833,8 @@ function loadMap(data)
 	rebuildMapControls();
 	handleZoom();
 	updateUrl();
+	olMap.getView().setRotation(parseFloat(data.rotation));
+	handleRotate();
 
 	$( "#getraster" ).button("enable");
 	$( "#getworldfile" ).button("enable");
@@ -1888,6 +1928,20 @@ function rebuildMapSheet()
 	layerMapContent.getSource().addFeatures([content]);
 	layerMapCentre.getSource().addFeatures([centreMarker]);
 
+	var angle = olMap.getView().getRotation();
+  //if (angle != rotAngle) {
+		layerMapBorder.getSource().getFeatures().forEach(function(f) {
+			f.values_.geometry.rotate(angle,sheetCentreLL);
+  	});
+		layerMapSheet.getSource().getFeatures()[0].values_.geometry.rotate(angle,sheetCentreLL);
+		layerMapTitle.getSource().getFeatures()[0].values_.geometry.rotate(angle,sheetCentreLL);
+		rotAngle = angle;
+	//}
+	mapPoly = layerMapSheet.getSource().getFeatures()[0].values_.geometry;
+	wgs84Poly = mapPoly;
+	wgs84Poly.transform("EPSG:3857", "EPSG:4326");
+
+
 	//dragControl.activate();
 	rebuildDescriptions();
 
@@ -1925,7 +1979,7 @@ function rebuildMapControls()
 	{
 		var control = controlsCP[i];
 		var controlCP = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
-		controlCP.set('angle', control.angle);
+		controlCP.set('angle', control.angle+rotAngle*180/Math.PI);
 		layerCP.getSource().addFeatures([controlCP]);
 	}
 
@@ -2058,8 +2112,10 @@ function handleGetPostboxesOld()
 
 function handleGetPostboxes()
 {
+  var arr = wgs84Poly.flatCoordinates
 	var bounds = ol.proj.transformExtent([mapBound[0], mapBound[1], mapBound[2], mapBound[3]], "EPSG:3857", "EPSG:4326");
-	var url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];node[amenity=post_box](' + bounds[1] + "," + bounds[0] + "," + bounds[3] + "," + bounds[2]+");out;";
+	//var url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];node[amenity=post_box](' + bounds[1] + "," + bounds[0] + "," + bounds[3] + "," + bounds[2]+");out;";
+	var url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];node[amenity=post_box](poly:\"' + arr[1] + " " + arr[0] + " " + arr[3] + " " + arr[2] + " " + arr[5] + " " + arr[4] + " " + arr[7] + " " + arr[6]+"\");out;";
     $.get(url, null, handleGetOSMboxesCallback);
 	$( "#postboxes_searching" ).dialog( "open" );
 
@@ -2290,6 +2346,28 @@ function updateUrl()
 	window.location.hash = "/" + mapID + "/" + mapStyleID + "/" + olMap.getView().getZoom() + "/" + centre[0].toFixed(4) + "/" + centre[1].toFixed(4) + "/";
 
 }
+
+function rotateToMagDec(){
+  if (magDec){
+		olMap.getView().setRotation(magDec * Math.PI/180);
+		handleRotate();
+	}
+}
+
+function setdecl(v){
+ console.log("declination found: "+v);
+ magDec=v;
+}
+
+function lookupMag(lat, lon) {
+   var url=
+"https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?magneticComponent=d&lat1="+lat+"&lon1="+lon+"&resultFormat=xml";
+   $.get(url, function(xml, status){
+        setdecl( $(xml).find('declination').text());
+   });
+}
+
+
 
 $(document).ready(function()
 {

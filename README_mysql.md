@@ -21,7 +21,8 @@ CREATE TABLE map(
 	created_by_domain VARCHAR(255),
 	created_date DATE,
 	access_count INT,
-	last_accessed DATE
+	last_accessed DATE,
+	rotation REAL NOT NULL DEFAULT 0
 ) ENGINE=INNODB;
 ```
 

@@ -15,7 +15,7 @@ if ($inData == false)
 }
 
 $conn = @mysqli_connect($dbhost, $dbuser, $dbpass); //Change to 127.0.0.1 for local dev
-if (!$conn) 
+if (!$conn)
 {
 	$returnData = array('success'=>false, 'message'=>mysqli_error($conn));
 	echo json_encode($returnData);
@@ -26,7 +26,7 @@ mysqli_select_db($conn, $dbdb);
 
 $shortcode = mysqli_real_escape_string($conn, $inData);
 
-$mapquery = "select id, title, race_instructions, eventdate, club, style, scale, papersize, paperorientation, centre_lat, centre_lon from map where shortcode = '$shortcode' limit 1";
+$mapquery = "select id, title, race_instructions, eventdate, club, style, scale, papersize, paperorientation, centre_lat, centre_lon, rotation from map where shortcode = '$shortcode' limit 1";
 
 $result = mysqli_query($conn, $mapquery);
 if (!$result)
@@ -68,6 +68,7 @@ $data["papersize"] = $row['papersize'];
 $data["paperorientation"] = $row['paperorientation'];
 $data["centre_lat"] = $row['centre_lat'];
 $data["centre_lon"] = $row['centre_lon'];
+$data["rotation"] = $row['rotation'];
 
 // Increment the counter here.
 $update_query = "update map set access_count = access_count + 1, last_accessed = now() where id = $map_id limit 1;";

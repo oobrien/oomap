@@ -1,3 +1,13 @@
+<Layer name="coast-poly" status="on" srs="&srs900913;">
+    <StyleName>coast-poly</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (SELECT ST_Intersection(way, !bbox!) as way from water WHERE ST_Intersects(way,!bbox!)) as coastline
+      </Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="water_areas" status="on" srs="&srs900913;">
     <StyleName>water_areas</StyleName>
     <Datasource>
@@ -12,6 +22,7 @@
         </Parameter>
     </Datasource>
 </Layer>
+
 <Layer name="piers" status="on" srs="&srs900913;">
     <StyleName>islands</StyleName>
     <Datasource>
