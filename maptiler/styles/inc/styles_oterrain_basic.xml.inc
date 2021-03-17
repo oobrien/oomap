@@ -323,13 +323,13 @@
         &maxscale_zoom12;
         <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <!-- <PolygonPatternSymbolizer file="&symbols;/blackdot.png" /> -->
+        <PolygonPatternSymbolizer file="&symbols;/blackdot.png" transform="scale(1.0, 1.0)" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/sand.png" />
+        <PolygonPatternSymbolizer file="&symbols;/sand.png" transform="scale(1.0, 1.0)" />
     </Rule>
     <Rule>
         &maxscale_zoom12;

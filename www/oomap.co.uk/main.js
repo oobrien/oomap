@@ -50,7 +50,6 @@ var dragControl;
 var sheetCentreLL;
 var newControlLL = [0, 0];
 var mapBound;
-var mapPoly;
 var wgs84Poly;
 var orienteeringAttribution;
 
@@ -1477,6 +1476,7 @@ function handleClick(evt)
 		$( "#getkmz" ).button("disable");
 
 		sheetCentreLL = evt.coordinate;
+		lookupMag(ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0]);
 		rebuildMapSheet();
 		state = "addcontrols";
 		$("#messageCentre").hide();
@@ -1931,14 +1931,15 @@ function rebuildMapSheet()
 	var angle = olMap.getView().getRotation();
   //if (angle != rotAngle) {
 		layerMapBorder.getSource().getFeatures().forEach(function(f) {
-			f.values_.geometry.rotate(angle,sheetCentreLL);
+			f.getGeometry().rotate(angle,sheetCentreLL);
   	});
-		layerMapSheet.getSource().getFeatures()[0].values_.geometry.rotate(angle,sheetCentreLL);
-		layerMapTitle.getSource().getFeatures()[0].values_.geometry.rotate(angle,sheetCentreLL);
+		layerMapSheet.getSource().getFeatures()[0].getGeometry().rotate(angle,sheetCentreLL);
+		layerMapTitle.getSource().getFeatures()[0].getGeometry().rotate(angle,sheetCentreLL);
 		rotAngle = angle;
 	//}
-	mapPoly = layerMapSheet.getSource().getFeatures()[0].values_.geometry;
-	wgs84Poly = mapPoly;
+
+	wgs84Poly = content.getGeometry();
+	wgs84Poly.rotate(angle, sheetCentreLL);
 	wgs84Poly.transform("EPSG:3857", "EPSG:4326");
 
 
@@ -2349,21 +2350,22 @@ function updateUrl()
 
 function rotateToMagDec(){
   if (magDec){
-		olMap.getView().setRotation(magDec * Math.PI/180);
+		olMap.getView().setRotation(-magDec * Math.PI/180);
 		handleRotate();
 	}
 }
 
-function setdecl(v){
+function setdecl(v, callback){
  console.log("declination found: "+v);
  magDec=v;
+ callback();
 }
 
 function lookupMag(lat, lon) {
    var url=
 "https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?magneticComponent=d&lat1="+lat+"&lon1="+lon+"&resultFormat=xml";
    $.get(url, function(xml, status){
-        setdecl( $(xml).find('declination').text());
+        setdecl( $(xml).find('declination').text(), rotateToMagDec);
    });
 }
 

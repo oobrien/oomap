@@ -3,14 +3,20 @@ OpenOrienteeringMap
 
 This is a fork of [oomap](https://github.com/oobrien/oomap) with the following main changes:
 
-Global:  Mapping data is up-to-date, as required OpenStreetMap data is queried directly when producing the final map.
-Global: No large large mapping databases are required as data is fetched as needed.  This significantly reduces the overhead in running & updating an oomap server.
-Global:  The standard OpenStreetMap rendering is used at all scales for the web view; the custom rendering is only performed on PDF/JPG/KMZ download.
-Global:  Contours are available (60N to 60S) based on NASA SRTM data - a long way from perfect but better than nothing!
-Global:  Magnetic North lines are present.
-UK: Higher resolution contours (2.5m, 5m or 10m spacing) are available for most of England & Wales, derived from LIDAR data.
+**Global:**  Mapping data is up-to-date, as required OpenStreetMap data is queried directly when producing the final map.
 
-Other changes:
+**Global:** No large large mapping databases are required as data is fetched as needed.  This significantly reduces the overhead in running & updating an oomap server.
+
+**Global:**  The standard OpenStreetMap rendering is used at all scales for the web view; the custom rendering is only performed on PDF/JPG/KMZ download.
+
+**Global:**  Contours are available (60N to 60S) based on NASA SRTM data - a long way from perfect but better than nothing!
+
+**Global:**  Magnetic North lines are present.
+
+**UK:** Higher resolution contours (2.5m, 5m or 10m spacing) are available for most of England & Wales, derived from LIDAR data.
+
+**Other changes:**
+
 Unicode text is handled correctly.
 Minor rendering changes, including cropping objects to map window (generating smaller PDFs with fewer artefacts), showing building outlines in coloured areas.
 Postboxes are now retrieved from OpenStreetMap.
@@ -29,7 +35,7 @@ Setup
 Data
 ---
 
-You need a PostgreSQL/PostGIS database (I'm using PostgreSQL 10) - with coastline and (for the UK) contour data.  See [README_postgres.md] for more details.
+You need a PostgreSQL/PostGIS database (I'm using PostgreSQL 10) - with coastline and (for the UK) contour data.  See [README_postgres.md](README_postgre.md) for more details.
 
 Set up a database and tile server, eg. https://www.linuxbabe.com/ubuntu/openstreetmap-tile-server-ubuntu-18-04-osm
 
@@ -61,6 +67,6 @@ The example images, using the XYZ map tile convention, have x=16090, y=10213, z=
 
 ![oterrain](https://raw.github.com/oobrien/oomap/master/examples/oterrain_z15.png "oterrain") oterrain
 
-![blueprint](https://raw.github.com/oobrien/oomap/master/examples/blueprint_z15.png "blueprint") blueprint (only on it's own edition which uses the Global edition database)
+![blueprint](https://raw.github.com/oobrien/oomap/master/examples/blueprint_z15.png "blueprint") blueprint 
 
 ![urban_skeleton](https://raw.github.com/oobrien/oomap/master/examples/urban_skeleton_z15.png "urban_skeleton") urban_skeleton (not currently on OOMap)
