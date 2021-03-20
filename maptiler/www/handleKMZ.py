@@ -26,11 +26,11 @@ def processRequest(req):
 
     outf = createKMZ(path)
 
-    if path.count("|") < 9 or path.count("|") > 10 or  len(path) < 30:
+    if path.count("|") < 10 or path.count("|") > 11 or  len(path) < 30:
         return "Incorrectly formatted string."
-    if path.count("|") == 9:
+    if path.count("|") == 10:
         path = path + "|"
-    style, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
+    style, paper, scale, centre, title, club, mapid, start, crosses, cps, controls, rotation  = path.split("|")
     mapid = mapid.split("=")[1]
 
     if isStr(outf):
@@ -77,11 +77,11 @@ def createKMZ(path):
 
 	global MAP_NM, MAP_EM, MAP_SM, MAP_WM
 
-	if path.count("|") < 9 or path.count("|") > 10 or  len(path) < 30:
+	if path.count("|") < 10 or path.count("|") > 11 or  len(path) < 30:
 		return "Incorrectly formatted string."
-	if path.count("|") == 9:
+	if path.count("|") == 10:
 		path = path + "|"
-	style, paper, scale, centre, title, club, mapid, start, crosses, cps, controls  = path.split("|")
+	style, paper, scale, centre, title, club, mapid, start, crosses, cps, controls, rotation  = path.split("|")
 
 	paper = paper.split("=")[1]
 	PAPER_W = float(paper.split(",")[0])
@@ -92,6 +92,7 @@ def createKMZ(path):
 	centre = centre.split("=")[1]
 	clat = int(centre.split(",")[0])
 	clon = int(centre.split(",")[1])
+	rotation = float(rotation.split("=")[1])
 
 	projection = mapnik.Projection(EPSG900913)
 	wgs84lat = mapnik.Coord(clon, clat).inverse(projection).y
@@ -110,6 +111,9 @@ def createKMZ(path):
 	YMin = clat - (paperNLat - paperSLat)/2.0
 	XMax = clon + (paperELon - paperWLon)/2.0
 	YMax = clat + (paperNLat - paperSLat)/2.0
+
+	TopLeftLat = clat + (MAP_H/2+MAP_NM)*scaleCorrected*math.cos(rotation) - (MAP_W/2+MAP_WM)*scaleCorrected*math.sin(rotation)
+	TopLeftLon = clon - (MAP_W/2+MAP_WM)*scaleCorrected*math.cos(rotation) - (MAP_H/2+MAP_NM)*scaleCorrected*math.sin(rotation)
 
 	north = mapnik.Coord(XMin, YMax).inverse(projection).y
 	west = mapnik.Coord(XMin, YMax).inverse(projection).x
@@ -133,7 +137,7 @@ def createKMZ(path):
 	ground.latlonbox.south = south
 	ground.latlonbox.east = east
 	ground.latlonbox.west = west
-	ground.latlonbox.rotation = 0
+	ground.latlonbox.rotation = rotation * 180/math.pi
 
 	kmzfile = tempfile.NamedTemporaryFile()
 	kml.savekmz(kmzfile.name)
@@ -150,4 +154,4 @@ def test(path):
 		fd.close()
 
 if __name__ == '__main__':
-    test("style=streeto|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=|start=6801344,-86261|crosses=|cps=|controls=")
+    test("style=streeto-OS-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6055d87797634|start=6801344,-86261|crosses=|cps=|controls=|rotation=0.3")
