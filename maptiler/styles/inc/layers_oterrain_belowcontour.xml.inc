@@ -9,7 +9,6 @@
 </Layer>
 
 <Layer name="coast-poly" status="on" srs="&srs900913;">
-    <StyleName>coast-poly</StyleName>
     <StyleName>coast-line</StyleName>
     <Datasource>
         &datasource-settings;
@@ -18,7 +17,6 @@
       </Parameter>
     </Datasource>
 </Layer>
-
 
 <Layer name="leisure" status="on" srs="&srs900913;">
     <StyleName>leisure</StyleName>
@@ -107,8 +105,7 @@
             (select way,"natural",waterway,landuse,way_area
             from &prefix;_polygon
             where waterway in ('dock','mill_pond','riverbank','canal','river')
-                or landuse in ('reservoir','water','basin')
-                or "natural" in ('lake','water','land','glacier','pond')
+                or "natural" in ('land','glacier','pond')
             order by z_order,way_area desc
             ) as water_areas
         </Parameter>

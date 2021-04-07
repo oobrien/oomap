@@ -352,9 +352,7 @@
 <Style name="graveyard_overprint">
     <Rule>
         &maxscale_zoom12;
- 	<!-- <MarkersSymbolizer file="&symbols;tomb.svg" placement="interior" spacing="5" max-error="0.5" transform="scale(0.5)" /> -->
-        <PolygonPatternSymbolizer file="&symbols;/tomb.png" transform="scale(0.01)" />
-	<!-- <PolygonPatternSymbolizer file="&symbols;/tomb.svg" transform="scale(3)" /> -->
+        <!-- <PolygonPatternSymbolizer file="&symbols;/tomb.png" transform="scale(0.01)" /> -->
     </Rule>
 </Style>
 

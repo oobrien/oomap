@@ -7,7 +7,7 @@ import time
 try:
     from PyPDF2 import PdfFileReader, PdfFileWriter
     from PyPDF2.generic import (ArrayObject, DecodedStreamObject, DictionaryObject, FloatObject, NameObject,
-        NumberObject, TextStringObject)
+        NumberObject, TextStringObject, ByteStringObject, createStringObject)
     HAS_PYPDF2 = True
 except ImportError:
     HAS_PYPDF2 = False
@@ -216,19 +216,32 @@ def createImage(path, fileformat, scalefactor=1):
 
         if contourSource == "SRTM":
             #Now get SRTM contours using phyghtmap:
-            phyString="phyghtmap --area="+str(bbox2.minx)+":"+str(bbox2.miny)+":"+ \
-                str(bbox2.maxx)+":"+str(bbox2.maxy)+" --step=" + contourSeparation + " --source=srtm1 --srtm-version=3 " + \
+            #Use Phyghtmap just to get DEM data - process separately
+            phyString="phyghtmap --area="+str(bbox2.minx-0.0002)+":"+str(bbox2.miny-0.002)+":"+ \
+                str(bbox2.maxx+0.0002)+":"+str(bbox2.maxy+0.0002)+ " --source=srtm1 --srtm-version=3 " + \
                 "--earthexplorer-user=" + ee_user + " --earthexplorer-password=" + ee_pw + \
-                " --scale=4 --smooth=0.85" + \
-                " --no-zero-contour --hgtdir=" + home_base + "/hgt -o " + home_base + "/"+tmpid + " >> " + home_base + "/phy.log"
-            os.system(phyString)   #writes .osm file containing contours
-            os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
-                " -p " + tmpid + "_srtm" + \
-                " --tag-transform-script " + home_base + "/openstreetmap-carto/srtm.lua" + \
-                " --style " + home_base + "/openstreetmap-carto/srtm.style -C 200 -U osm " + home_base + "/"+tmpid+"*.osm")
+                " --hgtdir=" + home_base + "/hgt -p " + home_base + "/"+tmpid + " >> " + home_base + "/phy.log"
+            os.system(phyString)
+            #Merge file(s) into single virtual dataset (prevents contour boundaries at degree grid lines)
+            os.system("gdalbuildvrt "+ home_base + "/"+tmpid + "_a.vrt " +  home_base + "/"+tmpid + "_lon*")
+            #Resample at 10m intervals to get smoother contours.  Reproject at the same time
+            os.system("gdalwarp -r cubic -tr 10 10 -s_srs EPSG:4326 -t_srs EPSG:3857 -te_srs EPSG:4326 -te " + \
+                str(bbox2.minx-0.0001)+" "+str(bbox2.miny-0.0001)+" "+ \
+                str(bbox2.maxx+0.0001)+" "+str(bbox2.maxy+0.0001)+ \
+                " -of SAGA -ot Float32 " + home_base + "/"+tmpid + "_a.vrt " + home_base + "/"+tmpid + ".sdat")
+            #Apply Guassian blur to further smooth contours
+            os.system("saga_cmd grid_filter \"Gaussian Filter\" -RADIUS 6 -INPUT " + home_base + "/"+tmpid + ".sdat -RESULT " + home_base + "/"+tmpid + "_s")
+            #Generate contours
+            os.system("gdal_contour -b 1 -a height -i " + contourSeparation + " " +  home_base + "/"+tmpid + "_s.sdat "  +  home_base + "/"+tmpid + ".shp")
+            #then load contours to database
+            os.system("shp2pgsql -g way " + home_base + "/"+tmpid + ".shp " + tmpid + "_srtm_line | psql -h localhost -p 5432 -U postgres -d otf1")
+            #os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
+            #    " -p " + tmpid + "_srtm" + \
+            #    " --tag-transform-script " + home_base + "/openstreetmap-carto/srtm.lua" + \
+            #    " --style " + home_base + "/openstreetmap-carto/srtm.style -C 200 -U osm " + home_base + "/"+tmpid+"*.osm")
             import glob
-            for i in glob.glob(home_base +'/'+tmpid+'*.osm'):
-                os.unlink(i)  #Finished with temporary osm data file - delete.
+            #for i in glob.glob(home_base +'/'+tmpid+'*'):
+            #    os.unlink(i)  #Finished with temporary files - delete.
 
     cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
     # Limit the size of map we are prepared to produce to roughly A2 size.
@@ -260,7 +273,8 @@ def createImage(path, fileformat, scalefactor=1):
     if fileformat == 'jpg':
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(PAPER_W*S2P), int(PAPER_H*S2P))
     else:
-        surface = cairo.PDFSurface(file.name, PAPER_W*S2P, PAPER_H*S2P)
+        surface = cairo.PDFSurface(file.name, PAPER_W*S2P / SCALE_FACTOR, PAPER_H*S2P / SCALE_FACTOR)
+        surface.set_device_scale(1.0/SCALE_FACTOR,1.0/SCALE_FACTOR)
         # versions = surface.get_versions()
         # version = versions[1]
         # surface.restrict_to_version(version)
@@ -326,18 +340,19 @@ def createImage(path, fileformat, scalefactor=1):
         return file
 
     #  Add grid lines in same layer - allows darken comp-op
-    ctx.rectangle(0, 0, MAP_W * S2P,  MAP_H * S2P)
-    ctx.clip() #Clip to map area
-    ctx.set_line_width(0.5*SCALE_FACTOR)
-    ctx.set_source_rgb(0.5, 0.5, 1)
-    ctx.set_operator(cairo.Operator.DARKEN)
-    northSpacing = scaleBarW / math.cos(magdec*math.pi/180+rotation)
-    shift = MAP_H * S2P * math.tan(magdec*math.pi/180+rotation) * 0.5
-    lines = range(int(-northSpacing * S2P/2), int((MAP_W + northSpacing) * S2P), int(northSpacing * S2P))
-    for line in lines:
-        ctx.move_to (line + shift, 0)
-        ctx.line_to (line - shift, MAP_H * S2P)
-    ctx.stroke()
+    if style != "blueprint":
+        ctx.rectangle(0, 0, MAP_W * S2P,  MAP_H * S2P)
+        ctx.clip() #Clip to map area
+        ctx.set_line_width(0.5*SCALE_FACTOR)
+        ctx.set_source_rgb(0.5, 0.5, 1)
+        ctx.set_operator(cairo.Operator.DARKEN)
+        northSpacing = scaleBarW / math.cos(magdec*math.pi/180+rotation)
+        shift = MAP_H * S2P * math.tan(magdec*math.pi/180+rotation) * 0.5
+        lines = range(int(-northSpacing * S2P/2), int((MAP_W + northSpacing) * S2P), int(northSpacing * S2P))
+        for line in lines:
+            ctx.move_to (line + shift, 0)
+            ctx.line_to (line - shift, MAP_H * S2P)
+        ctx.stroke()
 
     # Start control
     if slon != 0 and slat != 0:
@@ -352,8 +367,6 @@ def createImage(path, fileformat, scalefactor=1):
         ctx.set_source_rgb(1, 0, 1)
         #ctx.translate((MAP_WM+((slon-mapWLon)/scaleCorrected))*S2P, (MAP_NM+((mapNLat-slat)/scaleCorrected))*S2P)
         ctx.translate((slon-mapWLon)*EXTENT_W*S2P/(mapELon-mapWLon), (mapNLat-slat)*EXTENT_H*S2P/(mapNLat-mapSLat))
-        print((slon-mapWLon)*S2P*EXTENT_H/(mapELon-mapWLon))
-        print((mapNLat-slat)*S2P*EXTENT_H/(mapNLat-mapSLat))
         ctx.rotate(-rotation)
         ctx.move_to(0, -0.577*SC_W*S2P)
         ctx.rel_line_to(-0.5*SC_W*S2P, 0.866*SC_W*S2P)
@@ -792,4 +805,4 @@ def test(path):
         fd.close()
 
 if __name__ == '__main__':
-    test("style=streeto-OS-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc82|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
+    test("style=streeto-SRTM-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc91|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
