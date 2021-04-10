@@ -1053,7 +1053,7 @@ function handleZoom()
 //		layerMapnik.setVisible(false);
 //		layerOrienteering.setVisible(true);
 		layerMapnik.setVisible(true);	//Use standard slippy map for all zoom levels; keep old code for now.
-		if(mapStyleID.split("-")[1] == "SRTM" || mapStyleID.split("-")[1] == "NONE")
+		if(mapStyleID.split("-")[1] == "SRTM" || mapStyleID.split("-")[1] == "NONE" || mapStyleID.split("-")[1] == "COPE")
 		{
 			layerOrienteering.setVisible(false);
 	  }

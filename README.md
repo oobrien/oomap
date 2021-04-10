@@ -11,6 +11,8 @@ This is a fork of [oomap](https://github.com/oobrien/oomap) with the following m
 
 **Global:**  Contours are available (60N to 60S) based on NASA SRTM data - a long way from perfect but better than nothing!
 
+**Global:**  Contours are also available worldwide (except Armenia and Azerbaijan) based on ESA COPERNICUS GEO-30 data - should be fresher and a bit better quality than SRTM. 
+
 **Global:**  Magnetic North lines are present.
 
 **UK:** Higher resolution contours (2.5m, 5m or 10m spacing) are available for most of England & Wales, derived from LIDAR data.
@@ -67,6 +69,6 @@ The example images, using the XYZ map tile convention, have x=16090, y=10213, z=
 
 ![oterrain](https://raw.github.com/oobrien/oomap/master/examples/oterrain_z15.png "oterrain") oterrain
 
-![blueprint](https://raw.github.com/oobrien/oomap/master/examples/blueprint_z15.png "blueprint") blueprint 
+![blueprint](https://raw.github.com/oobrien/oomap/master/examples/blueprint_z15.png "blueprint") blueprint
 
 ![urban_skeleton](https://raw.github.com/oobrien/oomap/master/examples/urban_skeleton_z15.png "urban_skeleton") urban_skeleton (not currently on OOMap)

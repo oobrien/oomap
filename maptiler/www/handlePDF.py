@@ -214,11 +214,15 @@ def createImage(path, fileformat, scalefactor=1):
         with open(styleFile, mode="w") as f:
                 f.write(styleString)
 
-        if contourSource == "SRTM":
-            #Now get SRTM contours using phyghtmap:
+        if contourSource == "SRTM" or contourSource == "COPE":
+            #Now get contours using phyghtmap:
             #Use Phyghtmap just to get DEM data - process separately
+            if contourSource == "SRTM":
+                sourceText = " --source=srtm1 --srtm-version=3 "
+            else:
+                sourceText = " --source=cope1"
             phyString="phyghtmap --area="+str(bbox2.minx-0.0002)+":"+str(bbox2.miny-0.002)+":"+ \
-                str(bbox2.maxx+0.0002)+":"+str(bbox2.maxy+0.0002)+ " --source=srtm1 --srtm-version=3 " + \
+                str(bbox2.maxx+0.0002)+":"+str(bbox2.maxy+0.0002)+ sourceText + \
                 "--earthexplorer-user=" + ee_user + " --earthexplorer-password=" + ee_pw + \
                 " --hgtdir=" + home_base + "/hgt -p " + home_base + "/"+tmpid + " >> " + home_base + "/phy.log"
             os.system(phyString)
@@ -230,18 +234,22 @@ def createImage(path, fileformat, scalefactor=1):
                 str(bbox2.maxx+0.0001)+" "+str(bbox2.maxy+0.0001)+ \
                 " -of SAGA -ot Float32 " + home_base + "/"+tmpid + "_a.vrt " + home_base + "/"+tmpid + ".sdat")
             #Apply Guassian blur to further smooth contours
-            os.system("saga_cmd grid_filter \"Gaussian Filter\" -RADIUS 6 -INPUT " + home_base + "/"+tmpid + ".sdat -RESULT " + home_base + "/"+tmpid + "_s")
+            os.system("saga_cmd grid_filter \"Gaussian Filter\" -SIGMA 2.0 -RADIUS 12 -INPUT " + home_base + "/"+tmpid + ".sdat -RESULT " + home_base + "/"+tmpid + "_s")
             #Generate contours
             os.system("gdal_contour -b 1 -a height -i " + contourSeparation + " " +  home_base + "/"+tmpid + "_s.sdat "  +  home_base + "/"+tmpid + ".shp")
+            # If contour generation failed, use a dummy dataset so that the DB table
+            # gets created and the SQL query returns without errors.
+            try:
+                os.stat(home_base + "/"+tmpid + ".shp")
+            except:
+                os.system("cp " + home_base + "/null.shp " + home_base + "/"+tmpid + ".shp")
+                os.system("cp " + home_base + "/null.shx " + home_base + "/"+tmpid + ".shx")
+                os.system("cp " + home_base + "/null.dbf " + home_base + "/"+tmpid + ".dbf")
             #then load contours to database
             os.system("shp2pgsql -g way " + home_base + "/"+tmpid + ".shp " + tmpid + "_srtm_line | psql -h localhost -p 5432 -U postgres -d otf1")
-            #os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
-            #    " -p " + tmpid + "_srtm" + \
-            #    " --tag-transform-script " + home_base + "/openstreetmap-carto/srtm.lua" + \
-            #    " --style " + home_base + "/openstreetmap-carto/srtm.style -C 200 -U osm " + home_base + "/"+tmpid+"*.osm")
             import glob
-            #for i in glob.glob(home_base +'/'+tmpid+'*'):
-            #    os.unlink(i)  #Finished with temporary files - delete.
+            for i in glob.glob(home_base +'/'+tmpid+'*'):
+                os.unlink(i)  #Finished with temporary files - delete.
 
     cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
     # Limit the size of map we are prepared to produce to roughly A2 size.
@@ -604,6 +612,8 @@ def createImage(path, fileformat, scalefactor=1):
             text = "Contains OS data © Crown copyright & database right OS 2013-2017."
         elif contourSource=="LIDAR":
             text = "Contours from LIDAR  © Environment Agency copyright and/or database right 2015. All rights reserved."
+        elif contourSource=="COPE":
+            text = "Contours from Copernicus WorldDEM-30 ©DLR e.V. 2010-2014 and ©Airbus Defence and Space GmbH 2014-2018. All rights reserved."
         else:
             text=""
         ctx.translate((MAP_WM)*S2P, (MAP_NM+MAP_H+ADORN_ATTRIB_NM+0.002)*S2P)
@@ -728,7 +738,7 @@ def add_geospatial_pdf_header(m, f, f2, map_bounds, epsg=None, wkt=None):
             bbox = ArrayObject()
             #for x in mapnik.Box2d(0,int(page.mediaBox[3]),int(page.mediaBox[2]),0): #in pts
             for x in [0,595,841,0]: #in pts
-		    bbox.append(FloatObject(str(x)))  #Fixed
+                bbox.append(FloatObject(str(x)))  #Fixed
 
             viewport[NameObject('/BBox')] = bbox
             #viewport[NameObject('/Name')] = TextStringObject('OOMAP')
@@ -797,7 +807,7 @@ def get_pdf_gpts(m):
 def test(path):
     outf = createImage(path, 'pdf')
     if isStr(outf):
-        print outf
+        print (outf)
     else:
         fd = open('test.pdf', 'wb')
         outf.seek(0)    #DPD
@@ -805,4 +815,4 @@ def test(path):
         fd.close()
 
 if __name__ == '__main__':
-    test("style=streeto-SRTM-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc91|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
+    test("style=streeto-COPE-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc92|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
