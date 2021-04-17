@@ -4,6 +4,7 @@ import time
 
 home_base = os.getenv('OOM_HOME')
 home=home_base + "/maptiler"
+SCALE_FACTOR = 2
 
 def isStr(x):
     try:
@@ -47,7 +48,7 @@ def createJGW(path):
     import tempfile
 
     EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
-    S2P = 360.0/0.127
+    S2P = 360.0 * SCALE_FACTOR/0.127
 
     MAP_NM = 0.014
     MAP_EM = 0.008

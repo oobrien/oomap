@@ -11,7 +11,7 @@ This is a fork of [oomap](https://github.com/oobrien/oomap) with the following m
 
 **Global:**  Contours are available (60N to 60S) based on NASA SRTM data - a long way from perfect but better than nothing!
 
-**Global:**  Contours are also available worldwide (except Armenia and Azerbaijan) based on ESA COPERNICUS GEO-30 data - should be fresher and a bit better quality than SRTM. 
+**Global:**  Contours are also available worldwide (except Armenia and Azerbaijan) based on ESA COPERNICUS GLO-30 data - should be fresher and a bit better quality than SRTM.
 
 **Global:**  Magnetic North lines are present.
 

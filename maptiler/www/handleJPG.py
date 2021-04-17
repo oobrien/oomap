@@ -5,6 +5,7 @@ from handlePDF import createImage
 
 home_base = os.getenv('OOM_HOME')
 home=home_base + "/maptiler"
+SCALE_FACTOR = 2
 
 def isStr(x):
     try:
@@ -18,7 +19,7 @@ def processRequest(req):
 
 #    with open(home + "/logs/oommakerlog-jpg-access.txt", "a") as fa:
 #        fa.write(time.strftime('%x %X') + " : " + req.get_remote_host() + " : " + path + "\n")
-    outf = createImage(path, 'jpg')
+    outf = createImage(path, 'jpg', SCALE_FACTOR)
 
     if path.count("|") < 10 or path.count("|") > 11 or  len(path) < 30:
         return "Incorrectly formatted string."

@@ -33,6 +33,7 @@ def processRequest(req):
 #    with open(home + "/logs/oommakerlog-access.txt", "a") as fa:
 #        fa.write(time.strftime('%x %X') + " : " + req.get_remote_host() + " : " + path + "\n")
     outf = createImage(path, 'pdf')
+
     if path.count("|") < 10 or path.count("|") > 11  or  len(path) < 30:
         return "Incorrectly formatted string."
     if path.count("|") == 9:
@@ -51,6 +52,7 @@ def processRequest(req):
 #            fe.write(time.strftime('%x %X') + " : " + req.get_remote_host() + " : " + outf + " : " + path + "\n")
         return req
     else:
+        outf.seek(0)    #DPD
         outfsize = os.fstat(outf.fileno()).st_size
         req.status = apache.HTTP_OK
         req.content_type = 'application/pdf'
@@ -174,6 +176,19 @@ def createImage(path, fileformat, scalefactor=1):
     mapWLon = clon - (EXTENT_W/2)*scaleCorrected
     mapELon = clon + (EXTENT_W/2)*scaleCorrected
 
+    pagePolyUnrotated = ((clon - (MAP_W/2 + MAP_WM) * scaleCorrected,
+                            clat - (MAP_H/2 + MAP_SM) * scaleCorrected),
+                            (clon - (MAP_W/2 + MAP_WM) * scaleCorrected,
+                            clat + (MAP_H/2 + MAP_NM) * scaleCorrected),
+                            (clon + (MAP_W/2 + MAP_EM) * scaleCorrected,
+                            clat + (MAP_H/2 + MAP_NM) * scaleCorrected),
+                            (clon + (MAP_W/2 + MAP_EM) * scaleCorrected,
+                            clat - (MAP_H/2 + MAP_SM) * scaleCorrected))
+    pagePoly = (rotate((clon, clat),pagePolyUnrotated[0],rotation),
+                rotate((clon, clat),pagePolyUnrotated[1],rotation),
+                rotate((clon, clat),pagePolyUnrotated[2],rotation),
+                rotate((clon, clat),pagePolyUnrotated[3],rotation))
+
     styleFile = home + "/styles/" + style + ".xml"
     with open(styleFile, mode="r") as f:
                styleString = f.read()
@@ -221,9 +236,9 @@ def createImage(path, fileformat, scalefactor=1):
                 sourceText = " --source=srtm1 --srtm-version=3 "
             else:
                 sourceText = " --source=cope1"
-            phyString="phyghtmap --area="+str(bbox2.minx-0.0002)+":"+str(bbox2.miny-0.002)+":"+ \
+            phyString="phyghtmap --area="+str(bbox2.minx-0.0002)+":"+str(bbox2.miny-0.0002)+":"+ \
                 str(bbox2.maxx+0.0002)+":"+str(bbox2.maxy+0.0002)+ sourceText + \
-                "--earthexplorer-user=" + ee_user + " --earthexplorer-password=" + ee_pw + \
+                " --earthexplorer-user=" + ee_user + " --earthexplorer-password=" + ee_pw + \
                 " --hgtdir=" + home_base + "/hgt -p " + home_base + "/"+tmpid + " >> " + home_base + "/phy.log"
             os.system(phyString)
             #Merge file(s) into single virtual dataset (prevents contour boundaries at degree grid lines)
@@ -246,7 +261,7 @@ def createImage(path, fileformat, scalefactor=1):
                 os.system("cp " + home_base + "/null.shx " + home_base + "/"+tmpid + ".shx")
                 os.system("cp " + home_base + "/null.dbf " + home_base + "/"+tmpid + ".dbf")
             #then load contours to database
-            os.system("shp2pgsql -g way " + home_base + "/"+tmpid + ".shp " + tmpid + "_srtm_line | psql -h localhost -p 5432 -U postgres -d otf1")
+            os.system("shp2pgsql -g way " + home_base + "/"+tmpid + ".shp " + tmpid + "_srtm_line | psql -h localhost -p 5432 -U osm -d otf1")
             import glob
             for i in glob.glob(home_base +'/'+tmpid+'*'):
                 os.unlink(i)  #Finished with temporary files - delete.
@@ -675,13 +690,12 @@ def createImage(path, fileformat, scalefactor=1):
         surface.finish()
         surface.flush()
 
-        # Add Geospatial PDF metadata - not quite working so omit for now
+        # Add Geospatial PDF metadata
 
-        #map_bounds = (MAP_WM/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H, MAP_WM/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H)
-        #file2 = tempfile.NamedTemporaryFile()
-        #wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]'
-        #add_geospatial_pdf_header(map, file, file2, map_bounds, wkt = wkt)
-        #file = file2
+        map_bounds = (MAP_WM/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H, MAP_WM/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H)
+        file2 = tempfile.NamedTemporaryFile()
+        file = add_geospatial_pdf_header(map, file, file2, map_bounds, pagePoly, epsg = 3857)
+
 
     #Delete temporary style file and postgres tables (everything beginning with "h"):
     #BUT - don't delete here as may be needed for related query.  Periodically clean out with cron job instead
@@ -690,7 +704,7 @@ def createImage(path, fileformat, scalefactor=1):
     #os.system(dropTables)
     return file
 
-def add_geospatial_pdf_header(m, f, f2, map_bounds, epsg=None, wkt=None):
+def add_geospatial_pdf_header(m, f, f2, map_bounds, poly, epsg=None, wkt=None):
         """
         Adds geospatial PDF information to the PDF file as per:
             Adobe® Supplement to the ISO 32000 PDF specification
@@ -724,7 +738,7 @@ def add_geospatial_pdf_header(m, f, f2, map_bounds, epsg=None, wkt=None):
             if wkt:
                 gcs[NameObject('/WKT')] = TextStringObject(wkt)
 
-            measure = get_pdf_measure(m, gcs, map_bounds)
+            measure = get_pdf_measure(m, gcs, poly, map_bounds)
 
             """
             Returns the PDF's VP array.
@@ -736,8 +750,7 @@ def add_geospatial_pdf_header(m, f, f2, map_bounds, epsg=None, wkt=None):
             viewport[NameObject('/Type')] = NameObject('/Viewport')
 
             bbox = ArrayObject()
-            #for x in mapnik.Box2d(0,int(page.mediaBox[3]),int(page.mediaBox[2]),0): #in pts
-            for x in [0,595,841,0]: #in pts
+            for x in (0,int(page.mediaBox[3]),int(page.mediaBox[2]),0): #in pts
                 bbox.append(FloatObject(str(x)))  #Fixed
 
             viewport[NameObject('/BBox')] = bbox
@@ -746,14 +759,14 @@ def add_geospatial_pdf_header(m, f, f2, map_bounds, epsg=None, wkt=None):
 
             vp_array = ArrayObject()
             vp_array.append(viewport)
-            #print(vp_array)
             page[NameObject('/VP')] = vp_array
             file_writer.addPage(page)
 
         file_writer.write(f2)
+        return (f2)
 
 
-def get_pdf_measure(m, gcs, bounds_default):
+def get_pdf_measure(m, gcs, poly, bounds_default):
     """
     Returns the PDF Measure dictionary.
     The Measure dictionary is used in the viewport array
@@ -777,26 +790,27 @@ def get_pdf_measure(m, gcs, bounds_default):
         bounds.append(FloatObject(str(x)))
 
     measure[NameObject('/Bounds')] = bounds
-    measure[NameObject('/GPTS')] = get_pdf_gpts(m)
+    measure[NameObject('/GPTS')] = get_pdf_gpts(m, poly)
     measure[NameObject('/LPTS')] = bounds
     measure[NameObject('/GCS')] = gcs
 
     return measure
 
-def get_pdf_gpts(m):
+def get_pdf_gpts(m, poly):
     """
     Returns the GPTS array object containing the four corners of the
-    map envelope in map projection.
+    map rect in map projection.
     The GPTS entry is an array of numbers, taken pairwise, defining
     points as latitude and longitude.
+    m = mapnik map object
+    poly = tuple of (x,y) tuples describing rect polygon - allows geocoding of rotated maps.
     """
     gpts = ArrayObject()
 
     proj = mapnik.Projection(m.srs)
-    env = m.envelope()
-    for x in ((env.minx, env.miny), (env.minx, env.maxy),
-              (env.maxx, env.maxy), (env.maxx, env.miny)):
-        latlon_corner = proj.inverse(mapnik.Coord(*x))
+    #env = m.envelope()
+    for x,y in poly:
+        latlon_corner = proj.inverse(mapnik.Coord(x,y))
         # these are in lat,lon order according to the specification
         gpts.append(FloatObject(str(latlon_corner.y)))
         gpts.append(FloatObject(str(latlon_corner.x)))
@@ -813,6 +827,19 @@ def test(path):
         outf.seek(0)    #DPD
         fd.write(outf.read())
         fd.close()
+
+def rotate(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+
+    The angle should be given in radians.
+    """
+    ox, oy = origin
+    px, py = point
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return qx, qy
 
 if __name__ == '__main__':
     test("style=streeto-COPE-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc92|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
