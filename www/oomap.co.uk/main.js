@@ -1548,9 +1548,8 @@ function generateMap(type)
 		cpText = cpText.substring(0, cpText.length - 1);
 	}
 
-	//var contours= $("#contours :radio:checked").attr("id");
 	url = prefix1 + type
-		+ "/?style=" + mapStyleID // + "-" + contours
+		+ "/?style=" + mapStyleID
    		+ "|paper=" + paper
 		+ "|scale=" + scale
 		+ "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
@@ -1587,6 +1586,8 @@ function generateMap(type)
 		}
 	}
 	url	+= "|rotation=" + rotAngle.toFixed(4)
+	url += "|grid=yes"
+	url += "|dpi=150"
 
 	if (debug) { console.log(url); }
 	self.location=url;

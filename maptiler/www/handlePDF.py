@@ -3,6 +3,7 @@
 import os, os.path, platform, mapnik
 import math
 import time
+from oomf import *  #reused functions from oomf.py in same directory
 
 try:
     from PyPDF2 import PdfFileReader, PdfFileWriter
@@ -13,55 +14,15 @@ except ImportError:
     HAS_PYPDF2 = False
 from geomag import WorldMagneticModel
 
-#Get environment vars (set in /etc/apache2/envvars)
-home_base = os.getenv('OOM_HOME')
-ee_user = os.getenv('OOM_EE_USR')
-ee_pw = os.getenv('OOM_EE_PW')
-home=home_base + "/maptiler"
-
-def isStr(x):
-    try:
-        return str(x) == x
-    except Exception:
-        return False
 
 def processRequest(req):
-    from mod_python import apache, util
-    from urllib import unquote
     path = req.args
-
-#    with open(home + "/logs/oommakerlog-access.txt", "a") as fa:
-#        fa.write(time.strftime('%x %X') + " : " + req.get_remote_host() + " : " + path + "\n")
+    p = parse_query(path)
+    mapid = p.get('mapid', 'new')
     outf = createImage(path, 'pdf')
+    return req_write(outf, req, mapid, 'pdf')
 
-    if path.count("|") < 10 or path.count("|") > 11  or  len(path) < 30:
-        return "Incorrectly formatted string."
-    if path.count("|") == 9:
-        path = path + "|"
-    style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls, rotation  = path.split("|")
-    style, contourSource, contourSeparation = style_full.split("-")
-    contourSeparation = contourSeparation.replace("p",".")  #For 2.5 m contours, string comes as "2p5"
-    mapid = mapid.split("=")[1]
-
-    if isStr(outf):
-        req.status = apache.HTTP_SERVICE_UNAVAILABLE
-        req.content_type = 'text/html'
-        outHTML = "<html><head><title>OpenOrienteeringMap: Error</title></head><body><h1>Error</h1><p>" + outf + "</p></body></html>"
-        req.write(outHTML)
-#        with open(home + "/logs/oommakerlog-error.txt", "a") as fe:
-#            fe.write(time.strftime('%x %X') + " : " + req.get_remote_host() + " : " + outf + " : " + path + "\n")
-        return req
-    else:
-        outf.seek(0)    #DPD
-        outfsize = os.fstat(outf.fileno()).st_size
-        req.status = apache.HTTP_OK
-        req.content_type = 'application/pdf'
-        req.headers_out["Content-Disposition"] = "attachment; filename=\"oom_" + mapid + ".pdf\""
-        req.set_content_length(outfsize)
-        req.write(outf.read())
-        return req
-
-def createImage(path, fileformat, scalefactor=1):
+def createImage(path, fileformat):
     import tempfile
     import cairo
     import urllib
@@ -69,9 +30,11 @@ def createImage(path, fileformat, scalefactor=1):
     import overpass #For real-time data query
     import time
 
+    p = parse_query(path)
+
     EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
     C_SCALE_FACTOR = 1.4
-    SCALE_FACTOR = scalefactor
+    SCALE_FACTOR = p['dpi']/72.0
     S2P = SCALE_FACTOR*360/0.127
 
     # Feature widths/diameters and stroke thicknesses, in m. From the ISOM/ISSOM specs.
@@ -103,54 +66,43 @@ def createImage(path, fileformat, scalefactor=1):
     ADORN_ARROW_W = 0.012
     ADORN_LOGO_W = 0.018
 
-    if path.count("|") < 10 or path.count("|") > 11 or  len(path) < 30:
-        return "Incorrectly formatted string."
-    if path.count("|") == 10:
-        path = path + "|"
-    style_full, paper, scale, centre, title, club, mapid, start, crosses, cps, controls, rotation  = path.split("|")
-    style, contourSource, contourSeparation = style_full.split("-")
-    contourSeparation = contourSeparation.replace("p",".")  #For 2.5 m contours, string comes as "2p5"
-    style = style.split("=")[1]
-
+    style = p['style']
     if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "streeto_norail" and style != "adhoc":
         return "Unknown style."
 
-    paper = paper.split("=")[1]
-    PAPER_W = float(paper.split(",")[0])
-    PAPER_H = float(paper.split(",")[1])
+    PAPER_W = float(p['paper'].split(",")[0])
+    PAPER_H = float(p['paper'].split(",")[1])
+    scale = int(p['scale'])
+    clat = int(p['centre'].split(",")[0])
+    clon = int(p['centre'].split(",")[1])
+    try:
+        rotation = float(p['rotation'])
+    except:
+        rotation = 0
+    try:
+        title = p['title']
+    except:
+        title = "OpenOrienteeringMap"
 
-    scale = int(scale.split("=")[1])
-
-    centre = centre.split("=")[1]
-    clat = int(centre.split(",")[0])
-    clon = int(centre.split(",")[1])
-    rotation = float(rotation.split("=")[1])
-    title = title.split("=")[1]
+    mapid = p.get('mapid', 'new')
 
     slon = 0
     slat = 0
-    start = start.split("=")[1]
-    if len(start) > 0:
-        slat = int(start.split(",")[0])
-        slon = int(start.split(",")[1])
+    if 'start' in p:
+        slat = int(p['start'].split(",")[0])
+        slon = int(p['start'].split(",")[1])
 
     controlsArr = []
-    controls = controls.split("=")[1]
-    if len(controls) > 0:
-        controlsArr = controls.split(",")
+    if 'controls' in p:
+        controlsArr = p['controls'].split(",")
 
     crossesArr = []
-    crosses = crosses.split("=")[1]
-    if len(crosses) > 0:
-        crossesArr  = crosses.split(",")
+    if 'crosses' in p:
+        crossesArr  = p['crosses'].split(",")
 
     cpsArr = []
-    cps = cps.split("=")[1]
-    if len(cps) > 0:
-        cpsArr = cps.split(",")
-
-    if mapid != "":
-        mapid = mapid.split("=")[1]
+    if 'cps' in p:
+        cpsArr = p['cps'].split(",")
 
     projection = mapnik.Projection(EPSG900913)
     wgs84lat = mapnik.Coord(clon, clat).inverse(projection).y
@@ -221,18 +173,18 @@ def createImage(path, fileformat, scalefactor=1):
         # Therefore inject "prefix" entity into appropriate base style definition and save using temp id as name.
         import re
         insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">" + \
-            "\n<!ENTITY contourSeparation \"" + contourSeparation + "\">" + \
-            "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + contourSource + ".xml.inc\">"
+            "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
+            "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">"
         searchstring="\%settings;"
         styleString = re.sub(searchstring,insertstring,styleString)
 
         with open(styleFile, mode="w") as f:
                 f.write(styleString)
 
-        if contourSource == "SRTM" or contourSource == "COPE":
+        if p['contour'] == "SRTM" or p['contour'] == "COPE":
             #Now get contours using phyghtmap:
             #Use Phyghtmap just to get DEM data - process separately
-            if contourSource == "SRTM":
+            if p['contour'] == "SRTM":
                 sourceText = " --source=srtm1 --srtm-version=3 "
             else:
                 sourceText = " --source=cope1"
@@ -251,7 +203,7 @@ def createImage(path, fileformat, scalefactor=1):
             #Apply Guassian blur to further smooth contours
             os.system("saga_cmd grid_filter \"Gaussian Filter\" -SIGMA 2.0 -RADIUS 12 -INPUT " + home_base + "/"+tmpid + ".sdat -RESULT " + home_base + "/"+tmpid + "_s")
             #Generate contours
-            os.system("gdal_contour -b 1 -a height -i " + contourSeparation + " " +  home_base + "/"+tmpid + "_s.sdat "  +  home_base + "/"+tmpid + ".shp")
+            os.system("gdal_contour -b 1 -a height -i " + p['interval'] + " " +  home_base + "/"+tmpid + "_s.sdat "  +  home_base + "/"+tmpid + ".shp")
             # If contour generation failed, use a dummy dataset so that the DB table
             # gets created and the SQL query returns without errors.
             try:
@@ -338,6 +290,7 @@ def createImage(path, fileformat, scalefactor=1):
 
     # Background map
     ctx = cairo.Context(surface)
+    ctx.set_operator(cairo.Operator.OVER)
     ctx.translate(MAP_WM*S2P, MAP_NM*S2P)
     ctx.rectangle(0, 0, MAP_W * S2P,  MAP_H * S2P)
     ctx.clip() #Clip to map area
@@ -363,12 +316,10 @@ def createImage(path, fileformat, scalefactor=1):
         return file
 
     #  Add grid lines in same layer - allows darken comp-op
-    if style != "blueprint":
-        ctx.rectangle(0, 0, MAP_W * S2P,  MAP_H * S2P)
-        ctx.clip() #Clip to map area
-        ctx.set_line_width(0.5*SCALE_FACTOR)
+    if style != "blueprint" and p.get('grid',"yes") != "no":
         ctx.set_source_rgb(0.5, 0.5, 1)
         ctx.set_operator(cairo.Operator.DARKEN)
+        ctx.set_line_width(0.5*SCALE_FACTOR)
         northSpacing = scaleBarW / math.cos(magdec*math.pi/180+rotation)
         shift = MAP_H * S2P * math.tan(magdec*math.pi/180+rotation) * 0.5
         lines = range(int(-northSpacing * S2P/2), int((MAP_W + northSpacing) * S2P), int(northSpacing * S2P))
@@ -380,14 +331,14 @@ def createImage(path, fileformat, scalefactor=1):
     # Start control
     if slon != 0 and slat != 0:
         ctx = cairo.Context(surface)
-
+        ctx.set_operator(cairo.Operator.SOURCE)
+        ctx.set_operator(cairo.Operator.DARKEN)
+        ctx.set_source_rgb(0.651, 0.149, 1)
         ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
         ctx.rotate(rotation)
         ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
-
         ctx.set_line_width(SC_T*S2P)
         ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-        ctx.set_source_rgb(1, 0, 1)
         #ctx.translate((MAP_WM+((slon-mapWLon)/scaleCorrected))*S2P, (MAP_NM+((mapNLat-slat)/scaleCorrected))*S2P)
         ctx.translate((slon-mapWLon)*EXTENT_W*S2P/(mapELon-mapWLon), (mapNLat-slat)*EXTENT_H*S2P/(mapNLat-mapSLat))
         ctx.rotate(-rotation)
@@ -395,6 +346,7 @@ def createImage(path, fileformat, scalefactor=1):
         ctx.rel_line_to(-0.5*SC_W*S2P, 0.866*SC_W*S2P)
         ctx.rel_line_to(SC_W*S2P, 0)
         ctx.close_path()
+        ctx.set_operator(cairo.Operator.DARKEN)
         ctx.stroke()
 
     # Controls and labels
@@ -405,10 +357,35 @@ def createImage(path, fileformat, scalefactor=1):
         ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
 
 
-        ctx.set_source_rgb(1, 0, 1)
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(CTEXT_S*S2P)
         numControls = len(controlsArr)/4
+
+        #Draw white halo around control numbers for legibility on complex maps
+        ctx.set_operator(cairo.Operator.SOURCE)
+        ctx.set_source_rgb(1, 0.99, 1)
+        for i in range(numControls):
+            text = controlsArr[4*i]
+            labelAngle = float(controlsArr[4*i+1])
+            controllat = float(controlsArr[4*i+2])
+            controllon = float(controlsArr[4*i+3])
+            controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
+            controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
+            x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
+            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
+            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
+            ctx.save()
+            ctx.translate(controllonP*S2P, controllatP*S2P)
+            ctx.rotate(-rotation)
+            ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
+            ctx.text_path(text)
+            ctx.set_line_width(C_T*S2P)
+            ctx.stroke_preserve()
+            ctx.fill()
+            ctx.restore()
+
+        ctx.set_source_rgb(0.651, 0.149, 1)
+        ctx.set_operator(cairo.Operator.DARKEN)
         for i in range(numControls):
             text = controlsArr[4*i]
             labelAngle = float(controlsArr[4*i+1])
@@ -440,10 +417,11 @@ def createImage(path, fileformat, scalefactor=1):
     # Crosses and labels
     if len(crossesArr) > 0:
         #ctx = cairo.Context(surface)
-        ctx.set_source_rgb(1, 0, 1)
+        ctx.set_source_rgb(0.651, 0.149, 1)
+        ctx.set_operator(cairo.Operator.DARKEN)
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
         ctx.set_font_size(CTEXT_S*S2P/1.5)
-        ctx.set_source_rgb(1, 0, 0)
+        #ctx.set_source_rgb(1, 0, 0)
         numCrosses = len(crossesArr)/2
         for i in range(numCrosses):
             text = "X"
@@ -461,10 +439,11 @@ def createImage(path, fileformat, scalefactor=1):
     #Crossing points and labels
     if len(cpsArr) > 0:
         #ctx = cairo.Context(surface)
-        ctx.set_source_rgb(1, 0, 1)
+        ctx.set_source_rgb(0.651, 0.149, 1)
+        ctx.set_operator(cairo.Operator.DARKEN)
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(CTEXT_S*S2P/1.1)
-        ctx.set_source_rgb(1, 0, 0)
+        #ctx.set_source_rgb(1, 0, 0)
         numCps = len(cpsArr)/3
         for i in range(numCps):
             text = "]["
@@ -481,7 +460,7 @@ def createImage(path, fileformat, scalefactor=1):
             ctx.rel_move_to(-width/2, height/3.5)
             ctx.show_text(text)
             ctx.rotate(-1.0*controlAngleRads)
-            ctx.save()
+            #ctx.save()
 
     # Adornments - Title
     ctx = cairo.Context(surface)
@@ -510,7 +489,7 @@ def createImage(path, fileformat, scalefactor=1):
     text = "scale 1:" + str(scale)
 
     if style == "oterrain" or style == "streeto" or style == "streeto_norail":
-        text = "scale 1:" + str(scale) + ", contours " + contourSeparation + "m"
+        text = "scale 1:" + str(scale) + ", contours " + p['interval'] + "m"
     ctx.set_source_rgb(0, 0, 0)
     if style == 'blueprint':
         ctx.set_source_rgb(0, 0.5, 0.8)
@@ -621,13 +600,13 @@ def createImage(path, fileformat, scalefactor=1):
         ctx.set_source_rgb(0.12, 0.5, 0.65)
         ctx.set_font_size(7*SCALE_FACTOR)
 
-        if contourSource=="SRTM":
+        if p['contour']=="SRTM":
             text = "Contours from SRTM, NASA data. DOI number: /10.5066/F7PR7TFT"
-        elif contourSource=="OS":
+        elif p['contour']=="OS":
             text = "Contains OS data © Crown copyright & database right OS 2013-2017."
-        elif contourSource=="LIDAR":
+        elif p['contour']=="LIDAR":
             text = "Contours from LIDAR  © Environment Agency copyright and/or database right 2015. All rights reserved."
-        elif contourSource=="COPE":
+        elif p['contour']=="COPE":
             text = "Contours from Copernicus WorldDEM-30 ©DLR e.V. 2010-2014 and ©Airbus Defence and Space GmbH 2014-2018. All rights reserved."
         else:
             text=""
@@ -675,7 +654,7 @@ def createImage(path, fileformat, scalefactor=1):
     ctx = cairo.Context(surface)
     ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_font_size(0.5*SCALE_FACTOR)
-    text = path
+    text = web_root + fileformat + '/?' + path
     ctx.translate(MAP_WM*S2P, (MAP_NM+MAP_H+ADORN_URL_NM)*S2P)
     ctx.show_text(text)
 
@@ -691,11 +670,9 @@ def createImage(path, fileformat, scalefactor=1):
         surface.flush()
 
         # Add Geospatial PDF metadata
-
         map_bounds = (MAP_WM/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H, MAP_WM/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H)
         file2 = tempfile.NamedTemporaryFile()
         file = add_geospatial_pdf_header(map, file, file2, map_bounds, pagePoly, epsg = 3857)
-
 
     #Delete temporary style file and postgres tables (everything beginning with "h"):
     #BUT - don't delete here as may be needed for related query.  Periodically clean out with cron job instead
@@ -778,14 +755,11 @@ def get_pdf_measure(m, gcs, poly, bounds_default):
 
     bounds = ArrayObject()
 
-    # PDF specification's default for bounds (full unit square).  values as positions of map bounds relative to page size.
-    #bounds_default = (0.0, 0.0, 0.0, 1, 1, 1, 1, 0.0)
     """
     Returns the PDF BOUNDS array.
     The PDF's bounds array is equivalent to the map's neatline, i.e.,
     the border delineating the extent of geographic data on the output map.
     """
-    #for x in bounds_default:
     for x in [ 0, 1, 0, 0, 1, 0, 1, 1 ]:
         bounds.append(FloatObject(str(x)))
 
@@ -793,7 +767,6 @@ def get_pdf_measure(m, gcs, poly, bounds_default):
     measure[NameObject('/GPTS')] = get_pdf_gpts(m, poly)
     measure[NameObject('/LPTS')] = bounds
     measure[NameObject('/GCS')] = gcs
-
     return measure
 
 def get_pdf_gpts(m, poly):
@@ -808,7 +781,6 @@ def get_pdf_gpts(m, poly):
     gpts = ArrayObject()
 
     proj = mapnik.Projection(m.srs)
-    #env = m.envelope()
     for x,y in poly:
         latlon_corner = proj.inverse(mapnik.Coord(x,y))
         # these are in lat,lon order according to the specification
@@ -817,6 +789,17 @@ def get_pdf_gpts(m, poly):
 
     return gpts
 
+def rotate(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+    The angle should be given in radians.
+    """
+    ox, oy = origin
+    px, py = point
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return qx, qy
 
 def test(path):
     outf = createImage(path, 'pdf')
@@ -828,18 +811,7 @@ def test(path):
         fd.write(outf.read())
         fd.close()
 
-def rotate(origin, point, angle):
-    """
-    Rotate a point counterclockwise by a given angle around a given origin.
-
-    The angle should be given in radians.
-    """
-    ox, oy = origin
-    px, py = point
-
-    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
-    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-    return qx, qy
 
 if __name__ == '__main__':
-    test("style=streeto-COPE-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc92|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
+    test("style=oterrain-COPE-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=Furzton%20%28Milton%20Keynes%29|club=|mapid=6043c1a44cc93|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
+    #test("style=oterrain-COPE-5|grid=no&paper=0.297,0.210|scale=10000|centre=6801767,-86381|mapid=6043c1a44cc93&rotation=0.2")
