@@ -12,7 +12,7 @@ home = home_base + "/maptiler"
 web_root = 'http://tile.dna-software.co.uk:8888/'
 
 def parse_query(url):
-    p = parse_qs(url.replace("|", "&"))
+    p = parse_qs(url.replace("|", "&").replace("%7C", "&")) #Replace "|" to allow standard parsing; in case "|" gets URL-encoded also replace "%7C"
     for key, val in p.items():  #unlist param dictionary values
         p[key] = val[0]
     if not ('centre' in p and 'scale' in p and 'paper' in p):
@@ -27,7 +27,7 @@ def parse_query(url):
         p['interval'] = '0'
     p['contour'] = p.get('contour', 'NONE')
     p['dpi']=float(p.get('dpi','150'))
-    p['mapid']=p['id']
+    p['mapid']=p.get('id', 'new')
     return(p)
 
 

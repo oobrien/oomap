@@ -23,8 +23,8 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
-            from &prefix;_polygon
+          (select ST_Intersection(way, !bbox!) as way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
+          from &prefix;_polygon
             where landuse is not null
                 or leisure is not null
                 or amenity in ('parking','university','college','school','hospital','grave_yard')
@@ -68,8 +68,8 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural",waterway,landuse,way_area
-            from &prefix;_polygon
+          (select ST_Intersection(way, !bbox!) as way,"natural",waterway,landuse,way_area
+          from &prefix;_polygon
             where waterway in ('dock','mill_pond','riverbank','canal','river')
                 or landuse in ('reservoir','water','basin')
                 or "natural" in ('lake','water','land','wetland','marsh','glacier','pond')
@@ -102,8 +102,8 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural",waterway,landuse,way_area
-            from &prefix;_polygon
+          (select ST_Intersection(way, !bbox!) as way,"natural",waterway,landuse,way_area
+          from &prefix;_polygon
             where waterway in ('dock','mill_pond','riverbank','canal','river')
                 or "natural" in ('land','glacier','pond')
             order by z_order,way_area desc
@@ -185,12 +185,16 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,railway,
+            (select ST_Intersection(way, !bbox!) as way,highway,railway,amenity,service,access,
             case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
-            where highway is not null
-                or railway is not null
+            where (highway is not null
+            and (tags->'footway' is null or tags ->'footway' != 'sidewalk')
+            and (tags->'cycleway' is null or tags->'cycleway' != 'sidewalk')
+            and (service is null or service !='driveway')
+            and not (highway='footway' and access is not null and access ='private'))
+            or railway is not null
             order by z_order
             ) as roads
         </Parameter>

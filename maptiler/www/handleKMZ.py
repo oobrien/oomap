@@ -32,7 +32,7 @@ def createKMZ(path):
             out = self._genkml(format).encode('utf-8')
             kmz = zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED)
             info = zipfile.ZipInfo("doc.kml")
-            info.external_attr = 0100775 << 16
+            info.external_attr = 0o100775 << 16
             info.date_time = time.localtime()
             kmz.writestr(info, out)
             for image in self._images:
@@ -111,7 +111,7 @@ def createKMZ(path):
 def test(path):
     outf = createKMZ(path)
     if isStr(outf):
-        print outf
+        print (outf)
     else:
         fd = open('oom_test.kmz', 'wb')
         fd.write(outf.read())

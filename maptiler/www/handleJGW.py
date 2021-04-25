@@ -58,7 +58,7 @@ def createJGW(path):
     TopLeftLat = clat + (MAP_H/2+MAP_NM)*scaleCorrected*math.cos(rotation) - (MAP_W/2+MAP_WM)*scaleCorrected*math.sin(rotation)
     TopLeftLon = clon - (MAP_W/2+MAP_WM)*scaleCorrected*math.cos(rotation) - (MAP_H/2+MAP_NM)*scaleCorrected*math.sin(rotation)
 
-    fworld = tempfile.NamedTemporaryFile()
+    fworld = tempfile.NamedTemporaryFile(mode='w+')
     fworld.write(str((paperELon - paperWLon)*math.cos(rotation)/PIXEL_W) + "\n")
     fworld.write(str((paperELon - paperWLon)*math.sin(rotation)/PIXEL_W) + "\n")
     fworld.write(str((paperNLat - paperSLat)*math.sin(rotation)/PIXEL_H) + "\n")
@@ -71,9 +71,9 @@ def createJGW(path):
 def test(path):
     outf = createJGW(path)
     if isStr(outf):
-        print outf
+        print (outf)
     else:
-        fd = open('test.jgw', 'wb')
+        fd = open('test.jgw', 'w')
         fd.write(outf.read())
         fd.close()
 
