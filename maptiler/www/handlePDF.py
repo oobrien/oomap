@@ -593,29 +593,34 @@ def createImage(path, fileformat):
         ctx.set_source_rgb(0, 0.5, 0.8)
 
     ctx.set_font_size(7*SCALE_FACTOR)
-    text = "Map data (c) OpenStreetMap, available under the Open Database Licence."
+    text = "Map data: © OpenStreetMap contributors; Open Database Licence."
     ctx.translate((MAP_WM)*S2P, (MAP_NM+MAP_H+ADORN_ATTRIB_NM)*S2P)
     ctx.show_text(text)
 
-    # Adornments - Attribution left line 2
-    if style == "oterrain" or style == "streeto" or style == "streeto_norail":
-        ctx = cairo.Context(surface)
-        ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
-        ctx.set_source_rgb(0.12, 0.5, 0.65)
-        ctx.set_font_size(7*SCALE_FACTOR)
+    # Adornments - Attribution left line 2 - contours
+    ctx = cairo.Context(surface)
+    ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
+    ctx.set_source_rgb(0.12, 0.5, 0.65)
+    ctx.set_font_size(7*SCALE_FACTOR)
 
-        if p['contour']=="SRTM":
-            text = "Contours from SRTM, NASA data. DOI number: /10.5066/F7PR7TFT"
-        elif p['contour']=="OS":
-            text = "Contains OS data © Crown copyright & database right OS 2013-2017."
-        elif p['contour']=="LIDAR":
-            text = "Contours from LIDAR  © Environment Agency copyright and/or database right 2015. All rights reserved."
-        elif p['contour']=="COPE":
-            text = "Contours from Copernicus WorldDEM-30 ©DLR e.V. 2010-2014 and ©Airbus Defence and Space GmbH 2014-2018. All rights reserved."
-        else:
-            text=""
+    # Get contour attribution from custom Postgres DB table
+    # based on centre location and type (e.g. "LIDAR") of contour selected.
+    import psycopg2
+    conn = psycopg2.connect(database="gis", user = "osm", host = "127.0.0.1", port = "5432")
+    cur = conn.cursor()
+    cur.execute("""
+        select attrib from attrib WHERE
+            ST_Within(ST_SetSRID(ST_Point(%s, %s),900913),way)
+            and type = %s;
+        """,
+        (clon, clat, p['contour']))
+    # If at least 1 hit choose the first one, otherwise no contours available.
+    if cur.rowcount > 0:
+        text="Contours: " + cur.fetchone()[0]
         ctx.translate((MAP_WM)*S2P, (MAP_NM+MAP_H+ADORN_ATTRIB_NM+0.002)*S2P)
         ctx.show_text(text)
+    cur.close()
+    conn.close()
 
     #Adornments - Attribution left line 3
     ctx = cairo.Context(surface)

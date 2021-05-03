@@ -135,3 +135,15 @@ for f in ./*.shp; do
   shp2pgsql -a -g way -s 27700:900913 $f lidar2 | psql -h localhost -p 5432 -U postgres -d gis
 done
 ```
+
+
+Contour Attribution table
+=========================
+
+Create an ESRI shapefile with a multipolygon geometry object (SRID: 900913) providing the coverage area for each contour source.  Add the following text fields:
+ID						unique number
+TABLENAME			name of the postgres table holding the contourSeparation
+TYPE					Type of contours - [OS, LIDAR, SRTM, COPE]
+ATTRIB				Text to use for attribution
+
+Load into the Postgres table "attrib" using shp2pgsql, placing the geometry into a field called "way".
