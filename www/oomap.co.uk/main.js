@@ -30,6 +30,11 @@ var controlsSF = [];
 var controlsX = [];
 var controlsCP = [];
 var controls = [];
+var dpi=150;
+var drives=false;
+var rail=true;
+var walls=true;
+var grid=true;
 
 //OpenLayers single-instance objects
 var olMap;
@@ -240,6 +245,7 @@ function init()
 	$( "#getworldfile" ).button().click(function() {generateMap("jgw"); });
 	$( "#getkmz" ).button().click(function() {generateMap("kmz"); });
 	$( "#getkml" ).button().click(function() {generateKML(); });
+	$( "#opts" ).button().click(function() {handleAdvancedOptions(); });
 	$( "#createclue" ).button().click(function() { handleGenerateClue(); });
 	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteSheet(); });
 	$( "#deleteXs" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteXs(); });
@@ -604,6 +610,28 @@ function init()
 
 			$( this ).dialog( "close" );
 		  }
+		},
+		Cancel: function() {
+		  $( this ).dialog( "close" );
+		}
+	  }
+	});
+
+	$( "#advanced" ).dialog({
+	  autoOpen: false,
+	  height: 370,
+	  width: 550,
+	  modal: true,
+	  buttons: {
+		OK: function() {
+			rail = $('#rail').is(':checked');
+			grid = $('#grid').is(':checked');
+			drives = $('#drive').is(':checked');
+			walls = $('#wall').is(':checked');
+			dpi = parseInt($('#dpi').val());
+			if (isNaN(dpi)) { dpi = 150; }
+
+			$( this ).dialog( "close" );
 		},
 		Cancel: function() {
 		  $( this ).dialog( "close" );
@@ -1082,6 +1110,16 @@ function handleControlEditOptions(pid)
 			}
 			$( "#newcontroloptions" ).dialog( "open" );
 			resetControlAddDialog(pid);
+}
+
+function handleAdvancedOptions(pid)
+{
+			$('#rail').prop('checked', rail);
+			$('#grid').prop('checked', grid);
+			$('#drive').prop('checked', drives);
+			$('#wall').prop('checked', walls);
+			$('#dpi').val(dpi);
+			$( "#advanced" ).dialog( "open" );
 }
 
 function handleControlDelete(pid)
@@ -1585,9 +1623,12 @@ function generateMap(type)
 			url  = url.substring(0, url.length - 1);
 		}
 	}
-	url	+= "|rotation=" + rotAngle.toFixed(4)
-	url += "|grid=yes"
-	url += "|dpi=150"
+	url	+= "|rotation=" + rotAngle.toFixed(4);
+	if (grid) {url += "|grid=yes"; } else {url += "|grid=no"; }
+	if (rail) {url += "|rail=yes"; } else {url += "|rail=no"; }
+	if (walls) {url += "|walls=yes"; } else {url += "|walls=no"; }
+	if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
+	url += "|dpi=" + dpi;
 
 	if (debug) { console.log(url); }
 	self.location=url;
