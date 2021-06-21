@@ -1,5 +1,5 @@
-<!ENTITY symbols "/home/ollie/production/maptiler/symbols/">
-<!ENTITY shapefiles "/home/ollie/production/maptiler/shapefiles/">
+<!ENTITY symbols "/home/osm/maptiler/symbols/">
+<!ENTITY shapefiles "/home/osm/maptiler/shapefiles/">
 <!ENTITY srs900913 "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over">
 <!ENTITY srs27700 "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894 +units=m +nodefs">
 <!ENTITY srs29900 "+proj=tmerc +lat_0=53.5 +lon_0=-8 +k=1.000035 +x_0=200000 +y_0=250000 +a=6377340.189 +b=6356034.447938534 +units=m +no_defs">

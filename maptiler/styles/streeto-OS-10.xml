@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Map [
+<!ENTITY % settings SYSTEM "inc/settings.xml.inc">
+<!ENTITY % colours SYSTEM "inc/colours_oom.xml.inc">
+<!ENTITY styles-contours SYSTEM "inc/styles_contours.xml.inc">
+%settings;
+<!ENTITY prefix "h602d8e6d16395">
+<!ENTITY contourSeparation "10">
+<!ENTITY layers-contours SYSTEM "inc/layers_contours_OS.xml.inc">
+%colours;
+]>
+
+<Map background-color="rgba(0,0,0,0)" srs="&srs900913;">
+&styles-contours;
+&layers-contours;
+</Map>

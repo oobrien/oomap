@@ -24,7 +24,7 @@ if (isset($_SERVER['REMOTE_HOST']))
 }
 
 $conn = @mysqli_connect($dbhost, $dbuser, $dbpass); //Change to 127.0.0.1 for local dev
-if (!$conn) 
+if (!$conn)
 {
 	$returnData = array('success'=>false, 'message'=>mysqli_error($conn));
 	echo json_encode($returnData);
@@ -84,8 +84,9 @@ $papersize = mysqli_real_escape_string($conn, $inData['papersize']);
 $paperorientation = mysqli_real_escape_string($conn, $inData['paperorientation']);
 $centre_lat = mysqli_real_escape_string($conn, $inData['centre_wgs84lat']);
 $centre_lon = mysqli_real_escape_string($conn, $inData['centre_wgs84lon']);
+$rotation = mysqli_real_escape_string($conn, $inData['rotation']);
 
-$writequery = "insert into map values($next_id, '$shortcode', '$action', '$title', '$race_instructions', $eventdate, '$club', '$style', '$scale', '$papersize', '$paperorientation', $centre_lat, $centre_lon, '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now())";
+$writequery = "insert into map values($next_id, '$shortcode', '$action', '$title', '$race_instructions', $eventdate, '$club', '$style', '$scale', '$papersize', '$paperorientation', $centre_lat, $centre_lon, '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now(), '$rotation')";
 $result = mysqli_query($conn, $writequery);
 if (!$result)
 {

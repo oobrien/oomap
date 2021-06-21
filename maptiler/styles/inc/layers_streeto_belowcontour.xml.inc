@@ -1,19 +1,10 @@
-<Layer name="ocean" status="on" srs="&srs900913;">
-    <StyleName>ocean</StyleName>
+<Layer name="land" status="on" srs="&srs900913;">
+    <StyleName>land</StyleName>
     <Datasource>
-        <Parameter name="type">csv</Parameter>
-        <Parameter name="inline">
-            wkt|name
-            POLYGON((-20037508.34 -20037508.34, -20037508.34 20037508.34, 20037508.34 20037508.34, 20037508.34 -20037508.34, -20037508.34 -20037508.34))|bounds
-        </Parameter>
-    </Datasource> 
-</Layer>
-
-<Layer name="coast-poly" status="on" srs="&srs900913;">
-    <StyleName>coast-poly</StyleName>
-    <Datasource>
-        <Parameter name="type">shape</Parameter>
-        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter> 
+        &datasource-settings;
+        <Parameter name="table">
+            (SELECT ST_Intersection(way, !bbox!) as way from ocean) as ocean
+      </Parameter>
     </Datasource>
 </Layer>
 
@@ -22,7 +13,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
+            (select ST_Intersection(way, !bbox!) as way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
             from &prefix;_polygon
             where landuse is not null
                 or leisure is not null
@@ -42,11 +33,10 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural",waterway,landuse,way_area
+            (select ST_Intersection(way, !bbox!) as way,"natural",waterway,landuse,way_area
             from &prefix;_polygon
                     where waterway in ('dock','mill_pond','riverbank','canal','river')
-                or landuse in ('reservoir','water','basin')
-                or "natural" in ('lake','water','land','marsh','scrub','wetland','glacier')
+                or "natural" in ('land','marsh','scrub','wetland','glacier')
             order by z_order,way_area desc
             ) as water_areas
         </Parameter>
@@ -58,7 +48,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,amenity from &prefix;_polygon
+            (select ST_Intersection(way, !bbox!) as way,amenity from &prefix;_polygon
             where amenity='parking'
             order by z_order,way_area desc) as roads
         </Parameter>
@@ -70,8 +60,11 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,tunnel from &prefix;_polygon
-            where highway in ('residential','unclassified','pedestrian','service','footway','track')
+            (select ST_Intersection(way, !bbox!) as way,highway,tunnel from &prefix;_polygon
+            where highway in ('residential','unclassified','pedestrian','service')
+            or (highway in ('footway','track')
+            and (foot not in ('no', 'private','destination','customer'))
+            and (access not in ('no', 'private','destination','customer') and foot is null))
             order by z_order,way_area desc) as roads
         </Parameter>
     </Datasource>
@@ -82,7 +75,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,waterway,
+            (select ST_Intersection(way, !bbox!) as way,waterway,
             case when tunnel in ('yes','true','1','culvert') then 'yes'::text else tunnel end as tunnel
             from &prefix;_line
             where waterway in ('weir','river','canal','derelict_canal','stream','drain')
@@ -98,7 +91,22 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,amenity from &prefix;_line where tunnel in ('yes','true','1') order by z_order) as roads
+            (select ST_Intersection(way, !bbox!) as way,highway,amenity from &prefix;_line where tunnel in ('yes','true','1') order by z_order) as roads
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="buildings" status="on" srs="&srs900913;">
+    <StyleName>buildings-core</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Intersection(way, !bbox!) as way,building,leisure,railway,amenity,landuse from &prefix;_polygon
+            where building is not null
+                or landuse='building'
+                or railway='station'
+                or amenity='place_of_worship'
+            order by z_order,way_area desc) as buildings
         </Parameter>
     </Datasource>
 </Layer>
@@ -108,7 +116,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
+            (select ST_Intersection(way, !bbox!) as way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
         </Parameter>
     </Datasource>
 </Layer>
@@ -121,26 +129,44 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,railway,amenity,
+            (select ST_Intersection(way, !bbox!) as way,highway,railway,amenity,service,access,
             case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
-            where highway is not null
-                or railway is not null
+            where (highway is not null
+            and (tags->'footway' is null or tags ->'footway' != 'sidewalk')
+            and (tags->'cycleway' is null or tags->'cycleway' != 'sidewalk')
+            and (service is null or service !='driveway')
+            and not (highway='footway' and access is not null and access ='private'))
+            or railway is not null
             order by z_order
             ) as roads
         </Parameter>
     </Datasource>
 </Layer>
-
+<Layer name="driveways" status="on" srs="&srs900913;">
+    <StyleName>driveways</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Intersection(way, !bbox!) as way,highway,railway,amenity,service,access,
+            case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
+            case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
+            from &prefix;_line
+            where (highway = 'service'
+            and service = 'driveway')
+            order by z_order
+            ) as driveways
+        </Parameter>
+    </Datasource>
+</Layer>
 <Layer name="islands" status="on" srs="&srs900913;">
     <StyleName>islands</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural" from &prefix;_polygon
+            (select ST_Intersection(way, !bbox!) as way,"natural" from &prefix;_polygon
             where "natural" in ('land', 'island')
-                or "man_made" in ('pier')
             order by z_order,way_area desc) as land
         </Parameter>
     </Datasource>

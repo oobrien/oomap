@@ -1,14 +1,14 @@
-<Style name="ocean">
+<Style name="land">
 	<Rule>
 		&maxscale_zoom12;
-		<PolygonSymbolizer fill="&blue50;" />
+		<PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
 	</Rule>
 </Style>
 
 <Style name="coast-poly">
 	<Rule>
 		&maxscale_zoom12;
-	    <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+	    <PolygonSymbolizer fill="&blue50;" />
 	</Rule>
 </Style>
 
@@ -323,13 +323,13 @@
         &maxscale_zoom12;
         <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/blackdot.png" />
+        <PolygonPatternSymbolizer file="&symbols;/blackdot.png" transform="scale(1.0, 1.0)" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/sand.png" />
+        <PolygonPatternSymbolizer file="&symbols;/sand.png" transform="scale(1.0, 1.0)" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
@@ -352,9 +352,7 @@
 <Style name="graveyard_overprint">
     <Rule>
         &maxscale_zoom12;
- 	<!-- <MarkersSymbolizer file="&symbols;tomb.svg" placement="interior" spacing="5" max-error="0.5" transform="scale(0.5)" /> -->
-        <PolygonPatternSymbolizer file="&symbols;/tomb.png" transform="scale(0.01)" />
-	<!-- <PolygonPatternSymbolizer file="&symbols;/tomb.svg" transform="scale(3)" /> -->
+        <!-- <PolygonPatternSymbolizer file="&symbols;/tomb.png" transform="scale(0.01)" /> -->
     </Rule>
 </Style>
 
@@ -527,35 +525,35 @@
     </Rule>
 </Style>
 
-<Style name="symbols">
+<Style name="symbols" comp-op="darken">
     <Rule>
         &maxscale_zoom13;
         &minscale_zoom13;
 	<Filter>[natural]='tree'</Filter>
-        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.15,0.15)" />
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.15,0.15)" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
         &minscale_zoom14;
         <Filter>[natural]='tree'</Filter>
-        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.3,0.3)" />
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.3,0.3)" />
     </Rule>
     <Rule>
         &maxscale_zoom15;
         &minscale_zoom15;
         <Filter>[natural]='tree'</Filter>
-        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.4,0.4)" />
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.4,0.4)" />
     </Rule>
     <Rule>
         &maxscale_zoom16;
         &minscale_zoom16;
         <Filter>[natural]='tree'</Filter>
-        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.5,0.5)" />
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.5,0.5)" />
     </Rule>
     <Rule>
         &maxscale_zoom17;
         <Filter>[natural]='tree'</Filter>
-        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" comp-op="darken" transform="scale(0.8,0.8)" />
+        <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
     <Rule>
         &maxscale_zoom14;

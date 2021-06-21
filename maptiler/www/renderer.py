@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os, os.path
 
 def handle(req):
@@ -8,10 +9,11 @@ def handle(req):
 	req.headers_out.add('Access-Control-Allow-Origin', '*')
 
 	if path == "":
-		req.status = apache.HTTP_NOT_FOUND
-		req.content_type = 'text/plain'
-		req.write("Path not specified.")
-		return apache.OK
+#		req.status = apache.HTTP_NOT_FOUND
+#		req.content_type = 'text/plain'
+#		req.write("Path not specifiedddd.")
+#		return apache.OK
+		return apache.DECLINED
 
 	if path == "favicon.ico":
 		req.status = apache.HTTP_NOT_FOUND

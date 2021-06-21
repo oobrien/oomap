@@ -1,3 +1,29 @@
+<Layer name="coast-poly" status="on" srs="&srs900913;">
+    <StyleName>coast-poly</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (SELECT ST_Intersection(way, !bbox!) as way from water WHERE ST_Intersects(way,!bbox!)) as coastline
+      </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="water_areas_core" status="on" srs="&srs900913;">
+    <StyleName>water_areas_core</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select way,"natural",waterway,landuse,way_area
+            from &prefix;_polygon
+            where landuse in ('reservoir','water','basin')
+              or "natural" in ('lake','water')
+            order by z_order,way_area desc
+            ) as water_areas
+        </Parameter>
+    </Datasource>
+</Layer>
+
+
 <Layer name="line features" status="on" srs="&srs900913;">
     <StyleName>cliffs</StyleName>
     <Datasource>

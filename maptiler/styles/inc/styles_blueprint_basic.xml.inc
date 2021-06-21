@@ -1,4 +1,4 @@
-<Style name="ocean">
+<Style name="land">
 	<Rule>
 		&maxscale_zoom12;
 		<LineSymbolizer stroke="&black;" stroke-width="0.3" stroke-linecap="butt" />
@@ -557,4 +557,3 @@
         <LineSymbolizer stroke="&black;" stroke-width="0.3" />
     </Rule>
 </Style>
-

@@ -5,7 +5,8 @@
 <!ENTITY service_road "([highway] = 'service' or [highway] = 'byway')">
 <!ENTITY track "([highway] = 'track' or [highway] = 'unsurfaced' or [highway] = 'bridleway' or [highway] = 'cycleway')">
 <!ENTITY path "([highway] = 'path' or [highway] = 'footway' or [highway] = 'steps' or [highway] = 'pedestrian')">
-<!ENTITY railway "([railway] = 'rail' or [railway] = 'narrow_gauge' or [railway] = 'light_rail' or [railway] = 'subway')">
+<!ENTITY railway "([railway] = 'rail' or [railway] = 'narrow_gauge' or [railway] = 'light_rail' or [railway] = 'subway' or [railway]='funicular')">
 <!ENTITY tram "([railway] = 'tram')">
 <!ENTITY bridge "([bridge] = 'yes' or [bridge] = 'true' or [bridge] = '1')">
 <!ENTITY tunnel "([tunnel] = 'yes' or [tunnel] = 'true' or [tunnel] = '1')">
+<!ENTITY water_line "([waterway]='weir' or [waterway]='river' or [waterway]='canal' or [waterway]='derelict_canal' or [waterway]='stream' or [waterway]='drain')">
