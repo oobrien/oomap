@@ -35,6 +35,7 @@ var drives=false;
 var rail=true;
 var walls=true;
 var grid=true;
+var trees=true;
 
 //OpenLayers single-instance objects
 var olMap;
@@ -628,6 +629,7 @@ function init()
 			grid = $('#grid').is(':checked');
 			drives = $('#drive').is(':checked');
 			walls = $('#wall').is(':checked');
+			trees = $('#tree').is(':checked');
 			dpi = parseInt($('#dpi').val());
 			if (isNaN(dpi)) { dpi = 150; }
 
@@ -1118,6 +1120,7 @@ function handleAdvancedOptions(pid)
 			$('#grid').prop('checked', grid);
 			$('#drive').prop('checked', drives);
 			$('#wall').prop('checked', walls);
+			$('#tree').prop('checked', trees);
 			$('#dpi').val(dpi);
 			$( "#advanced" ).dialog( "open" );
 }
@@ -1627,6 +1630,7 @@ function generateMap(type)
 	if (grid) {url += "|grid=yes"; } else {url += "|grid=no"; }
 	if (rail) {url += "|rail=yes"; } else {url += "|rail=no"; }
 	if (walls) {url += "|walls=yes"; } else {url += "|walls=no"; }
+	if (trees) {url += "|trees=yes"; } else {url += "|trees=no"; }
 	if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
 	url += "|dpi=" + dpi;
 

@@ -5,3 +5,4 @@
 <Parameter name="dbname">gis</Parameter>
 <Parameter name="estimate_extent">false</Parameter>
 <Parameter name="extent"> -20026376.39, -20048966.10,20026376.39,20048966.10</Parameter>
+<Parameter name="srid">900913</Parameter>

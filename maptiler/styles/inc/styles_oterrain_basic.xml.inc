@@ -44,7 +44,7 @@
 	</Rule>
 	<Rule>
 		&maxscale_zoom13;
-		<Filter>&railway; or &tram;</Filter>
+		<Filter>(&railway; or &tram;) and &rail; ='yes'</Filter>
 		<LineSymbolizer stroke="&black;" stroke-width="7" stroke-linecap="butt" />
 	</Rule>
 </Style>
@@ -67,7 +67,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>&railway; or &tram;</Filter>
+        <Filter>(&railway; or &tram;)  and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="5" stroke-linecap="butt" />
     </Rule>
 </Style>
@@ -94,12 +94,12 @@
     <Rule>
         &maxscale_zoom12;
         &minscale_zoom13;
-        <Filter>&tram; and not &tunnel;</Filter>
+        <Filter>&tram; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="1.5" stroke-linejoin="round" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
-        <Filter>&tram; and not &tunnel;</Filter>
+        <Filter>&tram; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="3" stroke-linejoin="round" />
     </Rule>
 </Style>
@@ -130,12 +130,12 @@
     <Rule>
        &maxscale_zoom12;
        &minscale_zoom13;
-       <Filter>&railway; and not &tunnel;</Filter>
+       <Filter>&railway; and not &tunnel; and &rail; ='yes'</Filter>
       <LineSymbolizer stroke="&black;" stroke-width="1.5" stroke-linejoin="round" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
-        <Filter>&railway; and not &tunnel;</Filter>
+        <Filter>&railway; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="3" stroke-linejoin="round" />
     </Rule>
 </Style>
@@ -144,13 +144,13 @@
     <Rule>
         &maxscale_zoom12;
         &minscale_zoom13;
-        <Filter>&tram; and not &tunnel;</Filter>
+        <Filter>&tram; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="0.9" stroke-linejoin="round" />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linejoin="round" stroke-dasharray="0,2,4,1" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
-        <Filter>&tram; and not &tunnel;</Filter>
+        <Filter>&tram; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="1.8" stroke-linejoin="round" />
         <LineSymbolizer stroke="&black;" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="0,5,8,1" />
     </Rule>
@@ -193,25 +193,25 @@
     <Rule>
         &maxscale_zoom12;
         &minscale_zoom13;
-        <Filter>&railway; and not &tunnel;</Filter>
+        <Filter>&railway; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="0.9" stroke-linejoin="round" />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linejoin="round" stroke-dasharray="0,2,4,1" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
-        <Filter>&railway; and not &tunnel;</Filter>
+        <Filter>&railway; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&white;" stroke-width="1.8" stroke-linejoin="round" />
         <LineSymbolizer stroke="&black;" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="0,5,8,1" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         &minscale_zoom13;
-        <Filter>&tram; and not &tunnel;</Filter>
+        <Filter>&tram; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="0.5" stroke-linejoin="round" stroke-dasharray="0,2,4,1" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
-        <Filter>&tram; and not &tunnel;</Filter>
+        <Filter>&tram; and not &tunnel; and &rail; ='yes'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="2" stroke-linejoin="round" stroke-dasharray="0,5,2,4,2,1" />
     </Rule>
     <Rule>
@@ -506,7 +506,7 @@
     </Rule>
    <Rule>
         &maxscale_zoom13;
-        <Filter>[barrier] = 'citywall' or [barrier] = 'wall' or [barrier] = 'retaining_wall' or [barrier] = 'jersey_barrier' or [barrier] = 'yes'</Filter>
+        <Filter>&walls; = 'yes' and ([barrier] = 'citywall' or [barrier] = 'wall' or [barrier] = 'retaining_wall' or [barrier] = 'jersey_barrier' or [barrier] = 'yes')</Filter>
         <MarkersSymbolizer file="&symbols;/wall.svg" placement="line" spacing="8" max-error="0.5" transform="scale(0.7)" />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
@@ -529,30 +529,30 @@
     <Rule>
         &maxscale_zoom13;
         &minscale_zoom13;
-	<Filter>[natural]='tree'</Filter>
+	<Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.15,0.15)" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
         &minscale_zoom14;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.3,0.3)" />
     </Rule>
     <Rule>
         &maxscale_zoom15;
         &minscale_zoom15;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.4,0.4)" />
     </Rule>
     <Rule>
         &maxscale_zoom16;
         &minscale_zoom16;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.5,0.5)" />
     </Rule>
     <Rule>
         &maxscale_zoom17;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
     <Rule>
