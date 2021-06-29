@@ -2,6 +2,9 @@ proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=4
 
 var debug = false;
 
+var defaultMapTitle = "OpenOrienteeringMap";
+var defaultRaceDescription = "Race instructions";
+
 var currentID = null;
 var currentNumber = null;
 var topID = 0;
