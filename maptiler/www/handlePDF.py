@@ -252,12 +252,17 @@ def createImage(path, fileformat):
         trees = "yes"
     else:
         trees = "no"
+    if p.get('hedges',"yes") != "no":    # Switch walls (and unspecified "barriers") on/off.
+        hedges = "yes"
+    else:
+        hedges = "no"
     import re
     insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">" + \
         "\n<!ENTITY driveway \"" + driveway_colour + "\">" + \
         "\n<!ENTITY rail \"" + rail + "\">" + \
         "\n<!ENTITY walls \"" + walls + "\">" + \
         "\n<!ENTITY trees \"" + trees + "\">" + \
+        "\n<!ENTITY hedges \"" + hedges + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">"

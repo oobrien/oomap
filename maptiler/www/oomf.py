@@ -9,7 +9,7 @@ home_base = os.getenv('OOM_HOME')
 ee_user = os.getenv('OOM_EE_USR')
 ee_pw = os.getenv('OOM_EE_PW')
 home = home_base + "/maptiler"
-web_root = 'http://tile.dna-software.co.uk:8888/'
+web_root = 'https://tile.dna-software.co.uk/'
 
 def parse_query(url):
     p = parse_qs(url.replace("|", "&").replace("%7C", "&")) #Replace "|" to allow standard parsing; in case "|" gets URL-encoded also replace "%7C"
@@ -27,7 +27,7 @@ def parse_query(url):
         p['interval'] = '0'
     p['contour'] = p.get('contour', 'NONE')
     p['dpi']=float(p.get('dpi','150'))
-    p['mapid']=p.get('id', 'new')
+    p['mapid']=p['id']
     return(p)
 
 
@@ -61,5 +61,7 @@ def req_write(outf, req, mapid, filetype):
         req.set_content_length(outfsize)
         req.write(outf.read())
         with open(home_base + "/log/oommakerlog-access.txt", "a") as fa:
-            fa.write("success|" + time.strftime('%x %X') + "|" + req.get_remote_host() + "|" + os.path.basename(req.filename) + "|" + req.args + "\n")
+#            fa.write("success|" + time.strftime('%x %X') + "|" + req.get_remote_host() + "|" + os.path.basename(req.filename) + "|" + req.args + "\n")
+# Use next line instead if sitting behind a reverse proxy:
+            fa.write("success|" + time.strftime('%x %X') + "|" + req.headers_in['X-Forwarded-For'] + "|" + os.path.basename(req.filename) + "|" + req.args + "\n")
     return req

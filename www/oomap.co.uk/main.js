@@ -16,6 +16,7 @@ var raceDescription = defaultRaceDescription;
 var mapStyleID = "streeto-NONE-0";
 var mapStyleIDOnSource;
 var paper;
+var paper_pieces = [];
 var scale;
 var tips;
 var eventdate = "";
@@ -36,6 +37,7 @@ var rail=true;
 var walls=true;
 var grid=true;
 var trees=true;
+var hedges=true;
 
 //OpenLayers single-instance objects
 var olMap;
@@ -630,6 +632,7 @@ function init()
 			drives = $('#drive').is(':checked');
 			walls = $('#wall').is(':checked');
 			trees = $('#tree').is(':checked');
+			hedges = $('#hedges').is(':checked');
 			dpi = parseInt($('#dpi').val());
 			if (isNaN(dpi)) { dpi = 150; }
 
@@ -1121,6 +1124,7 @@ function handleAdvancedOptions(pid)
 			$('#drive').prop('checked', drives);
 			$('#wall').prop('checked', walls);
 			$('#tree').prop('checked', trees);
+			$('#hedges').prop('checked', hedges);
 			$('#dpi').val(dpi);
 			$( "#advanced" ).dialog( "open" );
 }
@@ -1591,7 +1595,7 @@ function generateMap(type)
 
 	url = prefix1 + type
 		+ "/?style=" + mapStyleID
-   		+ "|paper=" + paper
+	 	+ "|paper=" + paper_pieces[0].toFixed(3) + "," + paper_pieces[1].toFixed(3)	//trim numbers in string to 3dp
 		+ "|scale=" + scale
 		+ "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
 		+ "|title=" + escapeTitleText
@@ -1631,6 +1635,7 @@ function generateMap(type)
 	if (rail) {url += "|rail=yes"; } else {url += "|rail=no"; }
 	if (walls) {url += "|walls=yes"; } else {url += "|walls=no"; }
 	if (trees) {url += "|trees=yes"; } else {url += "|trees=no"; }
+	if (hedges) {url += "|hedges=yes"; } else {url += "|hedges=no"; }
 	if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
 	url += "|dpi=" + dpi;
 
@@ -1903,7 +1908,6 @@ function rebuildMapSheet()
 	layerMapContent.getSource().clear();
 
 	var papersize = "";
-	var paper_pieces = [];
 
 	papersize = $("#papersize :radio:checked").attr("id");
 

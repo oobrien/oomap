@@ -347,24 +347,24 @@
     <Rule>
         &maxscale_zoom12;
         &minscale_zoom12;
-        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="0.75" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
         &minscale_zoom13;
-        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="1.5" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
         &minscale_zoom15;
-        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="2" />
     </Rule>
     <Rule>
         &maxscale_zoom15;
-        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="2.5" />
     </Rule>
     <Rule>
