@@ -233,6 +233,9 @@ def createImage(path, fileformat):
             import glob
             for i in glob.glob(home_base +'/'+tmpid+'*'):
                 os.unlink(i)  #Finished with temporary files - delete.
+    else:   # If SRTM or COPE contours, still need to point to correct contour table for reused data so:
+        if p['contour'] == "SRTM" or p['contour'] == "COPE":
+            contour_table = tmpid + "_srtm_line"
 
     # Need a custom Mapnik style file to find tables with temo id prefix.
     # Therefore inject "prefix" entity into appropriate base style definition and save using temp id as name.
@@ -388,8 +391,8 @@ def createImage(path, fileformat):
         ctx.set_operator(cairo.Operator.MULTIPLY)
         ctx.set_source_rgb(0.651, 0.149, 1)
         ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
-        ctx.rotate(rotation)
-        ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+        ctx.rotate(rotation)    # rotate map to correct angle
+        ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)  # set origin to NW corner
         ctx.set_line_width(SC_T*S2P)
         ctx.set_line_join(cairo.LINE_JOIN_ROUND)
         #ctx.translate((MAP_WM+((slon-mapWLon)/scaleCorrected))*S2P, (MAP_NM+((mapNLat-slat)/scaleCorrected))*S2P)
@@ -399,6 +402,12 @@ def createImage(path, fileformat):
         ctx.rel_line_to(-0.5*SC_W*S2P, 0.866*SC_W*S2P)
         ctx.rel_line_to(SC_W*S2P, 0)
         ctx.close_path()
+        ctx.stroke()
+    #Finish control (same place as start)
+        ctx.set_line_width(C_T*S2P)
+        ctx.arc(0, 0, C_R*S2P*1.2, 0, 2*math.pi)    #Outer circle
+        ctx.stroke()
+        ctx.arc(0, 0, C_R*S2P*0.8, 0, 2*math.pi)    #inner circle
         ctx.stroke()
 
     # Controls and labels
