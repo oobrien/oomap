@@ -3,8 +3,7 @@
 import os, os.path, platform, mapnik
 import math
 import time
-from oomf import *  #reused functions from oomf.py in same directory
-
+from oomf import *
 try:
     from PyPDF2 import PdfFileReader, PdfFileWriter
     from PyPDF2.generic import (ArrayObject, DecodedStreamObject, DictionaryObject, FloatObject, NameObject,
@@ -15,17 +14,17 @@ except ImportError:
 from geomag import WorldMagneticModel
 
 
-def processRequest(req):
-    path = req.args
+def processRequest(environ):
+    path = environ['QUERY_STRING']
     p = parse_query(path)
+    if isStr(p):
+        return (p, 'new')
     mapid = p.get('mapid', 'new')
-    outf = createImage(path, 'pdf')
-    return req_write(outf, req, mapid, 'pdf')
+    return createImage(path, 'pdf'), mapid
 
 def createImage(path, fileformat):
     import tempfile
     import cairo
-    #import urllib
     try:    #DPD - get unquote regardless of Python version
         from urllib.parse import unquote   #Python3
     except ImportError:
@@ -735,6 +734,7 @@ def createImage(path, fileformat):
     #os.unlink(styleFile)
     #dropTables = 'psql -U osm otf1 -t -c "select \'drop table \\"\' || tablename || \'\\" cascade;\' from pg_tables where schemaname = \'public\' and tablename like \'h%\'"  | psql -U osm otf1'
     #os.system(dropTables)
+
     return file
 
 def add_geospatial_pdf_header(m, f, f2, map_bounds, poly, epsg=None, wkt=None):

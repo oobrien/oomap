@@ -4,6 +4,7 @@ except ImportError:
      from urlparse import parse_qs  #Python2
 import os, os.path
 import time
+
 #Get environment vars (set in /etc/apache2/envvars)
 home_base = os.getenv('OOM_HOME')
 ee_user = os.getenv('OOM_EE_USR')
@@ -36,32 +37,3 @@ def isStr(x):
         return str(x) == x
     except Exception:
         return False
-
-def req_write(outf, req, mapid, filetype):
-    from mod_python import apache, util
-    if isStr(outf):
-        req.status = apache.HTTP_SERVICE_UNAVAILABLE
-        req.content_type = 'text/html'
-        outHTML = "<html><head><title>OpenOrienteeringMap: Error</title></head><body><h1>Error</h1><p>" + outf + "</p></body></html>"
-        req.write(outHTML)
-        with open(home_base + "/log/oommakerlog-access.txt", "a") as fa:
-            fa.write("failure|" + time.strftime('%x %X') + "|" + req.get_remote_host() + "|" + os.path.basename(req.filename) + "|" + req.args + "\n")
-    else:
-        types = {
-            'jpg': 'image/jpeg',
-            'jgw': 'text/plain',
-            'kmz': 'application/vnd.google-earth.kmz',
-            'pdf': 'application/pdf'
-        }
-        outf.seek(0)    #DPD
-        outfsize = os.fstat(outf.fileno()).st_size
-        req.status = apache.HTTP_OK
-        req.content_type = types.get(filetype)
-        req.headers_out["Content-Disposition"] = "attachment; filename=\"oom_" + mapid + "." + filetype + "\""
-        req.set_content_length(outfsize)
-        req.write(outf.read())
-        with open(home_base + "/log/oommakerlog-access.txt", "a") as fa:
-#            fa.write("success|" + time.strftime('%x %X') + "|" + req.get_remote_host() + "|" + os.path.basename(req.filename) + "|" + req.args + "\n")
-# Use next line instead if sitting behind a reverse proxy:
-            fa.write("success|" + time.strftime('%x %X') + "|" + req.headers_in['X-Forwarded-For'] + "|" + os.path.basename(req.filename) + "|" + req.args + "\n")
-    return req

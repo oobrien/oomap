@@ -1592,8 +1592,9 @@ function generateMap(type)
 		}
 		cpText = cpText.substring(0, cpText.length - 1);
 	}
-
-	url = prefix1 + type
+	var site_href = window.location.href
+	var arr = site_href.split("/");
+	url = arr[0] + "//" + arr[2] + "/render/" + type
 		+ "/?style=" + mapStyleID
 	 	+ "|paper=" + paper_pieces[0].toFixed(3) + "," + paper_pieces[1].toFixed(3)	//trim numbers in string to 3dp
 		+ "|scale=" + scale
