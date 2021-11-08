@@ -6,7 +6,7 @@ def logRequest(status, filetype, environ):
         requestor = environ['HTTP_X_FORWARDED_FOR']
     except KeyError: #otherwise get directly
         requestor = environ['REMOTE_ADDR']
-    with open(home_base + "/log/oommakerlog-access2.txt", "a") as fa:
+    with open(home_base + "/log/oommakerlog-access.txt", "a") as fa:
         outline = status + "|" + time.strftime('%x %X') + "|" + requestor + "|" + filetype + "|" + environ['QUERY_STRING'] + "\n"
         fa.write(outline)
 

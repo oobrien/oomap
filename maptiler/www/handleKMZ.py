@@ -14,7 +14,8 @@ def processRequest(environ):
     path = environ['QUERY_STRING']
     p = parse_query(path)
     if isStr(p):
-        return (p, 'new')    mapid = p.get('mapid', 'new')
+        return (p, 'new')
+    mapid = p.get('mapid', 'new')
     return createKMZ(path), mapid
 
 def createKMZ(path):
