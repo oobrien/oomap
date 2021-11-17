@@ -11,8 +11,7 @@ try:
     HAS_PYPDF2 = True
 except ImportError:
     HAS_PYPDF2 = False
-from geomag import WorldMagneticModel
-
+import requests
 
 def processRequest(environ):
     path = environ['QUERY_STRING']
@@ -114,8 +113,11 @@ def createImage(path, fileformat):
     scaleCorrectionFactor = math.cos(wgs84lat * math.pi/180)
     scaleCorrected = scale / scaleCorrectionFactor
 
-    wmm = WorldMagneticModel()
-    magdec = wmm.calc_mag_field(wgs84lat, wgs84lon).declination #look up magnetic declination for correct map North lines
+    #get declination from local Python web service (declination.py; mod_wsgi alias for /wmm)
+    wmmParams = {'lat':str(wgs84lat), 'lon':str(wgs84lon)}
+    wmmResponse = requests.get(web_root+"wmm", params = wmmParams)
+    magdec = float(wmmResponse.text)
+
 
     if style == "adhoc":
         MAP_EM = MAP_WM
@@ -706,7 +708,7 @@ def createImage(path, fileformat):
     ctx = cairo.Context(surface)
     ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_font_size(0.5*SCALE_FACTOR)
-    text = web_root + fileformat + '/?' + path
+    text = web_root + "render/" + fileformat + '/?' + path
     ctx.translate(MAP_WM*S2P, (MAP_NM+MAP_H+ADORN_URL_NM)*S2P)
     ctx.show_text(text)
 

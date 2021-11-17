@@ -2414,9 +2414,9 @@ function setdecl(v, callback){
 
 function lookupMag(lat, lon) {
    var url=
-"https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?magneticComponent=d&lat1="+lat+"&lon1="+lon+"&resultFormat=xml";
-   $.get(url, function(xml, status){
-        setdecl( $(xml).find('declination').text(), rotateToMagDec);
+"/wmm?lat="+lat+"&lon="+lon;
+   $.get(url, function(response, status){
+        setdecl(response, rotateToMagDec);
    });
 }
 
