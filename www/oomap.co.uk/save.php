@@ -86,7 +86,7 @@ $centre_lat = mysqli_real_escape_string($conn, $inData['centre_wgs84lat']);
 $centre_lon = mysqli_real_escape_string($conn, $inData['centre_wgs84lon']);
 $rotation = mysqli_real_escape_string($conn, $inData['rotation']);
 
-$writequery = "insert into map values($next_id, '$shortcode', '$action', '$title', '$race_instructions', $eventdate, '$club', '$style', '$scale', '$papersize', '$paperorientation', $centre_lat, $centre_lon, '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now(), '$rotation')";
+$writequery = "insert into map values('$next_id', '$shortcode', '$action', '$title', '$race_instructions', $eventdate, '$club', '$style', '$scale', '$papersize', '$paperorientation', '$centre_lat', '$centre_lon', '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now(), '$rotation')";
 $result = mysqli_query($conn, $writequery);
 if (!$result)
 {
@@ -125,7 +125,7 @@ if ($controls != null)
 		$lon = mysqli_real_escape_string($conn, $control['wgs84lon']);
 		$description = mysqli_real_escape_string($conn, $control['description']);
 
-		$writequery = "insert into control values($next_id, '$type', '$label', $label_angle, '$score', $lat, $lon, '$description')";
+		$writequery = "insert into control values('$next_id', '$type', '$label', '$label_angle', '$score', '$lat', '$lon', '$description')";
 		$result = mysqli_query($conn, $writequery);
 		if (!$result)
 		{

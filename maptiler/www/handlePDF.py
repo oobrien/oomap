@@ -484,7 +484,7 @@ def createImage(path, fileformat):
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
         ctx.set_font_size(CTEXT_S*S2P/1.5)
         #ctx.set_source_rgb(1, 0, 0)
-        numCrosses = len(crossesArr)/2
+        numCrosses = len(crossesArr)//2
         for i in range(numCrosses):
             text = "X"
             controllat = float(crossesArr[2*i])

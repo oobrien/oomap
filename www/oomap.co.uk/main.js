@@ -529,8 +529,9 @@ function init()
 			//control.score_id = $("#c_score :radio:checked").attr("id");
 
 			control.type = $("#c_type :radio:checked").attr("id");
-
-			control.description = $("#c_description").val();
+			
+			//make sure entered description in $("#c_description").val() is santised:
+			control.description = $('<div>').text($("#c_description").val()).html();
 
 			control.lat = newControlLL[1];
 			control.lon = newControlLL[0];
