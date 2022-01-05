@@ -529,7 +529,7 @@ function init()
 			//control.score_id = $("#c_score :radio:checked").attr("id");
 
 			control.type = $("#c_type :radio:checked").attr("id");
-			
+
 			//make sure entered description in $("#c_description").val() is santised:
 			control.description = $('<div>').text($("#c_description").val()).html();
 
@@ -1352,11 +1352,39 @@ function handleLoadCallback(json)
 	}
 	else
 	{
+	//	$( "#loaderror" ).dialog( "open" );
+	//	$( "#loaderror_text" ).html(result.message);
+
+	//If failed, try looking up from oomap.co.uk load.php instead before giving up.
+		reqMapID = $("#savedMapID").val();
+		$.post('https://oomap.co.uk/load.php', {"shortcode":reqMapID}, handleLoadOldCallback);
+	}
+}
+
+//Old save lookup callback - delete when function becomes redundant
+function handleLoadOldCallback(json)
+{
+	$("#loaderror_text").html("");
+
+	var result = JSON.parse(json);
+	if (result.success)
+	{
+		if (debug) { console.log(result.data); }
+		//If successful, need to convert old-style data to updated format (different styles, added rotation value)
+		result.data.rotation='0';
+		if (result.data.style == 'streeto') {result.data.style = 'streeto-OS-10'; }
+		if ((result.data.style + "padding").substring(0,8) == 'streeto_') {result.data.style = 'streeto-NONE-0'; }
+		if (result.data.style == 'oterrain') {result.data.style = 'oterrain-OS-10'; }
+		if ((result.data.style + "padding").substring(0,9) == 'oterrain_') {result.data.style = 'oterrain-NONE-0'; }
+		if (result.data.style == 'blueprint') {result.data.style = 'blueprint-NONE-0'; }
+		loadMap(result.data);
+	}
+	else
+	{
 		$( "#loaderror" ).dialog( "open" );
 		$( "#loaderror_text" ).html(result.message);
 	}
 }
-
 function handleGenerateClue()
 {
 	//TODO Do warning that this action does not save - person needs to press Create Map Sheet.
