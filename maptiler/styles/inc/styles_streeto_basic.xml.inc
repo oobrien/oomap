@@ -375,7 +375,7 @@
     </Rule>
     <!-- <Rule>
         &maxscale_zoom13;
-        <Filter>[barrier] = 'fence'</Filter>
+        <Filter>&fences; = 'yes' and [barrier] = 'fence'</Filter>
 	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />
         <LineSymbolizer stroke="&black;" stroke-width="0.79" stroke-linecap="square" />
     </Rule> -->

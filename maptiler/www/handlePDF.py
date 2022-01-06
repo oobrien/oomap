@@ -252,14 +252,18 @@ def createImage(path, fileformat):
         walls = "yes"
     else:
         walls = "no"
-    if p.get('trees',"yes") != "no":    # Switch walls (and unspecified "barriers") on/off.
+    if p.get('trees',"yes") != "no":    # Switch trees on/off.
         trees = "yes"
     else:
         trees = "no"
-    if p.get('hedges',"yes") != "no":    # Switch walls (and unspecified "barriers") on/off.
+    if p.get('hedges',"yes") != "no":    # Switch hedges on/off.
         hedges = "yes"
     else:
         hedges = "no"
+    if p.get('fences',"yes") != "no":    # Switch fences on/off.
+        fences = "yes"
+    else:
+        fences = "no"
     import re
     insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">" + \
         "\n<!ENTITY driveway \"" + driveway_colour + "\">" + \
@@ -267,6 +271,7 @@ def createImage(path, fileformat):
         "\n<!ENTITY walls \"" + walls + "\">" + \
         "\n<!ENTITY trees \"" + trees + "\">" + \
         "\n<!ENTITY hedges \"" + hedges + "\">" + \
+        "\n<!ENTITY fences \"" + fences + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">"

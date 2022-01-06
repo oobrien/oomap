@@ -512,7 +512,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom13;
-        <Filter>([barrier] = 'fence' and not ([leisure] ='garden'))</Filter>
+        <Filter>&fences; = 'yes' and ([barrier] = 'fence' and not ([leisure] ='garden'))</Filter>
         <MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.4" max-error="0.5" transform="scale(0.7)"  />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>

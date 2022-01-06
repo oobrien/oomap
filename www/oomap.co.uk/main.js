@@ -38,6 +38,7 @@ var walls=true;
 var grid=true;
 var trees=true;
 var hedges=true;
+var fences=true;
 
 //OpenLayers single-instance objects
 var olMap;
@@ -634,6 +635,7 @@ function init()
 			walls = $('#wall').is(':checked');
 			trees = $('#tree').is(':checked');
 			hedges = $('#hedges').is(':checked');
+			fences = $('#fence').is(':checked');
 			dpi = parseInt($('#dpi').val());
 			if (isNaN(dpi)) { dpi = 150; }
 
@@ -1126,6 +1128,7 @@ function handleAdvancedOptions(pid)
 			$('#wall').prop('checked', walls);
 			$('#tree').prop('checked', trees);
 			$('#hedges').prop('checked', hedges);
+			$('#fence').prop('checked', fences);
 			$('#dpi').val(dpi);
 			$( "#advanced" ).dialog( "open" );
 }
@@ -1667,6 +1670,7 @@ function generateMap(type)
 	if (trees) {url += "|trees=yes"; } else {url += "|trees=no"; }
 	if (hedges) {url += "|hedges=yes"; } else {url += "|hedges=no"; }
 	if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
+	if (fences) {url += "|fences=yes"; } else {url += "|fences=no"; }
 	url += "|dpi=" + dpi;
 
 	if (debug) { console.log(url); }
