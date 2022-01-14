@@ -9,6 +9,7 @@ var topNumber = 1;
 
 var rotAngle = 0;
 var magDec;
+const hitTol = 8;	//pixel tolerance when selecting map features
 
 var mapTitle = defaultMapTitle;
 var mapTitleDisplay = mapTitle;
@@ -61,33 +62,63 @@ var newControlLL = [0, 0];
 var mapBound;
 var wgs84Poly;
 var orienteeringAttribution;
+var layerGPX;
+var purple = 'rgba(220, 40, 255, 1)';
 
 //State
 //initialzoom, placepaper, addcontrols
 var state = "initialzoom";
 var controloptstate = "add";
 
+
+let dragAndDropInteraction;
+
+function setInteraction() {
+  if (dragAndDropInteraction) {
+    olMap.removeInteraction(dragAndDropInteraction);
+  }
+  dragAndDropInteraction = new ol.interaction.DragAndDrop({
+    formatConstructors: [
+      ol.format.GPX,
+    ],
+  });
+  dragAndDropInteraction.on('addfeatures', function (event) {
+    const vectorSource = new ol.source.Vector({
+      features: event.features,
+    });
+    olMap.addLayer(
+      layerGPX = new ol.layer.Vector({
+        source: vectorSource,
+      })
+    );
+    olMap.getView().fit(vectorSource.getExtent());
+  });
+  olMap.addInteraction(dragAndDropInteraction);
+}
+
+
 function controlStyle(feature, resolution)
 {
+	var size = scale/(resolution * 10000);
 	return [
 	new ol.style.Style({
 		image: new ol.style.Circle({
-			fill: new ol.style.Fill({ color: 'rgba(255, 0, 255, 1)'}),
-			radius: 2
+			fill: new ol.style.Fill({ color: purple}),
+			radius: 10 * size
 		})
 	}),
 	new ol.style.Style({
 		image: new ol.style.Circle ({
-			stroke: new ol.style.Stroke({color: 'rgba(255,0,255,1)', width: 2}),
-			radius: 15
+			stroke: new ol.style.Stroke({color: purple, width: 10 * size}),
+			radius: 75 * size
 		}),
 		text: new ol.style.Text({
 			  textAlign: "center",
-			  font: "bold 24px arial, verdana, sans-serif",
+			  font: "bold " + 120 * size + "px arial, verdana, sans-serif",
 			  text: feature.get('number'),
-			  fill: new ol.style.Fill({color: 'rgba(255,0,255,1)'}),
-			  offsetX: feature.get('xoff'),
-			  offsetY: feature.get('yoff')
+			  fill: new ol.style.Fill({color: purple}),
+			  offsetX: feature.get('xoff') * 5 * size,
+			  offsetY: feature.get('yoff') * 5 * size
 		})
 	})
 ]};
@@ -95,46 +126,56 @@ function controlStyle(feature, resolution)
 var dotStyle = new ol.style.Style({
 });
 
-var sfStyle = new ol.style.Style({
-	image: new ol.style.Circle({
-		stroke: new ol.style.Stroke({color: 'rgba(255,0,255,1)', width: 2}),
-		radius: 15
-	}),
-	text: new ol.style.Text({
-          textAlign: "center",
-          font: "bold 15px arial, verdana, sans-serif",
-          text: "S/F",
-          fill: new ol.style.Fill({color: 'rgba(255,0,255,1)'}),
-          offsetX: 0,
-          offsetY: 0
+function sfStyle(feature, resolution)	//start/finish - triangle and 2 circles
+{
+	var size = scale/(resolution * 10000);
+	return [
+		new ol.style.Style({
+			image: new ol.style.RegularShape({
+				points: 3,
+				stroke: new ol.style.Stroke({color: purple, width: 10 * size}),
+				radius: 110 * size
+			})
+		}),
+		new ol.style.Style({
+			image: new ol.style.Circle({
+				stroke: new ol.style.Stroke({color: purple, width: 10 * size}),
+				radius: 70 * size
+			})
+		}),
+		new ol.style.Style({
+			image: new ol.style.Circle({
+				stroke: new ol.style.Stroke({color: purple, width: 10 * size}),
+				radius: 90 * size
     })
-});
-
-var sfStyleOuter = new ol.style.Style({
-	image: new ol.style.Circle({
-		stroke: new ol.style.Stroke({color: 'rgba(255,0,255,1)', width: 2}),
-		radius: 20
 	})
-});
+]};
 
-var xStyle = new ol.style.Style({
-	image: new ol.style.Circle({
-		stroke: new ol.style.Stroke({color: 'rgba(255,0,0,1)', width: 0.5}),
-		radius: 1
-	}),
-	text: new ol.style.Text({
-          textAlign: "center",
-          baseAlign: "middle",
-          font: "18px arial, verdana, sans-serif",
-          text: "X",
-          fill: new ol.style.Fill({color: 'rgba(255,0,0,1)'}),
-          offsetX: 0,
-          offsetY: 0
-    })
-});
+
+function xStyle(feature, resolution)
+{
+	var size = scale/(resolution * 10000);
+	return [
+	new ol.style.Style({
+		image: new ol.style.Circle({
+			stroke: new ol.style.Stroke({color: 'rgba(255,0,255,0)', width: 5 * size}),
+			radius: 1 * size
+		}),
+		text: new ol.style.Text({
+			  textAlign: "center",
+				baseAlign: "middle",
+			  font: "bold " + 90 * size + "px arial, verdana, sans-serif",
+			  text: "X",
+			  fill: new ol.style.Fill({color: purple}),
+			  offsetX: 0,
+			  offsetY: 0
+		})
+	})
+]};
 
 function cpStyle(feature, resolution)
 {
+	var size = scale/(resolution * 10000);
 	return [
 		new ol.style.Style({
 			image: new ol.style.Circle({
@@ -144,9 +185,9 @@ function cpStyle(feature, resolution)
 			text: new ol.style.Text({
 				  textAlign: "center",
 				  baseAlign: "middle",
-				  font: "18px arial, verdana, sans-serif",
+				  font: 90 * size + "px arial, verdana, sans-serif",
 				  text: "][",
-				  fill: new ol.style.Fill({color: 'rgba(255,0,0,1)'}),
+				  fill: new ol.style.Fill({color: purple}),
 				  offsetX: 0,
 				  offsetY: 0,
 				  rotation: feature.get('angle')*Math.PI/180
@@ -165,6 +206,7 @@ var sheetStyle  = new ol.style.Style({
 
 function titleStyle(feature, resolution)
 {
+	var size = scale/(resolution * 10000);
 	return [
 	 new ol.style.Style({
 		text: new ol.style.Text({
@@ -172,7 +214,7 @@ function titleStyle(feature, resolution)
 			textAlign: "left",
 			textBaseline: "middle",
           	fill: new ol.style.Fill({color: 'rgba(0,0,0,1)'}),
-			font: "italic " + feature.get('fontSizeFromArr') + "px arial, verdana, sans-serif",
+			font: "italic " + 150 * size + "px arial, verdana, sans-serif",
           	offsetX: feature.get('xoff'),
           	offsetY: feature.get('yoff'),
 		})
@@ -344,19 +386,26 @@ function init()
 		reqMapID = args['mapID'];
 	}
 
- 	layerMapnik = new ol.layer.Tile({ title: "OpenStreetMap", source: new ol.source.OSM({ "wrapX": true})});
+ 	layerMapnik = new ol.layer.Tile({ title: "OpenStreetMap", source: new ol.source.OSM({
+		"wrapX": true,
+		attributions: [
+			'Alt-Shift-Drag to rotate. Try drag & dropping a GPX file!<br>',
+			ol.source.OSM.ATTRIBUTION,
+		],
+		crossOrigin: null
+	})});
 	layerOrienteering = new ol.layer.Tile({opacity: 1, zIndex: 1});
 	layerMapBorder = new ol.layer.Vector({ title: "mapborder", style: marginStyle, source: new ol.source.Vector({}) , zIndex: 2});
 	layerMapCentre = new ol.layer.Vector({ title: "mapcentre", style: centreStyle, source: new ol.source.Vector({}) , zIndex: 2});
 	layerMapSheet = new ol.layer.Vector({ title: "mapsheet", style: sheetStyle, source: new ol.source.Vector({}), zIndex: 2});
 	layerMapTitle = new ol.layer.Vector({ title: "maptitle", style: titleStyle, source: new ol.source.Vector({}) , zIndex: 2});
 	layerMapContent = new ol.layer.Vector({ title: "mapcontent", style: contentStyle, source: new ol.source.Vector({}) });
-	layerSF = new ol.layer.Vector({ title: "controlsSF", style: [ sfStyle, sfStyleOuter], source: new ol.source.Vector({}) });
+	layerSF = new ol.layer.Vector({ title: "controlsSF", style: sfStyle, source: new ol.source.Vector({}) });
 	layerX = new ol.layer.Vector({ title: "controlsX", style: xStyle, source: new ol.source.Vector({}) });
 	layerCP = new ol.layer.Vector({ title: "controlsCP", style: cpStyle, source: new ol.source.Vector({}) });
 	layerControls = new ol.layer.Vector({ title: "controls", style: controlStyle, source: new ol.source.Vector({})});
 
-	orienteeringAttribution = new ol.Attribution({ 'html': 'Copyright OpenStreetMap contributors and OS Crown Copyright & Database Right Ordnance Survey 2016.'});
+	//orienteeringAttribution = new ol.Attribution({ 'html': 'Copyright OpenStreetMap contributors and OS Crown Copyright & Database Right Ordnance Survey 2016.'});
 
 	if (args['mapStyleID'])
 	{
@@ -382,15 +431,14 @@ function init()
 	}
 
 	select = new ol.interaction.Select({
-		layers: [layerMapCentre]
+		layers: [layerMapCentre, layerControls, layerSF, layerX, layerCP], hitTolerance: hitTol
 	});
 
-     var translate = new ol.interaction.Translate({
-   			features: select.getFeatures()
-   	   });
+	var translate = new ol.interaction.Translate({
+  	features: select.getFeatures()
+	});
 
-   	 translate.on('translateend', handleDrag)
-
+	translate.on('translateend', handleDrag)
 
 	olMap = new ol.Map(
 	{
@@ -434,22 +482,7 @@ function init()
 
 	olMap.getView().on('propertychange', handleRotate);
 
-	/* TODO - interactions here with both the sheetCentre control (drag it) and the controls themselves (bring up box)
-	dragControl = new OpenLayers.Control.DragFeature(layerMapCentre, {
-		onComplete: function(feature, pixel) {
-			dragControl.deactivate();
-			sheetCentreLL = [feature.geometry.getCentroid().x, feature.geometry.getCentroid().y];
-			rebuildMapSheet();
-		}
-	});
-	map.addControl(dragControl);
-	dragControl.activate();
-
-	map.addControl(controlsClick);
-	controlsClick.activate();
-	*/
-
-
+	setInteraction();
 
 	handleZoom();
 	updateUrl();
@@ -1078,7 +1111,7 @@ function handleZoom()
 				new ol.source.XYZ(
 					{
 						urls: [prefix1 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix2 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix3 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png"],
-						attributions: [ orienteeringAttribution ],
+						attributions: ['Contours: various - see PDF output', ],
 						"wrapX": true
 					}
 				)
@@ -1086,9 +1119,8 @@ function handleZoom()
 			mapStyleIDOnSource = mapStyleID;
 
 		}
-//		layerMapnik.setVisible(false);
-//		layerOrienteering.setVisible(true);
-		layerMapnik.setVisible(true);	//Use standard slippy map for all zoom levels; keep old code for now.
+
+		layerMapnik.setVisible(true);	//Use standard slippy map for all zoom levels.  Switch on/off contours depending on zoom and contour type
 		if(mapStyleID.split("-")[1] == "SRTM" || mapStyleID.split("-")[1] == "NONE" || mapStyleID.split("-")[1] == "COPE")
 		{
 			layerOrienteering.setVisible(false);
@@ -1097,7 +1129,6 @@ function handleZoom()
 		{
 			layerOrienteering.setVisible(true);
 		}
-	//updateUrl();
 }
 }
 
@@ -1311,11 +1342,71 @@ function validate()
 	}
 }
 
-function handleDrag()
+function handleDrag()	//Vector element has been dragged - update arrays to match UI
 {
-	if (debug) { console.log('handleDrag'); }
+	//console.log('drag ');
+	var feats = select.getFeatures();
+	feats.forEach((feat) => {
+		console.log('feat '+ JSON.stringify(feat));
+		if (debug) { console.log('handleDrag'); }
+		if(feat.get('type') == 'control')	//Is the moved element a control?
+		{
+		for (var i = 0; i < controls.length; i++)
+								{
+									if (feat.get('id') == controls[i].id)	//Find matching control
+									{
+										controls[i].lon = feat.getGeometry().getCoordinates()[0];
+										controls[i].lat = feat.getGeometry().getCoordinates()[1];
+										controls[i].wgs84lat = ol.proj.transform([controls[i].lon, controls[i].lat], "EPSG:3857", "EPSG:4326")[1];
+										controls[i].wgs84lon = ol.proj.transform([controls[i].lon, controls[i].lat], "EPSG:3857", "EPSG:4326")[0];
+									}
+								}
+		}
+		if(feat.get('type') == 'CP')	//Is the moved element a crossing point?
+		{
+		for (var i = 0; i < controlsCP.length; i++)
+								{
+									if (feat.get('id') == controlsCP[i].id)	//Find matching control
+									{
+										controlsCP[i].lon = feat.getGeometry().getCoordinates()[0];
+										controlsCP[i].lat = feat.getGeometry().getCoordinates()[1];
+										controlsCP[i].wgs84lat = ol.proj.transform([controlsCP[i].lon, controlsCP[i].lat], "EPSG:3857", "EPSG:4326")[1];
+										controlsCP[i].wgs84lon = ol.proj.transform([controlsCP[i].lon, controlsCP[i].lat], "EPSG:3857", "EPSG:4326")[0];
+									}
+								}
+		}
+		if(feat.get('type') == 'X')	//Is the moved element an X?
+		{
+		for (var i = 0; i < controlsX.length; i++)
+								{
+									if (feat.get('id') == controlsX[i].id)	//Find matching control
+									{
+										controlsX[i].lon = feat.getGeometry().getCoordinates()[0];
+										controlsX[i].lat = feat.getGeometry().getCoordinates()[1];
+										controlsX[i].wgs84lat = ol.proj.transform([controlsX[i].lon, controlsX[i].lat], "EPSG:3857", "EPSG:4326")[1];
+										controlsX[i].wgs84lon = ol.proj.transform([controlsX[i].lon, controlsX[i].lat], "EPSG:3857", "EPSG:4326")[0];
+									}
+								}
+		}
+		if(feat.get('type') == 'start')	//Is the moved element an X?
+		{
+		for (var i = 0; i < controlsSF.length; i++)
+								{
+									if (feat.get('id') == controlsSF[i].id)	//Find matching control
+									{
+										controlsSF[i].lon = feat.getGeometry().getCoordinates()[0];
+										controlsSF[i].lat = feat.getGeometry().getCoordinates()[1];
+										controlsSF[i].wgs84lat = ol.proj.transform([controlsSF[i].lon, controlsSF[i].lat], "EPSG:3857", "EPSG:4326")[1];
+										controlsSF[i].wgs84lon = ol.proj.transform([controlsSF[i].lon, controlsSF[i].lat], "EPSG:3857", "EPSG:4326")[0];
+									}
+								}
+		}
+		if(feat.get('type') == 'centre')
+		{
+			sheetCentreLL = (layerMapCentre.getSource().getFeatures()[0]).getGeometry().getFirstCoordinate();
+		}
+	});
 	//sheetCentreLL = ol.proj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
-	sheetCentreLL = (layerMapCentre.getSource().getFeatures()[0]).getGeometry().getFirstCoordinate();
 	select.getFeatures().clear()
 	rebuildMapSheet()
 }
@@ -1487,6 +1578,7 @@ function handleOptionChange()
 		$( "#getkmz" ).button("disable");
 
 		rebuildMapSheet();
+		rebuildMapControls();	//to correctly scale features
 		return;
 	}
 }
@@ -1497,12 +1589,16 @@ function handleClick(evt)
 	var pixel = evt.pixel;
 	olMap.forEachFeatureAtPixel(pixel, function(feature, layer)
 	{
-		if (feature && layer.get('title') == "mapcentre")
+		//Has a map feature been clicked?
+		if (feature && $.inArray(layer.get('title'), ['mapcentre', 'controls', 'controlsSF', 'controlsX', 'controlsCP']) >= 0)
 		{
 			centreClick = true;
 		}
+	},
+	{
+		hitTolerance: hitTol,
 	});
-
+	//If so, stop processing click and allow openLayers event to take over.
 	if (centreClick)
 	{
 		if (debug) { console.log('returning'); }
@@ -1991,7 +2087,10 @@ function rebuildMapSheet()
 		mapTitleDisplay = mapTitle;
 	}
 
-	var title = new ol.Feature({ geometry: new ol.geom.Point([ sheetCentreLL[0]-map_dlon/2, sheetCentreLL[1]+map_dlat/2+map_nm_dlat/2]) });
+	var title = new ol.Feature({
+		geometry: new ol.geom.Point([ sheetCentreLL[0]-map_dlon/2, sheetCentreLL[1]+map_dlat/2+map_nm_dlat/2]),
+		type: 'centre'
+	 });
 	title.set('fontSizeFromArr',  fontSizeFromArr);
 	title.set('mapTitleDisplay',  mapTitleDisplay);
 	title.set('xoff',  0);
@@ -2002,7 +2101,10 @@ function rebuildMapSheet()
 	var eastMargin = new ol.Feature({ geometry:  ol.geom.Polygon.fromExtent(paperEMBound) });
 	var northMargin = new ol.Feature({ geometry:  ol.geom.Polygon.fromExtent(paperNMBound) });
 	var southMargin = new ol.Feature({ geometry:  ol.geom.Polygon.fromExtent(paperSMBound) });
-	var centreMarker = new ol.Feature({ geometry: new ol.geom.Point(sheetCentreLL) });
+	var centreMarker = new ol.Feature({
+		geometry: new ol.geom.Point(sheetCentreLL),
+		type: 'centre'
+	 });
 
 	var titleFeature = new ol.Feature({ geometry: new ol.geom.Point([mapBound[0], mapBound[3] + (0.002 * trueScale)])});
 
@@ -2049,21 +2151,33 @@ function rebuildMapControls()
 	for (var i = 0; i < controlsSF.length; i++)
 	{
 		var control = controlsSF[i];
-		var controlSF = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
+		var controlSF = new ol.Feature({
+			geometry: new ol.geom.Point([control.lon, control.lat]),
+			id: control.id,
+			type: 'start'
+		});
 		layerSF.getSource().addFeatures([controlSF]);
 	}
 
 	for (var i = 0; i < controlsX.length; i++)
 	{
 		var control = controlsX[i];
-		var controlX = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
+		var controlX = new ol.Feature({
+			geometry: new ol.geom.Point([control.lon, control.lat]),
+			id: control.id,
+			type: 'X'
+		});
 		layerX.getSource().addFeatures([controlX]);
 	}
 
 	for (var i = 0; i < controlsCP.length; i++)
 	{
 		var control = controlsCP[i];
-		var controlCP = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
+		var controlCP = new ol.Feature({
+			geometry: new ol.geom.Point([control.lon, control.lat]),
+			id: control.id,
+			type: 'CP'
+		});
 		controlCP.set('angle', control.angle+rotAngle*180/Math.PI);
 		layerCP.getSource().addFeatures([controlCP]);
 	}
@@ -2072,8 +2186,16 @@ function rebuildMapControls()
 	{
 		var control = controls[i];
 
-		var controlPoint = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
-		controlPoint.set('number', "" + control.number);
+		var controlPoint = new ol.Feature({
+			geometry: new ol.geom.Point([control.lon, control.lat]),
+			number: "" + control.number,
+			angle: control.angle,
+			id: control.id,
+			type: 'control',
+			score: control.score,
+			description: control.description
+		});
+		//controlPoint.set('number', "" + control.number);
 		controlPoint.set('xoff', 35 * Math.sin((control.angle*Math.PI)/180));
 		controlPoint.set('yoff', -35 * Math.cos((control.angle*Math.PI)/180));
 
