@@ -1347,7 +1347,6 @@ function handleDrag()	//Vector element has been dragged - update arrays to match
 	//console.log('drag ');
 	var feats = select.getFeatures();
 	feats.forEach((feat) => {
-		console.log('feat '+ JSON.stringify(feat));
 		if (debug) { console.log('handleDrag'); }
 		if(feat.get('type') == 'control')	//Is the moved element a control?
 		{

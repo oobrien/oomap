@@ -94,13 +94,18 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>&minor_road; or &service_road;</Filter>
+        <Filter>&minor_road;</Filter>
         <LineSymbolizer stroke="&grey;" stroke-width="1.5" stroke-dasharray="3,3" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         <Filter>&track; or &path;</Filter>
         <LineSymbolizer stroke="&grey;" stroke-width="0.75" stroke-dasharray="2,2" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>&service_road;</Filter>
+        <LineSymbolizer stroke="&grey;" stroke-width="0.75" stroke-dasharray="3,3" />
     </Rule>
 </Style>
 
