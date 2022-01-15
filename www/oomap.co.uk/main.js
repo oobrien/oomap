@@ -5,7 +5,7 @@ var debug = false;
 var currentID = null;
 var currentNumber = null;
 var topID = 0;
-var topNumber = 1;
+var topNumber = 0;
 
 var rotAngle = 0;
 var magDec;
@@ -19,6 +19,7 @@ var mapStyleIDOnSource;
 var paper;
 var paper_pieces = [];
 var scale;
+var trueScale = 10000;
 var tips;
 var eventdate = "";
 var fontSizeFromArr;
@@ -99,7 +100,7 @@ function setInteraction() {
 
 function controlStyle(feature, resolution)
 {
-	var size = scale/(resolution * 10000);
+	var size = trueScale/(resolution * 16000);
 	return [
 	new ol.style.Style({
 		image: new ol.style.Circle({
@@ -128,7 +129,7 @@ var dotStyle = new ol.style.Style({
 
 function sfStyle(feature, resolution)	//start/finish - triangle and 2 circles
 {
-	var size = scale/(resolution * 10000);
+	var size = trueScale/(resolution * 16000);
 	return [
 		new ol.style.Style({
 			image: new ol.style.RegularShape({
@@ -154,7 +155,7 @@ function sfStyle(feature, resolution)	//start/finish - triangle and 2 circles
 
 function xStyle(feature, resolution)
 {
-	var size = scale/(resolution * 10000);
+	var size = trueScale/(resolution * 16000);
 	return [
 	new ol.style.Style({
 		image: new ol.style.Circle({
@@ -175,7 +176,7 @@ function xStyle(feature, resolution)
 
 function cpStyle(feature, resolution)
 {
-	var size = scale/(resolution * 10000);
+	var size = trueScale/(resolution * 16000);
 	return [
 		new ol.style.Style({
 			image: new ol.style.Circle({
@@ -206,7 +207,7 @@ var sheetStyle  = new ol.style.Style({
 
 function titleStyle(feature, resolution)
 {
-	var size = scale/(resolution * 10000);
+	var size = trueScale/(resolution * 16000);
 	return [
 	 new ol.style.Style({
 		text: new ol.style.Text({
@@ -272,31 +273,31 @@ function init()
 
 	$( "#contours" ).buttonset();
 
-	$("#portrait").button( { icons: {primary:'ui-icon-document'} } );
-	$("#landscape").button( { icons: {primary:'ui-icon-document-b'} } );
+	$( "#portrait" ).button( { icons: {primary: 'ui-icon-document'} } );
+	$( "#landscape" ).button( { icons: {primary: 'ui-icon-document-b'} } );
 
 	$( "#c_type" ).buttonset();
 	$( "#c_score" ).buttonset();
 
-	$( "#mapstyle input[type=radio]" ).change(handleStyleChange);
-	$( "#mapscale input[type=radio]" ).change(handleOptionChange);
-	$( "#papersize input[type=radio]" ).change(handleOptionChange);
-	$( "#paperorientation input[type=radio]" ).change(handleOptionChange);
-	$( "#c_type input[type=radio]" ).change(handleControlTypeChange);
+	$( "#mapstyle input[type=radio]" ).on('change', handleStyleChange);
+	$( "#mapscale input[type=radio]" ).on('change', handleOptionChange);
+	$( "#papersize input[type=radio]" ).on('change', handleOptionChange);
+	$( "#paperorientation input[type=radio]" ).on('change', handleOptionChange);
+	$( "#c_type input[type=radio]" ).on('change', handleControlTypeChange);
 
-	$( "#contours input[type=radio]" ).change(handleStyleChange);
+	$( "#contours input[type=radio]" ).on('change', handleStyleChange);
 
-	$( "#createmap" ).button({ icons: { primary: "ui-icon-disk" } }).click(function() { handleGenerateMap(); });
-	$( "#getraster" ).button().click(function() { generateMap("jpg"); });
-	$( "#getworldfile" ).button().click(function() {generateMap("jgw"); });
-	$( "#getkmz" ).button().click(function() {generateMap("kmz"); });
-	$( "#getkml" ).button().click(function() {generateKML(); });
-	$( "#opts" ).button().click(function() {handleAdvancedOptions(); });
-	$( "#createclue" ).button().click(function() { handleGenerateClue(); });
-	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteSheet(); });
-	$( "#deleteXs" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteXs(); });
-	$( "#getPostboxes" ).button({ icons: { primary: "ui-icon-pin-s" } }).click(function() { handleGetPostboxes(); });
-	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).click(function() { handleGetOpenplaques(); });
+	$( "#createmap" ).button({ icons: { primary: "ui-icon-disk" } }).on('click', function() { handleGenerateMap(); });
+	$( "#getraster" ).button().on('click', function() { generateMap("jpg"); });
+	$( "#getworldfile" ).button().on('click', function() {generateMap("jgw"); });
+	$( "#getkmz" ).button().on('click', function() {generateMap("kmz"); });
+	$( "#getkml" ).button().on('click', function() {generateKML(); });
+	$( "#opts" ).button().on('click', function() {handleAdvancedOptions(); });
+	$( "#createclue" ).button().on('click', function() { handleGenerateClue(); });
+	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).on('click', function() { handleDeleteSheet(); });
+	$( "#deleteXs" ).button({ icons: { primary: "ui-icon-trash" } }).on('click', function() { handleDeleteXs(); });
+	$( "#getPostboxes" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() { handleGetPostboxes(); });
+	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() { handleGetOpenplaques(); });
 
 	$( "#createmap" ).button("disable");
 	$( "#getraster" ).button("disable");
@@ -309,8 +310,8 @@ function init()
 	$( "#getPostboxes" ).button("disable");
 	$( "#getPlaques" ).button("disable");
 
-	$( "#edittitle" ).click(function() { handleTitleEdit(); })
-	$( "#editinstructions" ).click(function() { handleRaceDescriptionEdit(); })
+	$( "#edittitle" ).on('click', function() { handleTitleEdit(); })
+	$( "#editinstructions" ).on('click', function() { handleRaceDescriptionEdit(); })
 
 	$( "#eventdate").datepicker({
 		dateFormat: "D d M yy",
@@ -327,25 +328,7 @@ function init()
 	var currentZoom = 4;
 	var minZoom = 1;
 
-	if (country == "ioa")
-	{
-		minZoom = 1;
-		mapStyleID = "streeto-NONE-0";
-	}
-	if (country == "dk")
-	{
-		minZoom = 1;
-		mapStyleID = "streeto-NONE-0";
-	}
-	if (country == "bof")
-	{
-		minZoom = 1;
-		mapStyleID = "streeto-OS-10";
-	}
-	if (country == "blueprint")
-	{
-		mapStyleID = "blueprint-NONE-0";
-	}
+	mapStyleID = "streeto-LIDAR-5";
 
 	if (args['zoom'])
 	{
@@ -353,10 +336,7 @@ function init()
 	}
 	else
 	{
-		if (country == "ioa" || country == "bof" || country == "dk")
-		{
 			currentZoom = 8;
-		}
 	}
 	if (args['lat'] && args['lon'])
 	{
@@ -365,21 +345,8 @@ function init()
 	}
 	else
 	{
-		if (country == "ioa")
-		{
-			currentLat = 52.9;
-			currentLon = -8.3;
-		}
-		else if (country == "dk")
-		{
-			currentLat = 56.1;
-			currentLon = 10.8;
-		}
-		else if (country == "bof")
-		{
-			currentLat = 51.8;
-			currentLon = -0.9;
-		}
+		currentLat = 51.8;
+		currentLon = -0.9;
 	}
 	if (args['mapID'])
 	{
@@ -416,16 +383,8 @@ function init()
 	$('#' + mapStyleID.split("-")[1]+"-"+mapStyleID.split("-")[2]).prop('checked', true);
 	$('#contours').buttonset('refresh');
  	var theRestrictedExtent = undefined;
- 	if (country == "ioa" || country == "bof")
-	{
- 		//theRestrictedExtent = ol.proj.transformExtent([-12, 47, 8, 63], "EPSG:4326", "EPSG:3857");
-	}
- 	if (country == "dk")
-	{
- 		theRestrictedExtent = ol.proj.transformExtent([7, 53, 13, 59], "EPSG:4326", "EPSG:3857");
-	}
 
-	if (country == "blueprint")
+	if (mapStyleID.split("-")[0] == "blueprint")
 	{
 		mapTitle = "Blueprint";
 	}
@@ -487,8 +446,8 @@ function init()
 	handleZoom();
 	updateUrl();
 	initDescriptions();
-	if(!!document.createElement('canvas').getContext)
-	{
+	//if(!document.createElement('canvas').getContext)
+	//{
 		$( ".knob" ).knob({
 		'width':65,
 		'fgColor':"#222222",
@@ -499,7 +458,7 @@ function init()
 		'height':65,
 		'release' : function (v) { }
 		});
-	}
+	//}
 	var c_number = $( "#c_number" ),
       allFields = $( [] ).add( c_number );
 
@@ -870,19 +829,15 @@ function init()
 	  autoOpen: true,
 	  width: 760,
 	  modal: true,
-	  buttons: {
-		"      OK      ": function() {
-		  $( this ).dialog( "close" );
-		}
-	  }
+	  buttons:  [ { text: "Ok", click: function() { $( this ).dialog( "close" ); } } ]
 	});
 
 
-	$("#search").submit(function() { handleSearchPostcode(); return false });
-	$("#load").submit(function() { handleLoadMap(); return false; });
+	$("#search").on('submit', function() { handleSearchPostcode(); return false });
+	$("#load").on('submit', function() { handleLoadMap(); return false; });
 
-	$( "#searchButton" ).button().css('font-size', 10);
-	$( "#loadButton" ).button().css('font-size', 10);
+	$( "#searchButton" ).button().css('font-size', '10px');
+	$( "#loadButton" ).button().css('font-size', '10px');
 
 	//Handle loading in a map with ID.
 	if (reqMapID != "new")
@@ -920,8 +875,8 @@ function resetControlAddDialog(pid)
 	$("#c_number").removeAttr('disabled');
 	$("#c_description").removeAttr('disabled');
 
-	$('[for=c_regular]').click(); //Overlying label
-	$("#c_regular").click(); //Underlying button
+	$('[for=c_regular]').on('click', ); //Overlying label
+	$("#c_regular").on('click', ); //Underlying button
 
 	if (pid != null)
 	{
@@ -936,8 +891,8 @@ function resetControlAddDialog(pid)
 		}
 		$("#c_angle").val(control.angle).trigger('change');
 
-		$('[for=c_score' + control.score + ']').click(); //Overlying label
-		$("#c_score" + control.score).click(); //Underlying button
+		$('[for=c_score' + control.score + ']').on('click', ); //Overlying label
+		$("#c_score" + control.score).on('click', ); //Underlying button
 		$("#c_number").val(control.number);
 		$("#c_description").val(control.description);
 
@@ -1016,8 +971,8 @@ function handleRotate()
 				var orient;
 				if ($("#portrait").prop('checked')) {orient="landscape"}
 				else {orient="portrait"}
-				$("#" + orient).click();
-				$("[for=" + orient + "]").click();
+				$("#" + orient).on('click', );
+				$("[for=" + orient + "]").on('click', );
 				if(angle>0) {angle=angle-Math.PI/2}
 				else {angle=angle+Math.PI/2}
 				this.setRotation(angle);
@@ -1096,14 +1051,7 @@ function handleZoom()
 			$("#messageCentre").hide();
 			rebuildMapSheet();
 		}
-		if (country == "blueprint")
-		{
-			mapStyleID = "blueprint-NONE-0";
-		}
-		else
-		{
-			mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
-		}
+		mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
 
 		if (mapStyleIDOnSource != mapStyleID)
 		{
@@ -1220,7 +1168,7 @@ function handleDeleteSheet()
 	controlsCP = [];
 
 	topID = 0;
-	topNumber = 1;
+	topNumber = 0;
 	magDec = undefined;
 
 	rebuildMapControls();
@@ -1947,16 +1895,16 @@ function loadMap(data)
 	//$('#eventdate').datepicker("refresh");
 	//TODO Implement loading of saved club.
 
-	$style.click();
-	$styleL.click();
-	$scale.click();
-	$scaleL.click();
-	$papersize.click();
-	$papersizeL.click();
-	$paperorientation.click();
-	$paperorientationL.click();
-	$contours.click();
-	$contoursL.click();
+	$style.on('click', );
+	$styleL.on('click', );
+	$scale.on('click', );
+	$scaleL.on('click', );
+	$papersize.on('click', );
+	$papersizeL.on('click', );
+	$paperorientation.on('click', );
+	$paperorientationL.on('click', );
+	$contours.on('click', );
+	$contoursL.on('click', );
 
 	sheetCentreLL = ol.proj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
 	olMap.getView().setCenter(sheetCentreLL);
@@ -2051,7 +1999,7 @@ function rebuildMapSheet()
 
 	var centroidllWGS84 = ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326");
 	var fudgeFactor = Math.cos(centroidllWGS84[1] * Math.PI/180);
-	var trueScale = scale / fudgeFactor;
+	trueScale = scale / fudgeFactor;
 	//console.log("True scale is " + trueScale);
 
 	var paper_dlon = paper_pieces[0] * trueScale;
@@ -2079,11 +2027,15 @@ function rebuildMapSheet()
 	var sheet = new ol.Feature({ geometry: ol.geom.Polygon.fromExtent(paperBound) });
 
 	var titleSizeArr = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 9, 18, 36, 72, 144, 288];
-	fontSizeFromArr = (titleSizeArr[parseInt(olMap.getView().getZoom())]*(scale/10000)).toFixed(0);
-	mapTitleDisplay = mapTitle.toUpperCase();
-	if (country == "blueprint")
+	fontSizeFromArr = (titleSizeArr[parseInt(olMap.getView().getZoom())]*(trueScale/16000)).toFixed(0);
+
+	if (mapStyleID.split("-")[0] == "blueprint")
 	{
 		mapTitleDisplay = mapTitle;
+	}
+	else
+	{
+		mapTitleDisplay = mapTitle.toUpperCase();
 	}
 
 	var title = new ol.Feature({
@@ -2263,9 +2215,9 @@ function rebuildDescriptions()
 					.append(control.description.length > 28 ? control.description.substring(0,25) + "..."  : control.description)
 				  )
 				.append($('<th>')
-					.append($('<span>').addClass('edit').attr('id', 'e' + control.id).text('Edit').click(function() { handleControlEditOptions(this.id); })
+					.append($('<span>').addClass('edit').attr('id', 'e' + control.id).text('Edit').on('click', function() { handleControlEditOptions(this.id); })
 					  )
-					.append($('<span>').addClass('delete').attr('id', 'd' + control.id).text('Delete').click(function() { handleControlDelete(this.id); })
+					.append($('<span>').addClass('delete').attr('id', 'd' + control.id).text('Delete').on('click', function() { handleControlDelete(this.id); })
 					  )
 				  )
 			);
@@ -2335,11 +2287,10 @@ function handleGetOSMboxesCallback(result)
 	{
 		for(var i = 0; i < result.elements.length; i++)
 		{
-		  	var control = new Object();
-		  	control.id = topID++;
-		  	control.number = topNumber++;
-		  	//TODO Use a different number if one is already being used.
-		  	control.angle = 45;
+	  	var control = new Object();
+	  	control.id = topID++;
+	  	control.number = ++topNumber;
+	  	control.angle = 45;
 			control.score = 10;
 			if (control.number >= 20) { control.score = 20; }
 			if (control.number >= 30) { control.score = 30; }
@@ -2401,11 +2352,10 @@ function handleGetPostboxesCallback(result)
 	{
 		for(var i = 0; i < result.length; i++)
 		{
-		  	var control = new Object();
-		  	control.id = topID++;
-		  	control.number = topNumber++;
-		  	//TODO Use a different number if one is already being used.
-		  	control.angle = 45;
+	  	var control = new Object();
+	  	control.id = topID++;
+	  	control.number = ++topNumber;
+	  	control.angle = 45;
 			control.score = 10;
 			if (control.number >= 20) { control.score = 20; }
 			if (control.number >= 30) { control.score = 30; }
@@ -2476,11 +2426,10 @@ function handleGetOpenplaquesCallback(result)
 	{
 		for(var i = 0; i < result.features.length; i++)
 		{
-		  	var control = new Object();
-		  	control.id = topID++;
-		  	control.number = topNumber++;
-		  	//TODO Use a different number if one is already being used.
-		  	control.angle = 45;
+	  	var control = new Object();
+	  	control.id = topID++;
+	  	control.number = ++topNumber;
+	  	control.angle = 45;
 			control.score = 10;
 			if (control.number >= 20) { control.score = 20; }
 			if (control.number >= 30) { control.score = 30; }
@@ -2488,7 +2437,6 @@ function handleGetOpenplaquesCallback(result)
 			if (control.number >= 50) {	control.score = 50;	}
 			control.type = "c_regular";
 			control.description = "Plaque: " + result.features[i].properties.inscription;
-			//control.description = "Postbox";
 
 			control.lat = ol.proj.transform(result.features[i].geometry.coordinates, "EPSG:4326", "EPSG:3857")[1];
 			control.lon = ol.proj.transform(result.features[i].geometry.coordinates, "EPSG:4326", "EPSG:3857")[0];

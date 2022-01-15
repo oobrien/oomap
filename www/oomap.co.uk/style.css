@@ -39,7 +39,6 @@ h1, h2
 	color: white;
 	background-color: #cc0032;
 	font-variant: small-caps;
-	-moz-border-bottom-right-radius: 80px;
 	border-bottom-right-radius: 80px;
 }
 
@@ -266,11 +265,8 @@ h1, h2
 	width: 300px;
 	height: 250px;
 	bottom: 85px;
-	//-moz-border-top-left-radius: 150px;
-	//border-top-left-radius: 150px;
-	//border: 1px solid #006699;
 	text-align: center;
-	vertical-align: center;
+	vertical-align: middle;
 }
 
 #supported
@@ -282,7 +278,7 @@ h1, h2
 	height: 150px;
 	bottom: 65px;
 	text-align: center;
-	vertical-align: center;
+	vertical-align: middle;
 }
 
 #sponsor div { padding: 50px; color: #006699; font-style: italic; font-size: 11px; clear: both; }
@@ -422,4 +418,23 @@ h1, h2
 @media screen and (min-width: 0px) and (max-width: 950px)
 {
 	#messagePanelHolder { display: none; }
+}
+
+/* jQuery-ui edits */
+
+.ui-checkboxradio-radio-label .ui-icon-background {
+	visibility:hidden !important;
+	width: 0px !important;
+	height: 0px !important;
+}
+
+.ui-checkboxradio-radio-label.ui-checkboxradio-checked .ui-icon,
+.ui-checkboxradio-radio-label.ui-checkboxradio-checked:hover .ui-icon {
+	visibility:hidden !important;
+	width: 0px !important;
+	height: 0px !important;
+}
+
+.ui-button {
+	padding: .4em 0.7em !important;
 }
