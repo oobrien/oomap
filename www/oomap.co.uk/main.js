@@ -1,5 +1,5 @@
 proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
-
+ol.proj.proj4.register(proj4);
 var debug = false;
 
 var currentID = null;
@@ -417,7 +417,33 @@ function init()
 	  		layerControls
 		],
 
-		controls: ol.control.defaults({ }).extend(
+		controls: ol.control.defaults({rotateOptions: {
+		      label: "M",
+		      autoHide: false,
+		      tipLabel: "M: To Mag North / N: to True North",
+		      resetNorth: function()
+		      {
+		        //var contrls = map.getControls(); // this is a ol.Collection
+		        //contrls.forEach(function(con){
+		        //    console.info(contrl instanceof ol.control.Zoom);
+		        //});
+		        if (magDec == null) { //If no mag N details available, look up.
+		          var coords = olMap.getView().getCenter();
+		          //Use view centre unless sheet has been placed.
+		          if (state != 'initialzoom' && state != 'placepaper') { coords = sheetCentreLL; }
+		          lookupMag(ol.proj.transform(coords, "EPSG:3857", "EPSG:4326")[1],ol.proj.transform(coords, "EPSG:3857", "EPSG:4326")[0]);
+		          this.Er.innerHTML = 'N';
+		        }
+		        else if (Math.PI - Math.abs(Math.abs((-magDec * Math.PI/180) - olMap.getView().getRotation()) - Math.PI) > 0.016) { //If mag N available, and not current orientation, change to Mag N
+		          olMap.getView().setRotation(-magDec * Math.PI/180);
+		          this.Er.innerHTML = 'N';
+		        }
+		        else {  //Otherwise rotate to True N
+		          olMap.getView().setRotation(0);
+		                    this.Er.innerHTML = 'M';
+		        }
+		      }
+		    } }).extend(
 		[
 			new ol.control.ScaleLine({'geodesic': true, 'units': 'metric'})
 		]),
@@ -875,8 +901,8 @@ function resetControlAddDialog(pid)
 	$("#c_number").removeAttr('disabled');
 	$("#c_description").removeAttr('disabled');
 
-	$('[for=c_regular]').on('click', ); //Overlying label
-	$("#c_regular").on('click', ); //Underlying button
+	$('[for=c_regular]').trigger( "click" ); //Overlying label
+	$("#c_regular").trigger( "click" ); //Underlying button
 
 	if (pid != null)
 	{
@@ -891,8 +917,8 @@ function resetControlAddDialog(pid)
 		}
 		$("#c_angle").val(control.angle).trigger('change');
 
-		$('[for=c_score' + control.score + ']').on('click', ); //Overlying label
-		$("#c_score" + control.score).on('click', ); //Underlying button
+		$('[for=c_score' + control.score + ']').trigger( "click" ); //Overlying label
+		$("#c_score" + control.score).trigger( "click" ); //Underlying button
 		$("#c_number").val(control.number);
 		$("#c_description").val(control.description);
 
@@ -959,8 +985,8 @@ function handleStyleChange()
 
 function handleRotate()
 {
-	console.log('handleRotate');
-	if (!olMap)
+	if (debug) {console.log('handleRotate');}
+	if (!olMap || state == "initialzoom" || state == "placepaper")
 	{
 		return;
 	}
@@ -971,8 +997,8 @@ function handleRotate()
 				var orient;
 				if ($("#portrait").prop('checked')) {orient="landscape"}
 				else {orient="portrait"}
-				$("#" + orient).on('click', );
-				$("[for=" + orient + "]").on('click', );
+				$("#" + orient).trigger( "click" );
+				$("[for=" + orient + "]").trigger( "click" );
 				if(angle>0) {angle=angle-Math.PI/2}
 				else {angle=angle+Math.PI/2}
 				this.setRotation(angle);
@@ -1895,16 +1921,16 @@ function loadMap(data)
 	//$('#eventdate').datepicker("refresh");
 	//TODO Implement loading of saved club.
 
-	$style.on('click', );
-	$styleL.on('click', );
-	$scale.on('click', );
-	$scaleL.on('click', );
-	$papersize.on('click', );
-	$papersizeL.on('click', );
-	$paperorientation.on('click', );
-	$paperorientationL.on('click', );
-	$contours.on('click', );
-	$contoursL.on('click', );
+	$style.trigger( "click" );
+	//$styleL.trigger( "click" );
+	$scale.trigger( "click" );
+	//$scaleL.trigger( "click" );
+	$papersize.trigger( "click" );
+	//$papersizeL.trigger( "click" );
+	$paperorientation.trigger( "click" );
+	//$paperorientationL.trigger( "click" );
+	$contours.trigger( "click" );
+	//$contoursL.trigger( "click" );
 
 	sheetCentreLL = ol.proj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
 	olMap.getView().setCenter(sheetCentreLL);
@@ -2247,7 +2273,9 @@ function handleSearchPostcodeCallback(json)
 		{
 			zoom = 13;
 		}
-		olMap.getView().setCenter(ol.proj.transform([result.easting, result.northing], "EPSG:27700", "EPSG:3857"));
+//		olMap.getView().setCenter(ol.proj.transform([result.easting, result.northing], "EPSG:27700", "EPSG:3857"));
+	//above fails in Openlayers6 - so replace with proj4 equivalent.
+		olMap.getView().setCenter(proj4("EPSG:27700", "EPSG:3857", [parseInt(result.easting), parseInt(result.northing)]));
 		olMap.getView().setZoom(zoom);
 	}
 	else
