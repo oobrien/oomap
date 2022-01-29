@@ -1,0 +1,19 @@
+{
+  "name": "OpenOrienteeringMap",
+  "version": "4.0.0",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "devDependencies": {
+    "@rollup/plugin-inject": "^4.0.4",
+    "vite": "^2.6.7"
+  },
+  "dependencies": {
+    "jquery": "^3.6.0",
+    "jquery-ui-dist": "^1.13.0",
+    "ol": "6.12.0",
+    "proj4": "^2.7.5"
+  }
+}

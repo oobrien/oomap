@@ -54,6 +54,15 @@ custom_fonts_dir = '/usr/share/fonts/truetype/msttcorefonts/'
 
 mapnik.register_fonts(custom_fonts_dir)
 
+Website build
+---
+
+The website has to be built from the source files in www/oomap.co.uk/ using npm (from node.js install):
+
+1.  Open a command prompt in this directory
+2.  run "npm install" to retrieve required dependencies
+3.  run "npm run build" to package up site into the "dist" subdirectory.
+
 Examples
 ===
 

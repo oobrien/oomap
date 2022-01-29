@@ -5,18 +5,13 @@
 		<meta name="viewport" content="minimal-ui, initial-scale=0.5, user-scalable=no, width=device-width">
 
 		<title>OpenOrienteeringMap: The easy Street-O map creation tool</title>
-		<script type='text/javascript' src='/lib/proj4.js'></script>
-		<script type='text/javascript' src='/lib/ol.js'></script>
-		<script type='text/javascript' src='/lib/jquery-3.6.0.min.js'></script>
-		<script type='text/javascript' src='/lib/jquery-ui.min.js'></script>
-		<script type='text/javascript' src='/lib/jquery.knob.js'></script>
-		<script type='text/javascript' src='/lib/jquery.jqprint-0.3.js'></script>
-		<!--<script src="https://code.jquery.com/jquery-migrate-3.3.2.js"></script>-->
-		<script type='text/javascript' src="/consts.js"></script>
-		<script type='text/javascript' src="/main.js"></script>
-		<link rel='stylesheet' type='text/css' href='/lib/jquery-ui.min.css'>
-		<link rel='stylesheet' type='text/css' href='/lib/ol.css'>
-		<link rel='stylesheet' type='text/css' href='/style.css'>
+
+		<script type='module' src="./main.js"></script>
+		<script type='text/javascript' src="./Widget_2.js"></script>
+
+		<!--<link rel='stylesheet' type='text/css' href='./lib/jquery-ui.min.css'>
+	  <link rel='stylesheet' type='text/css' href='./lib/ol.css'>
+		<link rel='stylesheet' type='text/css' href='./lib/style.css'>-->
 
 	</head>
 	<body>
@@ -32,7 +27,7 @@
 				<div class='messagePanel' id='messageCentre'>Tip: click where you want the centre of your sheet to be. Don't forget you can drag the map to move it.</div>
 				<div class='messagePanel' id='messageAdd'>Tip: click to add controls, To move the map, select and then drag the blue marker. Once done, click "Save" to get PDF.</div>
 			</div>
-			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v3.3</span></div>
+			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v4.0</span></div>
 		</div>
 		<div id='optionspanel'>
 			<div id='toolbar' class="ui-widget-header ui-corner-all">
@@ -113,7 +108,7 @@
 				Get: <button id='getraster'>JPG</button>
 				<button id='getworldfile'>JGW</button>
 				<button id='createclue'>Clues</button><br />
-				MapRunF: <button id='getkmz'>KMZ</button> <a href='#' id='getkml'>KML</a><br />
+				MapRun: <button id='getkmz'>KMZ</button> <a href='#' id='getkml'>KML</a><br />
 				<button id='opts'>Rendering options</button>
 			</div>
 		</div>
@@ -135,19 +130,24 @@
 			</div>
 
 			<div id='attribution'>
-				<div><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors 2015. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are  © Environment Agency copyright and/or database right 2015, all rights reserved.  Plaques from Open Plaques project.'); return false;">Credit</a> <a href="https://blog.oomap.co.uk/oom/">About</a> Support: <a href="https://www.orienteeringfoundation.org.uk/">The Orienteering Foundation</a>.</div>
-				<script type='text/javascript' src='https://ko-fi.com/widgets/widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
+				<div><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are from various sources, as attributed on the PDF rendering. Plaques from Open Plaques project.'); return false;">Credit</a>
+					<a href="#" id="about"> About</a>
+					<a href="https://blog.oomap.co.uk/oom/">Blog</a>
+					  <a href="https://www.orienteeringfoundation.org.uk/">Support</a>.</div>
+						<script type='text/javascript'>kofiwidget2.init('Buy Ollie a coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
+						<script type='text/javascript'>kofiwidget2.init('Buy David a coffee', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script>
 			</div>
 			<div id='map'></div>
 		</div>
 		<div id="newcontroloptions" title="Control options" style='display: none;'>
-		  <p class="validateTips">Tip: There can only be one start/finish control. Adding another moves it.</p>
+		  <p class="validateTips">Tip: There can only be one start or finish control. Adding another moves it.</p>
 		  <fieldset>
 			<table style='margin: 0 auto;'>
 			<tr>
 				<td id="c_type" class="buttonset">
 					<input type="radio" id="c_regular" name="c_type" checked="checked" /><label for="c_regular"><img src='/images/c_regular.png' alt='Regular' style='width: 60px; height: 60px;' /><br />Control<br />&nbsp;</label>
-					<input type="radio" id="c_startfinish" name="c_type" /><label for="c_startfinish"><img src='/images/c_startfinish.png' alt='Start and Finish' style='width: 60px; height: 60px;' /><br />Start/<br />Finish</label>
+					<input type="radio" id="c_startfinish" name="c_type" /><label for="c_startfinish"><img src='/images/c_startfinish.png' alt='Start and Finish' style='width: 60px; height: 60px;' /><br />Start<br />&nbsp;</label>
+					<input type="radio" id="c_finish" name="c_type" /><label for="c_finish"><img src='/images/c_finish.png' alt='Finish' style='width: 60px; height: 60px;' /><br />Finish<br />&nbsp;</label>
 					<input type="radio" id="c_cross" name="c_type" /><label for="c_cross"><img src='/images/c_cross.png' alt='Do not Cross' style='width: 60px; height: 60px;' /><br />Do Not<br />Cross: X</label>
 					<input type="radio" id="c_crossingpoint" name="c_type" /><label for="c_crossingpoint"><img src='/images/c_crossingpoint.png' alt='Crossing Point' style='width: 60px; height: 60px;' /><br />Crossing<br />Point: ][</label>
 				</td>
@@ -244,8 +244,9 @@
 				<tr><td class="ui-icon ui-icon-check" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top'>Your map and descriptions have been successfully saved. The map is now being generated and will automatically download to your computer in the next few seconds.</td></tr>
 				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top' id='saved_mapid'></td></tr>
 				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='vertical-align: top'>
-					OpenOrienteeringMap receives no ongoing funding, but it has hosting costs and takes time to maintain. If this map is being used for an event, we would encourage you to support the project, simply by buying the creator a coffee:
-						<div style='text-align: center; padding: 10px;'><script type='text/javascript' src='https://ko-fi.com/widgets/widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script></div>
+					OpenOrienteeringMap receives no ongoing funding, but it has hosting costs and takes time to maintain. If this map is being used for an event, we would encourage you to support the project, simply by buying the creators a coffee:
+						<div style='text-align: center; padding: 10px;'><script type='text/javascript'>kofiwidget2.init('Buy Ollie a Coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
+						<script type='text/javascript'>kofiwidget2.init('Buy David a coffee', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script></div>
 				</td></tr>
 			</table>
 			<div style='clear: both;'></div>
@@ -304,10 +305,11 @@
 		</div>
 		<div id="welcome" title="OpenOrienteeringMap: Unified Edition">
 			<h2>OpenOrienteeringMap, the easy Street-O map creation tool.</h2>
-			You can quickly and easily set a map, add controls, and create a print-ready, high quality vector PDF. If you have any comments, leave them at the end <a href="https://blog.oomap.co.uk/oom/#commentform">here</a>.
-			You can also <a href="https://blog.oomap.co.uk/oom/">find out more</a> about OpenOrienteeringMap, and keep an eye on <a href="https://blog.oomap.co.uk/">my blog</a> for news on updates.<br /><br />
-			If you feel like contributing, or just want to look at the code, you can find it on
-			<a href="https://github.com/oobrien/oomap">GitHub</a>.<br /><br />
+			You can quickly and easily set a map, add controls, and create a print-ready, high quality vector PDF. If you have any comments, leave them at the end <a href="https://blog.oomap.co.uk/oom/#commentform" target=”_blank” rel=”noopener noreferrer”>here</a>.
+			You can also <a href="https://blog.oomap.co.uk/oom/" target=”_blank” rel=”noopener noreferrer”>find out more</a> about OpenOrienteeringMap, and keep an eye on <a href="https://blog.oomap.co.uk/"  target=”_blank” rel=”noopener noreferrer”>Ollie's blog</a> for news on updates.<br /><br />
+			If you feel like contributing, or just want to look at the code, you can find it on Github - <a href="https://github.com/oobrien/oomap" target=”_blank” rel=”noopener noreferrer”>the original code</a> and <a href="https://github.com/cadnant/oomap" target=”_blank” rel=”noopener noreferrer”>the latest enhancements.</a>
+			<br /><br />
+			Ollie O'Brien wrote the original oomap; David Dixon provided enhancements from 2021 on.<br />
 <!-- OpenOrienteeringMap LB -->
 			<div style='font-size: 12px; margin: 20px 0;'>OpenOrienteeringMap's data is obtained from <a href="https://osm.org/">OpenStreetMap</a>, &copy; OSM contributors. Contours are from a variety of sources, with correct attribution on the output PDF.
 			</div>

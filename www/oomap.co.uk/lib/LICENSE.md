@@ -1,4 +1,5 @@
-Jquery:
+Jquery
+---
 
 Copyright OpenJS Foundation and other contributors, https://openjsf.org/
 
@@ -22,7 +23,8 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-Jquery-ui:
+Jquery-ui
+---
 
 Copyright jQuery Foundation and other contributors, https://jquery.org/
 
@@ -33,7 +35,7 @@ available at https://github.com/jquery/jquery-ui
 The following license applies to all parts of this software except as
 documented below:
 
-====
+
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -54,24 +56,25 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-====
 
 Copyright and related rights for sample code are waived via CC0. Sample
 code is defined as all source code contained within the demos directory.
 
 CC0: http://creativecommons.org/publicdomain/zero/1.0/
 
-====
 
 
 
-Jquery.knob:
+
+Jquery.knob
+---
 
 http://opensource.org/licenses/mit-license.php
 
 
 
-Openlayers:
+Openlayers
+---
 
 Copyright (c) , All rights reserved.
 
@@ -81,7 +84,8 @@ Redistributions of source code must retain the above copyright notice, this list
 
 
 
-Proj4js -- Javascript reprojection library:
+Proj4js -- Javascript reprojection library
+---
 
 Authors:
 

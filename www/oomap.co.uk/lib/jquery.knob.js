@@ -10,11 +10,14 @@
  *
  * Thanks to vor, eskimoblood, spiffistan, FabrizioC
  */
+import jQuery from 'jquery';
+
 (function (factory) {
-    if (typeof exports === 'object') {
+    // DPD if (typeof exports === 'object') {
         // CommonJS
-        module.exports = factory(require('jquery'));
-    } else if (typeof define === 'function' && define.amd) {
+    // DPD   module.exports = factory(require('jquery'));
+    // DPD } else
+    if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['jquery'], factory);
     } else {

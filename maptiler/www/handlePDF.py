@@ -89,11 +89,14 @@ def createImage(path, fileformat):
 
     mapid = p.get('mapid', 'new')
 
-    slon = 0
-    slat = 0
+    slon = slat = flon = flat = 0
     if 'start' in p:
-        slat = int(p['start'].split(",")[0])
-        slon = int(p['start'].split(",")[1])
+        slat = flat = int(p['start'].split(",")[0])
+        slon = flon = int(p['start'].split(",")[1])
+
+    if 'finish' in p:
+        flat = int(p['finish'].split(",")[0])
+        flon = int(p['finish'].split(",")[1])
 
     controlsArr = []
     if 'controls' in p:
@@ -409,7 +412,11 @@ def createImage(path, fileformat):
         ctx.rel_line_to(SC_W*S2P, 0)
         ctx.close_path()
         ctx.stroke()
-    #Finish control (same place as start)
+
+        #Finish control (same place as start, unless separate finish coords)
+        if flon != 0 and flat != 0:
+            ctx.rotate(rotation)
+            ctx.translate((flon-slon)*EXTENT_W*S2P/(mapELon-mapWLon), (slat-flat)*EXTENT_H*S2P/(mapNLat-mapSLat))
         ctx.set_line_width(C_T*S2P)
         ctx.arc(0, 0, C_R*S2P*1.2, 0, 2*math.pi)    #Outer circle
         ctx.stroke()

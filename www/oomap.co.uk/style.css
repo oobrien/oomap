@@ -295,7 +295,7 @@ h1, h2
         margin: 10px;
 		padding: 5px 10px;
         width: 278px;
-        height: 70px;
+        height: 105px;
         bottom: 0;
         border: 1px solid #006699;
         text-align: center;
@@ -420,6 +420,10 @@ h1, h2
 	#messagePanelHolder { display: none; }
 }
 
+.features
+{
+	mix-blend-mode: multiply;
+}
 /* jQuery-ui edits */
 
 .ui-checkboxradio-radio-label .ui-icon-background {
