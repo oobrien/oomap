@@ -16,7 +16,7 @@ import {ScaleLine, defaults as defaultControls} from 'ol/control';
 import * as olProj from 'ol/proj';
 import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteractions,} from 'ol/interaction';
 import GPX from 'ol/format/GPX';
-import {Point, Polygon} from 'ol/geom';
+import {Point, Polygon, LineString} from 'ol/geom';
 import {fromExtent as PolyFromExtent} from 'ol/geom/Polygon';
 import './lib/jquery-ui.min.css';
 import 'ol/ol.css';
@@ -68,6 +68,7 @@ var grid=true;
 var trees=true;
 var hedges=true;
 var fences=true;
+var linear=false;
 
 //OpenLayers single-instance objects
 var olMap;
@@ -81,8 +82,8 @@ var layerMapTitle;
 var layerMapContent;
 var layerControls;
 var layerGPX;
+var layerLines;
 var titleFeature;
-var dragControl;
 var sheetCentreLL;
 var newControlLL = [0, 0];
 var mapBound;
@@ -142,7 +143,7 @@ function controlStyle(feature, resolution)
   		}),
   		text: new Text({
   			  textAlign: "center",
-  			  font: "bold " + 120 * size + "px arial, verdana, sans-serif",
+  			  font: 120 * size + "px arial, verdana, sans-serif",
   			  text: feature.get('number'),
   			  fill: new Fill({color: purple}),
   			  offsetX:  5 * size * 35 * Math.sin((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation()),
@@ -232,6 +233,33 @@ function controlStyle(feature, resolution)
     		})]
       break;
   }
+};
+
+
+function lineStyle(feature, resolution) //Lines between controls
+{
+  const geometry = feature.getGeometry();
+  var size = trueScale/(resolution * 16000);
+  const styles = [];
+  geometry.forEachSegment(function (start, end) {
+     const scale = trueScale/200;
+     const dx = end[0] - start[0];
+     const dy = end[1] - start[1];
+     const rotation = Math.atan2(dy, dx);
+     const start2 = [start[0] + Math.cos(rotation) * scale, start[1] + Math.sin(rotation) * scale]
+     const end2 = [end[0]-Math.cos(rotation) * scale, end[1]-Math.sin(rotation) * scale]
+     // arrows
+     styles.push(
+       new Style({
+         geometry: new LineString([start2,end2]), //shorten lines at ends
+           stroke: new Stroke({
+             color: purple,
+             width: 10 * size,
+           })
+         }),
+       )
+     });
+   return styles;
 };
 
 var dotStyle = new Style({
@@ -414,14 +442,20 @@ function init()
     const sourceMT = new VectorSource({});
     const sourceContent = new VectorSource({});
     const sourceCons = new VectorSource({});
+    const sourceLines = new VectorSource({});
 
   layerOrienteering = new TileLayer({opacity: 1, zIndex: 1, className: 'features'});
-	layerMapBorder = new VectorLayer({ title: "mapborder", style: marginStyle, source: sourceMB, zIndex: 2});
+	layerMapBorder = new VectorLayer({ title: "mapborder", style: marginStyle, source: sourceMB, zIndex: 2,
+    updateWhileAnimating: true});
 	layerMapCentre = new VectorLayer({ title: "mapcentre", style: centreStyle, source: sourceMC, zIndex: 2});
-	layerMapSheet = new VectorLayer({ title: "mapsheet", style: sheetStyle, source: sourceMS, zIndex: 2});
-	layerMapTitle = new VectorLayer({ title: "maptitle", style: titleStyle, source: sourceMT, zIndex: 2});
+	layerMapSheet = new VectorLayer({ title: "mapsheet", style: sheetStyle, source: sourceMS, zIndex: 2,
+    updateWhileAnimating: true});
+	layerMapTitle = new VectorLayer({ title: "maptitle", style: titleStyle, source: sourceMT, zIndex: 2,
+    updateWhileAnimating: true});
 	layerMapContent = new VectorLayer({ title: "mapcontent", style: contentStyle, source: sourceContent });
-	layerControls = new VectorLayer({ title: "controls", style: controlStyle, source: sourceCons, className: 'features' });
+	layerControls = new VectorLayer({ title: "controls", style: controlStyle, source: sourceCons, className: 'features',
+    updateWhileAnimating: true});
+  layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false });
 
 	if (args['mapStyleID'])
 	{
@@ -460,7 +494,8 @@ function init()
   		  layerMapSheet,
 	  		layerMapTitle,
 	  		layerMapCentre,
-	  		layerControls
+	  		layerControls,
+        layerLines
 		],
 
 		controls: defaultControls({rotateOptions: {
@@ -658,6 +693,8 @@ function init()
 				trees = $('#tree').is(':checked');
 				hedges = $('#hedges').is(':checked');
 				fences = $('#fence').is(':checked');
+        linear = $('#linear').is(':checked');
+        layerLines.setVisible(linear);
 				dpi = parseInt($('#dpi').val());
 				if (isNaN(dpi)) { dpi = 150; }
 
@@ -1138,6 +1175,7 @@ function handleAdvancedOptions(pid)
 			$('#tree').prop('checked', trees);
 			$('#hedges').prop('checked', hedges);
 			$('#fence').prop('checked', fences);
+      $('#linear').prop('checked', linear);
 			$('#dpi').val(dpi);
 			$( "#advanced" ).dialog( "open" );
 }
@@ -1309,6 +1347,7 @@ function handleDrag()	//Vector element has been dragged - update arrays to match
 	});
 	select.getFeatures().clear();
 	rebuildMapSheet();
+  rebuildMapControls();
 }
 
 function handleSaveCallback(json)
@@ -1453,7 +1492,7 @@ function handleOptionChange()
 		$( "#getkmz" ).button("disable");
 
 		rebuildMapSheet();
-		//rebuildMapControls();	//to correctly scale features
+		rebuildMapControls();	//to correctly scale features
     layerControls.changed(); //force re-draw
 		return;
 	}
@@ -1677,6 +1716,7 @@ function generateMap(type)
 	if (hedges) {url += "|hedges=yes"; } else {url += "|hedges=no"; }
 	if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
 	if (fences) {url += "|fences=yes"; } else {url += "|fences=no"; }
+  if (linear) {url += "|linear=yes"; } else {url += "|linear=no"; }
 	url += "|dpi=" + dpi;
 
 	if (debug) { console.log(url); }
@@ -1954,7 +1994,7 @@ function rebuildMapSheet()
 	var centroidllWGS84 = olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326");
 	var fudgeFactor = Math.cos(centroidllWGS84[1] * Math.PI/180);
 	trueScale = scale / fudgeFactor;
-	//console.log("True scale is " + trueScale);
+	if (debug) {console.log("True scale is " + trueScale);}
 
 	var paper_dlon = paper_pieces[0] * trueScale;
 	var paper_dlat = paper_pieces[1] * trueScale;
@@ -2064,6 +2104,21 @@ function rebuildMapControls()
 		$( "#getPostboxes" ).button("enable");
 		$( "#getOpenplaques" ).button("enable");
 	}
+  var listC = getSortedControls("c_regular");
+  var listS = getSortedControls("c_startfinish");
+  var listF = getSortedControls("c_finish");
+  if (listF.length == 0) {listF = listS}  //Reuse start as finish if needed
+  var list = listS.concat(listC, listF);
+
+  layerLines.getSource().clear();
+  for (var i = 0; i < (list.length - 1); i++)
+  {
+    var line = new Feature({
+      geometry: new LineString([[list[i].lon, list[i].lat], [list[i+1].lon, list[i+1].lat]]),
+    });
+    layerLines.getSource().addFeature(line);
+  }
+  layerLines.getSource().changed();
 }
 
 function rebuildDescriptions()

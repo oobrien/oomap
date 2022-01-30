@@ -434,7 +434,6 @@ def createImage(path, fileformat):
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(CTEXT_S*S2P)
         numControls = len(controlsArr)//4
-
         #Draw white halo around control numbers for legibility on complex maps
         ctx.set_operator(cairo.Operator.SOURCE)
         ctx.set_source_rgb(1, 0.997, 1)
@@ -460,14 +459,14 @@ def createImage(path, fileformat):
 
         ctx.set_source_rgb(0.651, 0.149, 1)
         ctx.set_operator(cairo.Operator.MULTIPLY)
+        lastlonP = (slon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
+        lastlatP = (mapNLat-slat)*EXTENT_H/(mapNLat-mapSLat)
         for i in range(numControls):
             text = controlsArr[4*i]
             labelAngle = float(controlsArr[4*i+1])
             controllat = float(controlsArr[4*i+2])
             controllon = float(controlsArr[4*i+3])
-            #controllatP = MAP_NM+((mapNLat-controllat)/scaleCorrected)
-            #controllonP = MAP_WM+((controllon-mapWLon)/scaleCorrected)
-            #ctx.move_to((controllonP+C_R)*S2P, controllatP*S2P)
+
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
             ctx.move_to((controllonP+C_R)*S2P, controllatP*S2P)
@@ -477,6 +476,17 @@ def createImage(path, fileformat):
             ctx.move_to((controllonP+CDOT_R)*S2P, controllatP*S2P)
             ctx.arc(controllonP*S2P, controllatP*S2P, CDOT_R*S2P, 0, 2*math.pi)
             ctx.fill()
+            if p.get('linear',"no") != "no":
+                angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
+                start2lonP = lastlonP + math.cos(angle) * C_R
+                start2latP = lastlatP + math.sin(angle) * C_R
+                end2lonP = controllonP - math.cos(angle) * C_R
+                end2latP = controllatP - math.sin(angle) * C_R
+                ctx.move_to(start2lonP*S2P, start2latP*S2P)
+                ctx.line_to(end2lonP*S2P, end2latP*S2P)  #draw line between controls
+                lastlonP = controllonP
+                lastlatP = controllatP
+
             x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
             labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
             labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
@@ -487,6 +497,18 @@ def createImage(path, fileformat):
             ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
             ctx.show_text(text)
             ctx.restore()
+        # draw line from last control to finish
+        if p.get('linear',"no") != "no":
+            controllatP = (mapNLat-flat)*EXTENT_H/(mapNLat-mapSLat)
+            controllonP = (flon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
+            angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
+            start2lonP = lastlonP + math.cos(angle) * C_R
+            start2latP = lastlatP + math.sin(angle) * C_R
+            end2lonP = controllonP - math.cos(angle) * C_R * 1.2
+            end2latP = controllatP - math.sin(angle) * C_R * 1.2
+            ctx.move_to(start2lonP*S2P, start2latP*S2P)
+            ctx.line_to(end2lonP*S2P, end2latP*S2P)
+        ctx.stroke()
 
     # Crosses and labels
     if len(crossesArr) > 0:
@@ -883,5 +905,5 @@ def test(path):
 
 
 if __name__ == '__main__':
-    test("style=streeto-COPE-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=|id=6043c1a44cc95|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
+    test("style=streeto-COPE-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=|id=6043c1a44cc95|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2|linear=no")
     #test("style=oterrain-COPE-5|grid=no&paper=0.297,0.210|scale=10000|centre=6801767,-86381|id=6043c1a44cc93&rotation=0.2")
