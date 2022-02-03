@@ -110,6 +110,7 @@
 				<button id='createclue'>Clues</button><br />
 				MapRun: <button id='getkmz'>KMZ</button> <a href='#' id='getkml'>KML</a><br />
 				<button id='opts'>Rendering options</button>
+				<button id='preview'>Preview</button>
 			</div>
 		</div>
 		<div id='mainpanel'>
@@ -132,8 +133,8 @@
 			<div id='attribution'>
 				<div><a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are from various sources, as attributed on the PDF rendering. Plaques from Open Plaques project.'); return false;">Credit</a>
 					<a href="#" id="about"> About</a>
-					<a href="https://blog.oomap.co.uk/oom/">Blog</a>
-					  <a href="https://www.orienteeringfoundation.org.uk/">Support</a>.</div>
+					<a href="https://blog.oomap.co.uk/oom/" target=”_blank” rel=”noopener noreferrer”>Blog</a>
+					  <a href="https://www.orienteeringfoundation.org.uk/" target=”_blank” rel=”noopener noreferrer”>Support</a>.</div>
 						<script type='text/javascript'>kofiwidget2.init('Buy Ollie a coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
 						<script type='text/javascript'>kofiwidget2.init('Buy David a coffee', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script>
 			</div>
@@ -381,9 +382,13 @@
 				<input type="text" name="dpi" id="dpi" size='3' maxlength='3' class="text ui-widget-content ui-corner-all" />
 			</td>
 			</table>
-
 		  </fieldset>
-
+		</div>
+		<div id="prevWarn" title="Preview request" style='display: none;'>
+			<h2>Preview Request</h2>
+			Please note: each preview sends a request to the OpenStreetMap API servers.  Please use with moderation.<br />
+			<input type="checkbox" id="prevAccept" name="prevAccept" value="suppress">
+			<label for="prevAccept"> Tick to suppress this message for this session</label><br>
 		</div>
 	</body>
 </html>

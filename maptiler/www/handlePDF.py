@@ -311,8 +311,14 @@ def createImage(path, fileformat):
     file = tempfile.NamedTemporaryFile()
 
     surface = None
-    if fileformat == 'jpg':
+    if fileformat == 'jpg' or fileformat == 'pre':
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(PAPER_W*S2P), int(PAPER_H*S2P))
+    elif fileformat == 'svg':
+        surface = cairo.SVGSurface(file.name, PAPER_W*S2P / SCALE_FACTOR, PAPER_H*S2P / SCALE_FACTOR)
+        surface.set_device_scale(1.0/SCALE_FACTOR,1.0/SCALE_FACTOR)
+        versions = surface.get_versions()
+        version = versions[1]
+        surface.restrict_to_version(version)
     else:
         surface = cairo.PDFSurface(file.name, PAPER_W*S2P / SCALE_FACTOR, PAPER_H*S2P / SCALE_FACTOR)
         surface.set_device_scale(1.0/SCALE_FACTOR,1.0/SCALE_FACTOR)
@@ -364,7 +370,9 @@ def createImage(path, fileformat):
     ctx.translate(MAP_W*S2P/2,MAP_H*S2P/2) # translate origin to the center
     ctx.rotate(rotation)
     ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+
     mapnik.render(map, ctx, SCALE_FACTOR, 0, 0)
+
     ctx.restore()
 
     if style == "adhoc":
@@ -375,7 +383,7 @@ def createImage(path, fileformat):
         text = path
         ctx.translate(MAP_WM*S2P, (MAP_NM+MAP_H+0.001)*S2P)
         ctx.show_text(text)
-        if fileformat == 'jpg':
+        if fileformat == 'jpg' or fileformat == 'pre':
             surface.write_to_png(file.name)
         else:
             surface.finish()
@@ -709,7 +717,7 @@ def createImage(path, fileformat):
         ctx.set_source_rgb(0, 0.5, 0.8)
 
     ctx.set_font_size(7*SCALE_FACTOR)
-    text = "OOM created by Oliver O'Brien. Make your own: http://oomap.co.uk/"
+    text = "OOM created by Oliver O'Brien. Make your own: " + web_root
     ctx.translate((MAP_WM)*S2P, (MAP_NM+MAP_H+ADORN_ATTRIB_NM+0.004)*S2P)
     ctx.show_text(text)
 
@@ -746,7 +754,7 @@ def createImage(path, fileformat):
     ctx.translate(MAP_WM*S2P, (MAP_NM+MAP_H+ADORN_URL_NM)*S2P)
     ctx.show_text(text)
 
-    if fileformat == 'jpg':
+    if fileformat == 'jpg' or fileformat == 'pre':
         from PIL import Image, ImageCms
         surface.write_to_png(file.name + '.png')
         im = Image.open(file.name + '.png')
@@ -759,7 +767,7 @@ def createImage(path, fileformat):
     else:
         surface.finish()
         surface.flush()
-
+    if fileformat == 'pdf':
         # Add Geospatial PDF metadata
         map_bounds = (MAP_WM/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H, MAP_WM/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H)
         file2 = tempfile.NamedTemporaryFile()

@@ -28,7 +28,7 @@ def parse_query(url):
         p['interval'] = '0'
     p['contour'] = p.get('contour', 'NONE')
     p['dpi']=float(p.get('dpi','150'))
-    p['mapid']=p['id']
+    p['mapid']= p.get('id', 'new')
     return(p)
 
 

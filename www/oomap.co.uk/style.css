@@ -223,7 +223,7 @@ h1, h2
 	right: 0;
 	top: 0;
 	width: 302px;
-	bottom: 325px;
+	bottom: 140px;
 	margin: 0 7px 0 0;
 	padding: 0 1px 12px 1px;
 	overflow: auto;
@@ -379,6 +379,11 @@ h1, h2
 .cs_spacer td
 {
 	border-top: 3px solid black !IMPORTANT;
+}
+
+.loading
+{
+    color:red !IMPORTANT;
 }
 
 /* OpenLayers */

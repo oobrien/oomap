@@ -27,7 +27,7 @@ def application(environ, start_response):
         import handlePDF
         body, mapid = handlePDF.processRequest(environ)
 
-    elif filetype == "jpg":
+    elif filetype == "jpg" or filetype == "pre":
         import handleJPG
         body, mapid = handleJPG.processRequest(environ)
 
@@ -64,6 +64,7 @@ def application(environ, start_response):
     else:   #Otherwise, body is a file handle - send file as attachment
         types = {
             'jpg': 'image/jpeg',
+            'pre': 'image/jpeg',
             'jgw': 'text/plain',
             'kmz': 'application/vnd.google-earth.kmz',
             'pdf': 'application/pdf'
@@ -71,9 +72,11 @@ def application(environ, start_response):
         body.seek(0)    #DPD
         outfsize = os.fstat(body.fileno()).st_size
         status = '200 OK'
+        logRequest("success", filetype, environ)
+        if filetype == 'pre':
+            filetype = 'jpg'
         response_headers = [('Content-type',types.get(filetype)),
             ("Content-Disposition", "attachment; filename=\"oom_" + mapid + "." + filetype + "\""),
             ('content-length',str(outfsize))]
-        logRequest("success", filetype, environ)
         start_response(status, response_headers)
         return [body.read()]

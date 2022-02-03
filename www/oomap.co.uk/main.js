@@ -7,7 +7,10 @@ import Proj4 from 'proj4';
 import {Map, View} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
+import ImageLayer from 'ol/layer/Image';
+import GeoImageLayer from 'ol-ext/layer/GeoImage';
 import VectorSource from 'ol/source/Vector';
+import Static from 'ol/source/ImageStatic';
 import Feature from 'ol/feature';
 import {OSM, XYZ} from 'ol/source';
 import Select from 'ol/interaction/Select';
@@ -18,6 +21,7 @@ import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteracti
 import GPX from 'ol/format/GPX';
 import {Point, Polygon, LineString} from 'ol/geom';
 import {fromExtent as PolyFromExtent} from 'ol/geom/Polygon';
+import GeoImage from 'ol-ext/source/GeoImage';
 import './lib/jquery-ui.min.css';
 import 'ol/ol.css';
 import './style.css';
@@ -59,6 +63,7 @@ var mapID = "new";
 var reqMapID = "new";
 var select;
 var contourSeparation;
+var previewWarning = true;
 
 var dpi=150;  //advanced rendering options & defualt values
 var drives=false;
@@ -69,6 +74,7 @@ var trees=true;
 var hedges=true;
 var fences=true;
 var linear=false;
+var preview=false;
 
 //OpenLayers single-instance objects
 var olMap;
@@ -83,6 +89,7 @@ var layerMapContent;
 var layerControls;
 var layerGPX;
 var layerLines;
+var layerPreview;
 var titleFeature;
 var sheetCentreLL;
 var newControlLL = [0, 0];
@@ -360,6 +367,15 @@ function init()
 	$( "#getkmz" ).button().on('click', function() {generateMap("kmz"); });
 	$( "#getkml" ).button().on('click', function() {generateKML(); });
 	$( "#opts" ).button().on('click', function() {handleAdvancedOptions(); });
+	$( "#preview" ).button().on('click', function() {
+    if (previewWarning == false || preview == true) {
+      handlePreview();
+    }
+    else {
+      $('#prevAccept').prop('checked', !previewWarning);
+      $("#prevWarn").dialog('open');
+    }
+  });
 	$( "#createclue" ).button().on('click', function() { handleGenerateClue(); });
 	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).on('click', function() { handleDeleteSheet(); });
 	$( "#deleteXs" ).button({ icons: { primary: "ui-icon-trash" } }).on('click', function() { handleDeleteXs(); });
@@ -376,6 +392,7 @@ function init()
 	$( "#deleteXs" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getPlaques" ).button("disable");
+	$( "#preview" ).button("disable");
 
 	$( "#edittitle" ).on('click', function() { handleTitleEdit(); })
 	$( "#editinstructions" ).on('click', function() { handleRaceDescriptionEdit(); })
@@ -389,9 +406,9 @@ function init()
     tips = $( ".validateTips" );
 
     $('#about').click(function(event) {
-    event.preventDefault();
-    $("#welcome").dialog('open');
-});
+      event.preventDefault();
+      $("#welcome").dialog('open');
+    });
 
 	setDefaults();
 
@@ -447,15 +464,18 @@ function init()
   layerOrienteering = new TileLayer({opacity: 1, zIndex: 1, className: 'features'});
 	layerMapBorder = new VectorLayer({ title: "mapborder", style: marginStyle, source: sourceMB, zIndex: 2,
     updateWhileAnimating: true});
-	layerMapCentre = new VectorLayer({ title: "mapcentre", style: centreStyle, source: sourceMC, zIndex: 2});
+	layerMapCentre = new VectorLayer({ title: "mapcentre", style: centreStyle, source: sourceMC, zIndex: 4});
 	layerMapSheet = new VectorLayer({ title: "mapsheet", style: sheetStyle, source: sourceMS, zIndex: 2,
     updateWhileAnimating: true});
 	layerMapTitle = new VectorLayer({ title: "maptitle", style: titleStyle, source: sourceMT, zIndex: 2,
     updateWhileAnimating: true});
 	layerMapContent = new VectorLayer({ title: "mapcontent", style: contentStyle, source: sourceContent });
 	layerControls = new VectorLayer({ title: "controls", style: controlStyle, source: sourceCons, className: 'features',
-    updateWhileAnimating: true});
-  layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false });
+    updateWhileAnimating: true, zIndex: 4});
+  layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 4 });
+  layerPreview = new ImageLayer({ name: "Georef",  zIndex: 3});
+
+  //layerPreview = new GeoImageLayer({title: "preview", visible: true, zIndex: 3});
 
 	if (args['mapStyleID'])
 	{
@@ -495,7 +515,8 @@ function init()
 	  		layerMapTitle,
 	  		layerMapCentre,
 	  		layerControls,
-        layerLines
+        layerLines,
+        layerPreview
 		],
 
 		controls: defaultControls({rotateOptions: {
@@ -534,6 +555,15 @@ function init()
 		}),
 		interactions: defaultInteractions().extend([select, translate]),
 	});
+
+/*  layerPreview.setSource(new GeoImage({
+    url: './oom.jpg',
+    crossOrigin: '',
+    imageCenter: [0,0],
+    imageScale: 0.1,
+    imageRotate: 0,
+  }));
+*/
  	olMap.getView().on('change:resolution', handleZoom);
 	olMap.on("moveend", updateUrl);
 
@@ -565,22 +595,20 @@ function init()
 	});
 	//}
 	var c_number = $( "#c_number" ),
-      allFields = $( [] ).add( c_number );
+  allFields = $( [] ).add( c_number );
 
-    function checkNumber( o, n, type )
-    {
-    	if (type == "c_startfinish" ||type == "c_finish" || type == "c_cross" || type == "c_crossingpoint")
-    	{
-    		return true;
-    	}
-
+  function checkNumber( o, n, type )
+  {
+  	if (type == "c_startfinish" ||type == "c_finish" || type == "c_cross" || type == "c_crossingpoint")
+  	{
+  		return true;
+  	}
 		if (o.val() == null || o.val().length < 1)
 		{
 			o.addClass( "ui-state-error" );
 			updateTips( "You must enter a number." );
 			return false;
 		}
-
 		if (o.val() != currentNumber &&
 			layerControls.getSource().getFeatures().filter(feat=>feat.get('number')==o.val()).length > 0)
 		{
@@ -588,7 +616,6 @@ function init()
 			updateTips( "This number has already been used." );
 			return false;
 		}
-
 		return true;
 	}
 
@@ -705,6 +732,23 @@ function init()
 			}
 	  }
 	});
+
+  $( "#prevWarn" ).dialog({
+    autoOpen: false,
+    height: 300,
+    width: 550,
+    modal: true,
+    buttons: {
+      OK: function() {
+        previewWarning = !$('#prevAccept').is(':checked');
+        handlePreview();
+        $( this ).dialog( "close" );
+      },
+      Cancel: function() {
+        $( this ).dialog( "close" );
+      }
+    }
+  });
 
 	$( "#setmaptitle" ).dialog({
 	  autoOpen: false,
@@ -1070,6 +1114,7 @@ function handleZoom()
 	$( "#deleteXs" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
+  	$( "#preview" ).button("disable");
 
 	if (layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=="c_cross").length > 0 ||
 	 layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=="c_crossingpoint").length > 0)
@@ -1230,6 +1275,7 @@ function handleDeleteSheet()
 	$( "#deletesheet" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
+  $( "#preview" ).button("disable");
 }
 
 
@@ -1630,13 +1676,18 @@ function saveMap()
 
 function generateMap(type)
 {
-	//Construct the URL to the PDF.
-	var escapeTitleText = encodeURIComponent(mapTitle);
+		self.location=getURL(type);
+}
 
-	var startText = "";
+function getURL(type)
+{
+  //Construct the URL to the download file/image.
+  var escapeTitleText = encodeURIComponent(mapTitle);
+
+  var startText = "";
   var finishText = "";
-	var xText = "";
-	var cpText = "";
+  var xText = "";
+  var cpText = "";
   if(getSortedControls('c_startfinish').length > 0)
   {
     getSortedControls('c_startfinish').forEach(function(c)
@@ -1669,35 +1720,36 @@ function generateMap(type)
     cpText  = cpText.substring(0, cpText.length - 1);
   }
 
-	var site_href = window.location.href
-	var arr = site_href.split("/");
-	var url = arr[0] + "//" + arr[2] + "/render/" + type
-		+ "/?style=" + mapStyleID
-	 	+ "|paper=" + paper_pieces[0].toFixed(3) + "," + paper_pieces[1].toFixed(3)	//trim numbers in string to 3dp
-		+ "|scale=" + scale
-		+ "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
-		+ "|title=" + escapeTitleText
-		+ "|club=" + $('#club').val()
-		+ "|id=";
-	if (mapID != "new")
-	{
-		url += mapID;
-	}
+  var site_href = window.location.href
+  var arr = site_href.split("/");
+  var url = arr[0] + "//" + arr[2] + "/render/" + type
+    + "/?style=" + mapStyleID
+    + "|paper=" + paper_pieces[0].toFixed(3) + "," + paper_pieces[1].toFixed(3)	//trim numbers in string to 3dp
+    + "|scale=" + scale
+    + "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
+    + "|title=" + escapeTitleText
+    + "|club=" + $('#club').val()
+    + "|id=";
+  if (mapID != "new")
+  {
+    url += mapID;
+  }
 
-	if (type == 'kmz')
-	{
-		url	+= "|start="
-			+ "|crosses=" + xText
-			+ "|cps=" + cpText
-			+ "|controls=";
-	}
-	else
-	{
-		url	+= "|start=" + startText
+  if (type == 'kmz')
+  {
+    url	+= "|start="
+      + "|crosses=" + xText
+      + "|cps=" + cpText
+      + "|controls=";
+  }
+  else if (type == 'pre') {} //don't add features to preview image
+  else
+  {
+    url	+= "|start=" + startText
       + "|finish=" + finishText
-			+ "|crosses=" + xText
-			+ "|cps=" + cpText
-			+ "|controls=";
+      + "|crosses=" + xText
+      + "|cps=" + cpText
+      + "|controls=";
 
     if(getSortedControls('c_regular').length > 0)
     {
@@ -1707,20 +1759,20 @@ function generateMap(type)
       })
       url  = url.substring(0, url.length - 1);
     }
-	}
-	url	+= "|rotation=" + olMap.getView().getRotation().toFixed(4);
-	if (grid) {url += "|grid=yes"; } else {url += "|grid=no"; }
-	if (rail) {url += "|rail=yes"; } else {url += "|rail=no"; }
-	if (walls) {url += "|walls=yes"; } else {url += "|walls=no"; }
-	if (trees) {url += "|trees=yes"; } else {url += "|trees=no"; }
-	if (hedges) {url += "|hedges=yes"; } else {url += "|hedges=no"; }
-	if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
-	if (fences) {url += "|fences=yes"; } else {url += "|fences=no"; }
+  }
+  url	+= "|rotation=" + olMap.getView().getRotation().toFixed(4);
+  if (grid) {url += "|grid=yes"; } else {url += "|grid=no"; }
+  if (rail) {url += "|rail=yes"; } else {url += "|rail=no"; }
+  if (walls) {url += "|walls=yes"; } else {url += "|walls=no"; }
+  if (trees) {url += "|trees=yes"; } else {url += "|trees=no"; }
+  if (hedges) {url += "|hedges=yes"; } else {url += "|hedges=no"; }
+  if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
+  if (fences) {url += "|fences=yes"; } else {url += "|fences=no"; }
   if (linear) {url += "|linear=yes"; } else {url += "|linear=no"; }
-	url += "|dpi=" + dpi;
+  url += "|dpi=" + dpi;
 
-	if (debug) { console.log(url); }
-	self.location=url;
+  if (debug) { console.log(url); }
+  return url;
 }
 
 function getStartKML(control, i)
@@ -2082,6 +2134,7 @@ function rebuildMapSheet()
 	$( "#deletesheet" ).button("enable");
 	$( "#getPostboxes" ).button("enable");
 	$( "#getOpenplaques" ).button("enable");
+	$( "#preview" ).button("enable");
 }
 
 function rebuildMapControls()
@@ -2103,6 +2156,7 @@ function rebuildMapControls()
 		$( "#getkml" ).button("disable");
 		$( "#getPostboxes" ).button("enable");
 		$( "#getOpenplaques" ).button("enable");
+    $( "#preview" ).button("enable");
 	}
   var listC = getSortedControls("c_regular");
   var listS = getSortedControls("c_startfinish");
@@ -2368,6 +2422,38 @@ function lookupMag(lat, lon) {
    });
 }
 
+function handlePreview(){
+  if (!preview){
+    var oldDPI = dpi;
+    dpi = 300;
+    var geoimg =  new GeoImage({
+        url: getURL("pre"),
+        crossOrigin: '',
+        imageCenter: [sheetCentreLL[0], sheetCentreLL[1] + 0.0005 * trueScale], //this is centred on *map*, not *sheet* - need to adjust slightly based on margins.
+        imageScale: [1.016 * trueScale * 0.025/dpi,trueScale*0.0254/dpi],  //1.016 x scaling factor empirically determined - don't know why this is needed! metres per pixel.
+        imageRotate: olMap.getView().getRotation() * -1,
+    });
+    $( "#preview" ).button().addClass('loading');
+    $( "#preview" ).html('Loading...');
+    //$(this).addClass('loading');
+    layerPreview.setSource(geoimg);
+
+    geoimg.on('change', function(event) { //imageloadend event isn't triggered, so use generic "change" event instead.
+      if(debug) {console.log('change event fired');}
+      $( "#preview" ).button().removeClass('loading');
+      $( "#preview" ).html('Preview');
+    });
+
+    dpi = oldDPI;
+    preview = true;
+  }
+
+  else {
+    layerPreview.setSource();
+    //olMap.removeLayer(olMap.getLayers().getArray().find(layer => layer.get('name') == 'Georef'));
+    preview=false;
+  }
+}
 
 
 $(document).ready(function()
