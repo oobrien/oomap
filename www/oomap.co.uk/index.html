@@ -64,6 +64,7 @@
 							<div id="papersize">
 								<input type="radio" id="p2970-2100" name="papersize" checked="checked" /><label for="p2970-2100">A4</label>
 								<input type="radio" id="p4200-2970" name="papersize" /><label for="p4200-2970">A3</label>
+								<input type="radio" id="p2794-2159" name="papersize" /><label for="p2794-2159">Letter</label>
 								<!-- <input type="radio" id="p4430-3140" name="papersize" /><label for="p4430-3140">RA3</label> -->
 							</div>
 						</td>
@@ -78,9 +79,8 @@
 					<tr>
 						<td colspan='3'>
 							<div id="specialoptions">Delete
-								<button id='deletesheet'>Sheet</button>
-								<button id='deleteXs'>Xs &amp; ][s</button>&nbsp;&nbsp;&nbsp;Add
-								<button id='getPostboxes'>Postboxes</button>
+								<button id='deletesheet'>Sheet</button>&nbsp;&nbsp;&nbsp;Add
+								<button id='getPostboxes'>Map Features</button>
 								<button id='getOpenplaques'>Plaques</button>
 							</div>
 						</td>
@@ -274,9 +274,9 @@
 				<tr><td class="ui-icon ui-icon-info" style='margin: 0 7px 20px 0;'></td><td style='padding-bottom: 20px; vertical-align: top'>Retrieving features from OpenStreetMap...</td></tr>
 			</table>
 		</div>
-		<div id="postboxes_error" title="Postboxes Error" style='display: none;'>
+		<div id="postboxes_error" title="Feature Retrieval Error" style='display: none;'>
 			<table>
-				<tr><td class="ui-icon ui-icon-alert" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top'>Unfortunately local postboxes could not be retrieved. An error occurred.</td></tr>
+				<tr><td class="ui-icon ui-icon-alert" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top'>Unfortunately no features could not be retrieved. No features to return or an error occurred.</td></tr>
 				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top' id='postboxes_error_text'></td></tr>
 			</table>
 		</div>
@@ -316,7 +316,7 @@
 			</div>
 		</div>
 		<div id="advanced" title="Advanced Options" style='display: none;'>
-			<p class="validateTips">Choose which optional features to render:</p>
+			<p>Choose which optional features to render:</p>
 		  <fieldset>
 			<table style='margin: 0 auto;'>
 			<tr>
@@ -389,6 +389,52 @@
 			Please note: each preview sends a request to the OpenStreetMap API servers.  Please use with moderation.<br />
 			<input type="checkbox" id="prevAccept" name="prevAccept" value="suppress">
 			<label for="prevAccept"> Tick to suppress this message for this session</label><br>
+		</div>
+		<div id="pois" title="Get features" style='display: none;'>
+			<p>Select class of feature to search OpenStreetMap data for and add to map.  To avoid clusters, set a minimum distance to filter out nearby features.</p>
+			<fieldset id="c_pois">
+			<table>
+				<tr>
+					<td>	<input type="radio" id="c_poi_post" value="amenity=post_box,Postbox: ,ref," name="c_pois" checked /> </td>
+					<td>	<label for="c_poi_post"><b>Postboxes</b></label></td>
+					<td>	amenity = post_box </td>
+				</tr>
+				<tr>
+					<td>	<input type="radio" id="c_poi_plaque" value="memorial=plaque,Plaque: ,name," name="c_pois" /> </td>
+					<td>	<label for="c_poi_plaque"><b>Plaques</b></label></td>
+					<td>	memorial = plaque </td>
+				</tr>
+				<tr>
+					<td>	<input type="radio" id="c_poi_bench" value="amenity=bench,Bench: ,ref," name="c_pois" /> </td>
+					<td>	<label for="c_poi_bench"><b>Benches</b></label></td>
+					<td>	amenity = bench </td>
+				</tr>
+				<tr>
+					<td>	<input type="radio" id="c_poi_lp" value="highway=street_lamp,Lamp: ,ref," name="c_pois" /> </td>
+					<td>	<label for="c_poi_lp"><b>Lampposts</b></label></td>
+					<td>	highway = street_lamp </td>
+				</tr>
+				<tr>
+					<td>	<input type="radio" id="c_poi_omarker" value="orienteering=marker,Control: ,ref,ref" name="c_pois" /> </td>
+					<td>	<label for="c_poi_omarker"><b>O-controls</b></label></td>
+					<td>	orienteering = marker </td>
+				</tr>
+				<tr>
+					<td>	<input type="radio" id="c_poi_custom" value="custom" name="c_pois" /> </td>
+					<td>	<label for="c_poi_custom"><b>Custom</b></label> </td>
+					<td>	<input type="text" size='10' maxlength='20' value="" name="poi_key" id="s_poi_key" class="text ui-widget-content ui-corner-all" /> =
+								<input type="text" size='10' maxlength='20' value="" name="poi_value" id="s_poi_value" class="text ui-widget-content ui-corner-all" /></td>
+				</tr>
+				<tr>
+				</tr>
+				<tr>
+					<td>	</td>
+					<td><label for="c_poi_dist">Minimum spacing:</label> </td>
+					<td>	<input type="text" size='8' maxlength='4' value="" name="poi_dist" id="c_poi_dist" class="text ui-widget-content ui-corner-all" /> m </td>
+
+				</tr>
+			</table>
+		</fieldset>
 		</div>
 	</body>
 </html>

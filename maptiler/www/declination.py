@@ -21,7 +21,7 @@ def application(environ, start_response):
     wmm = WorldMagneticModel()
 
     try:
-        magdec = wmm.calc_mag_field(real(p['lat']), real(p['lon'])).declination #look up magnetic declination for correct map North lines
+        magdec = wmm.calc_mag_field(float(p['lat']), float(p['lon'])).declination #look up magnetic declination for correct map North lines
     except:
         magdec = 0
 

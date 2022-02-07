@@ -21,6 +21,7 @@ import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteracti
 import GPX from 'ol/format/GPX';
 import {Point, Polygon, LineString} from 'ol/geom';
 import {fromExtent as PolyFromExtent} from 'ol/geom/Polygon';
+import {getDistance} from 'ol/sphere';
 import GeoImage from 'ol-ext/source/GeoImage';
 import './lib/jquery-ui.min.css';
 import 'ol/ol.css';
@@ -36,6 +37,8 @@ var prefix2 = "https://tile.dna-software.co.uk/";
 var prefix3 = "https://tile.dna-software.co.uk/";
 var defaultMapTitle = "OpenOrienteeringMap";
 var defaultRaceDescription = "Race instructions";
+//var apiServer = "https://overpass-api.de/api/interpreter";
+var apiServer = "https://overpass.kumi.systems/api/interpreter";
 //==================================================
 
 var currentID = null;
@@ -121,6 +124,7 @@ function setInteraction() {
     olMap.addLayer(
       layerGPX = new VectorLayer({
         source: vectorSource,
+        zindex: 4,
       })
     );
     olMap.getView().fit(vectorSource.getExtent());
@@ -378,8 +382,7 @@ function init()
   });
 	$( "#createclue" ).button().on('click', function() { handleGenerateClue(); });
 	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).on('click', function() { handleDeleteSheet(); });
-	$( "#deleteXs" ).button({ icons: { primary: "ui-icon-trash" } }).on('click', function() { handleDeleteXs(); });
-	$( "#getPostboxes" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() { handleGetPostboxes(); });
+	$( "#getPostboxes" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() {   $( "#pois" ).dialog( "open" ) });
 	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() { handleGetOpenplaques(); });
 
 	$( "#createmap" ).button("disable");
@@ -389,13 +392,14 @@ function init()
 	$( "#getkml" ).button("disable");
 	$( "#createclue" ).button("disable");
 	$( "#deletesheet" ).button("disable");
-	$( "#deleteXs" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getPlaques" ).button("disable");
 	$( "#preview" ).button("disable");
 
 	$( "#edittitle" ).on('click', function() { handleTitleEdit(); })
 	$( "#editinstructions" ).on('click', function() { handleRaceDescriptionEdit(); })
+  $("#s_poi_key").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
+  $("#s_poi_value").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
 
 	$( "#eventdate").datepicker({
 		dateFormat: "D d M yy",
@@ -943,6 +947,29 @@ function init()
 	  buttons:  [ { text: "Ok", click: function() { $( this ).dialog( "close" ); } } ]
 	});
 
+  $( "#pois" ).dialog({
+    autoOpen: false,
+    height: 400,
+    width: 530,
+    modal: true,
+    buttons: {
+      OK: function() {
+        var rVal = $("input[name='c_pois']:checked").val().split(",");
+        if (rVal[0]=='custom')
+        {
+          rVal = [ $("input[name='poi_key']").val() + "=" +  $("input[name='poi_value']").val(),$("input[name='poi_value']").val() + ': ','name', ''];
+        }
+        //rVal = [key=value, description prefix, field for description, sort field]
+        rVal.push(parseInt($("input[name='poi_dist']").val()));
+        if (debug) {console.log(rVal);}
+        handleGetPois(rVal);
+        $( this ).dialog( "close" );
+      },
+      Cancel: function() {
+        $( this ).dialog( "close" );
+      }
+    }
+  });
 
 	$("#search").on('submit', function() { handleSearchPostcode(); return false });
 	$("#load").on('submit', function() { handleLoadMap(); return false; });
@@ -1111,16 +1138,9 @@ function handleZoom()
 	$( "#getworldfile" ).button("disable");
 	$( "#getkmz" ).button("disable");
 	$( "#deletesheet" ).button("disable");
-	$( "#deleteXs" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
   	$( "#preview" ).button("disable");
-
-	if (layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=="c_cross").length > 0 ||
-	 layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=="c_crossingpoint").length > 0)
-	{
-		$( "#deleteXs" ).button("enable");
-	}
 
 /*	if (olMap.getView().getZoom() != parseInt(olMap.getView().getZoom()))
 	{
@@ -1279,7 +1299,7 @@ function handleDeleteSheet()
 }
 
 
-function handleDeleteXs()
+/*function handleDeleteXs()
 {
 	if (mapID != "new")
 	{
@@ -1290,12 +1310,12 @@ function handleDeleteXs()
   delList.forEach(function(feat){layerControls.getSource().removeFeature(feat)});
 
 	rebuildMapControls();
-	$( "#deleteXs" ).button("disable");
 
 	$( "#getraster" ).button("disable");
 	$( "#getworldfile" ).button("disable");
 	$( "#getkmz" ).button("disable");
 }
+*/
 
 function handleTitleEdit()
 {
@@ -2139,12 +2159,6 @@ function rebuildMapSheet()
 
 function rebuildMapControls()
 {
-	if ( layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_cross').length +
-       layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_crossingpoint').length > 0 )
-	{
-		$( "#deleteXs" ).button("enable");
-	}
-
 	if (layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_regular').length > 0)
 	{
 		$( "#createclue" ).button("enable");
@@ -2251,13 +2265,92 @@ function handleSearchPostcodeCallback(json)
 	}
 }
 
-function handleGetPostboxes()
+function sortByProp(property){
+   return function(a,b){
+      if(parseInt(a.tags[property]) > parseInt(b.tags[property]))
+         return 1;
+      else if(parseInt(a.tags[property]) < parseInt(b.tags[property]))
+         return -1;
+
+      return 0;
+   }
+}
+function handleGetPois([query, prefix, srcDescription, orderBy=null, radius])
+//Get points of interest from OSM Overpass query.
+// query - string containing key-value pair, e.g. "amenity=post_box"
+// prefix - String prefix for feature description eg. "Postbox: "
+// srcDescription - source tag for remaining description text - eg "name" or "ref"
+// orderBy - OSM tag to (numnerically) sort output on if order is important.
+// radius - minimum spacing in meters from all other placed controls.
 {
   var arr = wgs84Poly.flatCoordinates;
-	var bounds = olProj.transformExtent([mapBound[0], mapBound[1], mapBound[2], mapBound[3]], "EPSG:3857", "EPSG:4326");
-	//var url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];node[amenity=post_box](' + bounds[1] + "," + bounds[0] + "," + bounds[3] + "," + bounds[2]+");out;";
-	var url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];node[amenity=post_box](poly:\"' + arr[1] + " " + arr[0] + " " + arr[3] + " " + arr[2] + " " + arr[5] + " " + arr[4] + " " + arr[7] + " " + arr[6]+"\");out;";
-    $.get(url, null, handleGetOSMboxesCallback);
+  if (isNaN(radius)) { radius = 0;}
+	var url = apiServer + '?data=[out:json][timeout:25];node[' + query + '](poly:\"' + arr[1] + " " + arr[0] + " " + arr[3] + " " + arr[2] + " " + arr[5] + " " + arr[4] + " " + arr[7] + " " + arr[6]+"\");out;";
+    $.get(url)
+      .done(function( result, textStatus, jqXHR ) {
+    	var changed = false;
+    	$( "#postboxes_searching" ).dialog( "close" );
+    	if (result.elements.length > 0)
+    	{
+        if (orderBy != null) { result.elements.sort(sortByProp(orderBy)); }
+        for(var i = 0; i < result.elements.length; i++)
+    		{
+    			var dupe = false;
+          var p1 = new Point(olProj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857"));
+
+          if(getSortedControls('c_regular').length > 0)
+          {
+            getSortedControls('c_regular').forEach(function(c)
+            {
+              if (getDistance([result.elements[i].lon, result.elements[i].lat],[c.wgs84lon, c.wgs84lat]) < radius) {		dupe = true;	};
+            });
+          }
+    			if (!dupe)
+    			{
+            var control = new Feature({
+              geometry: new Point(olProj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857")),
+              id: topID++,
+              number: "" + ++topNumber,
+              angle: 45,
+              type: 'c_regular',
+              score: topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,
+              description: prefix + result.elements[i].tags[srcDescription]
+            });
+            control.setId(control.get('id'));
+    				layerControls.getSource().addFeature(control);
+    				changed = true;
+    			}
+    		}
+    		rebuildMapControls();
+    	  rebuildDescriptions();
+
+    		if (changed)
+    		{
+    			if (mapID != "new")
+    			{
+    				mapID = "new";
+    				updateUrl();
+    			}
+
+    			$( "#getraster" ).button("disable");
+    			$( "#getworldfile" ).button("disable");
+    			$( "#getkmz" ).button("disable");
+    		}
+    	}
+    	else
+    	{
+    		$( "#postboxes_error" ).dialog( "open" );
+    		$( "#postboxes_error_text" ).html(result.message);
+    	}
+
+    })
+      .fail(function( jqXHR, textStatus, errorThrown ) {
+        console.log(jqXHR);
+        console.log(textStatus);
+        console.log(errorThrown );
+        $( "#postboxes_searching" ).dialog( "close" );
+    });
+
 	$( "#postboxes_searching" ).dialog( "open" );
 }
 
@@ -2284,9 +2377,7 @@ function handleGetOSMboxesCallback(result)
 			for (var j = 0; j < i; j++)
 			{
 				if (result.elements[i].lon == result.elements[j].lon && result.elements[i].lat == result.elements[j].lat)
-				{
-					dupe = true;
-				}
+				{		dupe = true;	}
 			}
 			if (!dupe)
 			{
@@ -2296,7 +2387,7 @@ function handleGetOSMboxesCallback(result)
 		}
 		$( "#getPostboxes" ).button("disable");
 		rebuildMapControls();
-	  	rebuildDescriptions();
+	  rebuildDescriptions();
 
 		if (changed)
 		{
@@ -2321,11 +2412,12 @@ function handleGetOSMboxesCallback(result)
 
 function handleGetOpenplaques()
 {
-	var bounds = olProj.transformExtent([mapBound[0], mapBound[1], mapBound[2], mapBound[3]], "EPSG:3857", "EPSG:4326");
-	var url = '/php/getopenplaques.php?bounds=[' + bounds[3] + "%2C" + bounds[0] + "]%2C[" + bounds[1] + "%2C" + bounds[2] + "]";
-    $.get(url, null, handleGetOpenplaquesCallback);
-	$( "#openplaques_searching" ).dialog( "open" );
+	//var bounds = olProj.transformExtent([mapBound[0], mapBound[1], mapBound[2], mapBound[3]], "EPSG:3857", "EPSG:4326");
+	//var url = '/php/getopenplaques.php?bounds=[' + bounds[3] + "%2C" + bounds[0] + "]%2C[" + bounds[1] + "%2C" + bounds[2] + "]";
+  //  $.get(url, null, handleGetOpenplaquesCallback);
+	//$( "#openplaques_searching" ).dialog( "open" );
 
+    $( "#pois" ).dialog( "open" );
 }
 
 function handleGetOpenplaquesCallback(result)
