@@ -79,9 +79,10 @@
 					<tr>
 						<td colspan='3'>
 							<div id="specialoptions">Delete
-								<button id='deletesheet'>Sheet</button>&nbsp;&nbsp;&nbsp;Add
+								<button id='deletesheet'>Sheet</button>
+								<button id='deleteMarkers'>Markers</button>&nbsp;&nbsp;&nbsp;Add
 								<button id='getPostboxes'>Map Features</button>
-								<button id='getOpenplaques'>Plaques</button>
+								<button id='getOpenplaques'>OpenPlaques</button>
 							</div>
 						</td>
 					</tr>
@@ -433,8 +434,13 @@
 					<td>	<input type="text" size='8' maxlength='4' value="" name="poi_dist" id="c_poi_dist" class="text ui-widget-content ui-corner-all" /> m </td>
 
 				</tr>
+				<tr>
+					<td><input type="checkbox" id="tempLayer" name="tempLayer" value="tempLayer">	</td>
+					<td colspan = '2'><label for="tempLayer">Put controls in a temporary layer for selection?</label> </td>
+				</tr>
 			</table>
 		</fieldset>
+		<div id="layerMessage"> Double-click on small map circles in temporary layer to promote to control sites. </div>
 		</div>
 	</body>
 </html>

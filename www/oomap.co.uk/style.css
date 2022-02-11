@@ -381,11 +381,21 @@ h1, h2
 	border-top: 3px solid black !IMPORTANT;
 }
 
+#layerMessage
+{
+	font-size: 10px;
+	display: none;
+}
+
 .loading
 {
     color:red !IMPORTANT;
 }
 
+.grey
+{
+    color:grey !IMPORTANT;
+}
 /* OpenLayers */
 
 .olControlPermalink { position: absolute; left: 0; bottom: 50px; margin: 30px 10px; }

@@ -29,7 +29,7 @@ import './style.css';
 
 Proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
 
-var debug = false;
+var debug = true;
 
 //Site-specific constants - change these as required:
 var prefix1 = "https://tile.dna-software.co.uk/";
@@ -118,16 +118,13 @@ function setInteraction() {
     formatConstructors: [GPX, ],
   });
   dragAndDropInteraction.on('addfeatures', function (event) {
-    const vectorSource = new VectorSource({
-      features: event.features,
-    });
-    olMap.addLayer(
-      layerGPX = new VectorLayer({
-        source: vectorSource,
-        zindex: 4,
-      })
-    );
-    olMap.getView().fit(vectorSource.getExtent());
+    //const vectorSource = new VectorSource({
+    //  features: event.features,
+    //});
+    //layerGPX.setSource(vectorSource);
+    layerGPX.getSource().addFeatures(event.features);
+    olMap.getView().fit(layerGPX.getSource().getExtent());
+    $( "#deleteMarkers" ).button("enable");
   });
   olMap.addInteraction(dragAndDropInteraction);
 }
@@ -338,8 +335,6 @@ function setDefaults()
 	}
 }
 
-//var controlsClick  = new OpenLayers.Control.ControlsClick();
-
 /* Initialisation */
 
 function init()
@@ -382,6 +377,7 @@ function init()
   });
 	$( "#createclue" ).button().on('click', function() { handleGenerateClue(); });
 	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).on('click', function() { handleDeleteSheet(); });
+  $( "#deleteMarkers" ).button().on('click', function() { handleDeleteMarkers(); });
 	$( "#getPostboxes" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() {   $( "#pois" ).dialog( "open" ) });
 	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() { handleGetOpenplaques(); });
 
@@ -392,6 +388,7 @@ function init()
 	$( "#getkml" ).button("disable");
 	$( "#createclue" ).button("disable");
 	$( "#deletesheet" ).button("disable");
+  $( "#deleteMarkers" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getPlaques" ).button("disable");
 	$( "#preview" ).button("disable");
@@ -400,6 +397,18 @@ function init()
 	$( "#editinstructions" ).on('click', function() { handleRaceDescriptionEdit(); })
   $("#s_poi_key").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
   $("#s_poi_value").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
+
+  $('#tempLayer').change(function() {
+    if (this.checked) {
+      $('#c_poi_dist').prop('disabled', true);
+      $("label[for='c_poi_dist']").addClass( "grey" );
+      $("#layerMessage").show();
+    } else {
+      $('#c_poi_dist').prop('disabled', false);
+      $("label[for='c_poi_dist']").removeClass( "grey" );
+      $("#layerMessage").hide();
+    }
+  });
 
 	$( "#eventdate").datepicker({
 		dateFormat: "D d M yy",
@@ -464,6 +473,7 @@ function init()
     const sourceContent = new VectorSource({});
     const sourceCons = new VectorSource({});
     const sourceLines = new VectorSource({});
+    const sourceGPX = new VectorSource({});
 
   layerOrienteering = new TileLayer({opacity: 1, zIndex: 1, className: 'features'});
 	layerMapBorder = new VectorLayer({ title: "mapborder", style: marginStyle, source: sourceMB, zIndex: 2,
@@ -478,6 +488,7 @@ function init()
     updateWhileAnimating: true, zIndex: 4});
   layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 4 });
   layerPreview = new ImageLayer({ name: "Georef",  zIndex: 3});
+  layerGPX = new VectorLayer({ title: "GPX", source: sourceGPX, zIndex: 4 });
 
   //layerPreview = new GeoImageLayer({title: "preview", visible: true, zIndex: 3});
 
@@ -496,12 +507,13 @@ function init()
 	}
 
 	select = new Select({
-		layers: [layerMapCentre, layerControls],
+		layers: [layerMapCentre, layerControls, layerGPX],
     hitTolerance: hitTol,
 	});
 
 	var translate = new Translate({
-  	features: select.getFeatures()
+    layers: [layerMapCentre, layerControls],
+  	//features: select.getFeatures()
 	});
 
 	translate.on('translateend', handleDrag)
@@ -520,7 +532,8 @@ function init()
 	  		layerMapCentre,
 	  		layerControls,
         layerLines,
-        layerPreview
+        layerPreview,
+        layerGPX
 		],
 
 		controls: defaultControls({rotateOptions: {
@@ -560,14 +573,6 @@ function init()
 		interactions: defaultInteractions().extend([select, translate]),
 	});
 
-/*  layerPreview.setSource(new GeoImage({
-    url: './oom.jpg',
-    crossOrigin: '',
-    imageCenter: [0,0],
-    imageScale: 0.1,
-    imageRotate: 0,
-  }));
-*/
  	olMap.getView().on('change:resolution', handleZoom);
 	olMap.on("moveend", updateUrl);
 
@@ -949,7 +954,7 @@ function init()
 
   $( "#pois" ).dialog({
     autoOpen: false,
-    height: 400,
+    height: 440,
     width: 530,
     modal: true,
     buttons: {
@@ -961,6 +966,7 @@ function init()
         }
         //rVal = [key=value, description prefix, field for description, sort field]
         rVal.push(parseInt($("input[name='poi_dist']").val()));
+        rVal.push($("#tempLayer").prop('checked'));
         if (debug) {console.log(rVal);}
         handleGetPois(rVal);
         $( this ).dialog( "close" );
@@ -1253,19 +1259,29 @@ function handleControlDelete(pid)  //pid = "d<n>"
 	{
 		layerControls.getSource().removeFeature(control)
 	}
+  controlsChanged();
+}
 
-	if (mapID != "new")
-	{
-		mapID = "new";
-		updateUrl();
-	}
+function controlsChanged()
+{
+  if (mapID != "new")
+  {
+    mapID = "new";
+    updateUrl();
+  }
 
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
+  $( "#getraster" ).button("disable");
+  $( "#getworldfile" ).button("disable");
+  $( "#getkmz" ).button("disable");
 
-	rebuildMapControls();
-	rebuildDescriptions();
+  rebuildMapControls();
+  rebuildDescriptions();
+}
+
+function handleDeleteMarkers()
+{
+  layerGPX.getSource().clear();
+  $( "#deleteMarkers" ).button("disable");
 }
 
 function handleDeleteSheet()
@@ -1281,41 +1297,17 @@ function handleDeleteSheet()
 	topNumber = 0;
 	magDec = undefined;
 
-	rebuildMapControls();
-	rebuildDescriptions();
-	state = "initialzoom";
+  controlsChanged();
+  layerPreview.setSource();
+  preview=false;
+  state = "initialzoom";
 	handleZoom();
-	mapID = "new";
-	updateUrl();
-
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
 
 	$( "#deletesheet" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
   $( "#preview" ).button("disable");
 }
-
-
-/*function handleDeleteXs()
-{
-	if (mapID != "new")
-	{
-		mapID = "new";
-		updateUrl();
-	}
-  var delList = layerControls.getSource().getFeatures().filter(feat => feat.get('type')=='c_cross' || feat.get('type')=='c_crossingpoint');
-  delList.forEach(function(feat){layerControls.getSource().removeFeature(feat)});
-
-	rebuildMapControls();
-
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
-}
-*/
 
 function handleTitleEdit()
 {
@@ -1412,8 +1404,8 @@ function handleDrag()	//Vector element has been dragged - update arrays to match
 		}
 	});
 	select.getFeatures().clear();
-	rebuildMapSheet();
-  rebuildMapControls();
+  rebuildMapSheet();
+  controlsChanged();
 }
 
 function handleSaveCallback(json)
@@ -1547,18 +1539,8 @@ function handleOptionChange()
 	}
 	if (state == "addcontrols" || state == "zoom")
 	{
-		if (mapID != "new")
-		{
-			mapID = "new";
-			updateUrl();
-		}
-
-		$( "#getraster" ).button("disable");
-		$( "#getworldfile" ).button("disable");
-		$( "#getkmz" ).button("disable");
-
-		rebuildMapSheet();
-		rebuildMapControls();	//to correctly scale features
+    rebuildMapSheet();
+    controlsChanged();
     layerControls.changed(); //force re-draw
 		return;
 	}
@@ -1571,7 +1553,7 @@ function handleClick(evt)
 	olMap.forEachFeatureAtPixel(pixel, function(feature, layer)
 	{
 		//Has a map feature been clicked?
-		if (feature && $.inArray(layer.get('title'), ['mapcentre', 'controls']) >= 0)
+		if (feature && $.inArray(layer.get('title'), ['mapcentre', 'controls', 'GPX']) >= 0)
 		{
 			centreClick = true;
 		}
@@ -1594,7 +1576,7 @@ function handleClick(evt)
 	{
   	var coordinate = evt.coordinate;
 		newControlLL = coordinate;
-		if (!(new Point(newControlLL).intersectsExtent(mapBound)))
+    if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(olProj.transform(newControlLL, "EPSG:3857", "EPSG:4326"))))
 		{ //if control outside map area, alert
 			$( "#newcontroloutsidemap" ).dialog({
 			  modal: true,
@@ -1644,13 +1626,48 @@ function handleClick(evt)
 
 function handleDblClick(evt)
 {
-	var pixel = evt.pixel;
+
+  var pixel = evt.pixel;
+
 	olMap.forEachFeatureAtPixel(pixel, function(feature, layer)
 	{
 		//Has a map feature been clicked?
 		if (feature && $.inArray(layer.get('title'), ['controls']) >= 0)
 		{
       handleControlEditOptions('e'+feature.getId()); //Open edit dialog
+      evt.stopPropagation(); //Don't continue to trigger zoom
+		}
+    else if (feature && $.inArray(layer.get('title'), ['GPX']) >= 0)
+		{ //Clicked GPX/temp feature - promote to layerControls
+      if (state == 'addcontrols' && feature.getGeometry().flatCoordinates.length < 4)
+      { //only run if clicked item is a (3D) point, and a map has been placed
+        if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(olProj.transform(evt.coordinate, "EPSG:3857", "EPSG:4326"))))
+        { //if event outside map area, alert
+          $( "#newcontroloutsidemap" ).dialog({
+            modal: true,
+            buttons: {
+              Ok: function() {
+                $( this ).dialog( "close" );
+              }
+            }
+          });
+          return;
+        }
+
+        layerGPX.getSource().removeFeature(feature);
+        if (feature.get('type')!='c_regular') //if not from a POI query
+        {
+          feature.set('description',"" + feature.get('name'),true)
+        }
+        feature.set('type','c_regular',true)
+        feature.set('id',topID++,true)
+        feature.set('number',"" + ++topNumber,true)
+        feature.set('angle',45,true)
+        feature.set('score',topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,true)
+        feature.setId(feature.get('id'));
+        layerControls.getSource().addFeature(feature);
+        controlsChanged();
+      }
       evt.stopPropagation(); //Don't continue to trigger zoom
 		}
 	},
@@ -1919,15 +1936,10 @@ function loadMap(data)
 	//TODO Implement loading of saved club.
 
 	$style.trigger( "click" );
-	//$styleL.trigger( "click" );
   $scale.trigger( "click" );
-	//$scaleL.trigger( "click" );
 	$papersize.trigger( "click" );
-	//$papersizeL.trigger( "click" );
 	$paperorientation.trigger( "click" );
-	//$paperorientationL.trigger( "click" );
 	$contours.trigger( "click" );
-	//$contoursL.trigger( "click" );
 
   layerControls.getSource().clear();
   topID=0;
@@ -1985,7 +1997,7 @@ function loadMap(data)
 	$( "#getkmz" ).button("enable");
 }
 
-//convert a control Bbject to an ol Feature
+//convert a control Object to an ol Feature
 function controlToFeature(control)
 {
 	var feature = new Feature({
@@ -2212,7 +2224,7 @@ function rebuildDescriptions()
 	{
 		var control  = list[i];
 		$("#controldescriptions").find('tbody')
-			.append($('<tr>').addClass('controlrow')
+			.append($('<tr draggable="true">').addClass('controlrow')
 				.append($('<td>')
 					.append(control.number)
 				  )
@@ -2275,13 +2287,14 @@ function sortByProp(property){
       return 0;
    }
 }
-function handleGetPois([query, prefix, srcDescription, orderBy=null, radius])
+function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,boolTemp])
 //Get points of interest from OSM Overpass query.
 // query - string containing key-value pair, e.g. "amenity=post_box"
 // prefix - String prefix for feature description eg. "Postbox: "
 // srcDescription - source tag for remaining description text - eg "name" or "ref"
 // orderBy - OSM tag to (numnerically) sort output on if order is important.
 // radius - minimum spacing in meters from all other placed controls.
+// boolTemp - put controls in a temporary layer?
 {
   var arr = wgs84Poly.flatCoordinates;
   if (isNaN(radius)) { radius = 0;}
@@ -2302,40 +2315,41 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius])
           {
             getSortedControls('c_regular').forEach(function(c)
             {
-              if (getDistance([result.elements[i].lon, result.elements[i].lat],[c.wgs84lon, c.wgs84lat]) < radius) {		dupe = true;	};
+              if (getDistance([result.elements[i].lon, result.elements[i].lat],[c.wgs84lon, c.wgs84lat]) <= (radius+1)) {		dupe = true;	};
             });
           }
     			if (!dupe)
     			{
             var control = new Feature({
               geometry: new Point(olProj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857")),
-              id: topID++,
-              number: "" + ++topNumber,
               angle: 45,
               type: 'c_regular',
-              score: topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,
               description: prefix + result.elements[i].tags[srcDescription]
             });
-            control.setId(control.get('id'));
-    				layerControls.getSource().addFeature(control);
-    				changed = true;
+
+            if(boolTemp)
+            {
+              layerGPX.getSource().addFeature(control);
+              $( "#deleteMarkers" ).button("enable");
+            }
+            else
+            {
+              control.set('id',topID++);
+              control.set('number',"" + ++topNumber);
+              control.set('score', topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50)
+              control.setId(control.get('id'));
+              layerControls.getSource().addFeature(control);
+      				changed = true;
+            }
     			}
     		}
     		rebuildMapControls();
     	  rebuildDescriptions();
 
     		if (changed)
-    		{
-    			if (mapID != "new")
-    			{
-    				mapID = "new";
-    				updateUrl();
-    			}
-
-    			$( "#getraster" ).button("disable");
-    			$( "#getworldfile" ).button("disable");
-    			$( "#getkmz" ).button("disable");
-    		}
+        {
+          controlsChanged();
+        }
     	}
     	else
     	{
@@ -2354,70 +2368,13 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius])
 	$( "#postboxes_searching" ).dialog( "open" );
 }
 
-function handleGetOSMboxesCallback(result)
-{
-	var changed = false;
-	$( "#postboxes_searching" ).dialog( "close" );
-	if (result.elements.length > 0)
-	{
-		for(var i = 0; i < result.elements.length; i++)
-		{
-      var control = new Feature({
-        geometry: new Point(olProj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857")),
-        id: topID++,
-        number: "" + ++topNumber,
-        angle: 45,
-        type: 'c_regular',
-        score: topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,
-        description: "Postbox " + result.elements[i].tags.ref
-      });
-      control.setId(control.get('id'));
-
-			var dupe = false;
-			for (var j = 0; j < i; j++)
-			{
-				if (result.elements[i].lon == result.elements[j].lon && result.elements[i].lat == result.elements[j].lat)
-				{		dupe = true;	}
-			}
-			if (!dupe)
-			{
-				layerControls.getSource().addFeature(control);
-				changed = true;
-			}
-		}
-		$( "#getPostboxes" ).button("disable");
-		rebuildMapControls();
-	  rebuildDescriptions();
-
-		if (changed)
-		{
-			if (mapID != "new")
-			{
-				mapID = "new";
-				updateUrl();
-			}
-
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-		}
-	}
-	else
-	{
-		$( "#postboxes_error" ).dialog( "open" );
-		$( "#postboxes_error_text" ).html(result.message);
-	}
-
-}
-
 function handleGetOpenplaques()
 {
-	//var bounds = olProj.transformExtent([mapBound[0], mapBound[1], mapBound[2], mapBound[3]], "EPSG:3857", "EPSG:4326");
-	//var url = '/php/getopenplaques.php?bounds=[' + bounds[3] + "%2C" + bounds[0] + "]%2C[" + bounds[1] + "%2C" + bounds[2] + "]";
-  //  $.get(url, null, handleGetOpenplaquesCallback);
-	//$( "#openplaques_searching" ).dialog( "open" );
+  var bounds = layerMapContent.getSource().getExtent();
+	var url = '/php/getopenplaques.php?bounds=[' + bounds[3] + "%2C" + bounds[0] + "]%2C[" + bounds[1] + "%2C" + bounds[2] + "]";
+  $.get(url, null, handleGetOpenplaquesCallback);
+	$( "#openplaques_searching" ).dialog( "open" );
 
-    $( "#pois" ).dialog( "open" );
 }
 
 function handleGetOpenplaquesCallback(result)
@@ -2454,19 +2411,7 @@ function handleGetOpenplaquesCallback(result)
 			}
 		}
 		$( "#getOpenplaques" ).button("disable");
-		rebuildMapControls();
-	  	rebuildDescriptions();
-		if (changed)
-		{
-			if (mapID != "new")
-			{
-				mapID = "new";
-				updateUrl();
-			}
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-		}
+		if (changed)	{ controlsChanged();	}
 	}
 	else
 	{
@@ -2542,7 +2487,6 @@ function handlePreview(){
 
   else {
     layerPreview.setSource();
-    //olMap.removeLayer(olMap.getLayers().getArray().find(layer => layer.get('name') == 'Georef'));
     preview=false;
   }
 }
