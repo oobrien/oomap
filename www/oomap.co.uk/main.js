@@ -23,13 +23,14 @@ import {Point, Polygon, LineString} from 'ol/geom';
 import {fromExtent as PolyFromExtent} from 'ol/geom/Polygon';
 import {getDistance} from 'ol/sphere';
 import GeoImage from 'ol-ext/source/GeoImage';
+import Overlay from 'ol/Overlay';
 import './lib/jquery-ui.min.css';
 import 'ol/ol.css';
 import './style.css';
 
 Proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
 
-var debug = true;
+var debug = false;
 
 //Site-specific constants - change these as required:
 var prefix1 = "https://tile.dna-software.co.uk/";
@@ -99,6 +100,17 @@ var newControlLL = [0, 0];
 var mapBound;
 var wgs84Poly;
 var purple = 'rgba(220, 40, 255, 1)';
+
+const container = document.getElementById('popup');
+const content = document.getElementById('popup-content');
+const overlay = new Overlay({
+  element: container,
+  autoPan: {
+    animation: {
+      duration: 250,
+    },
+  },
+});
 
 //State
 //initialzoom, placepaper, addcontrols
@@ -298,6 +310,61 @@ function titleStyle(feature, resolution)
 	})
 ]};
 
+function markerStyle(feature)
+{
+  if (feature.getGeometry().getType() == 'Point') {
+    var markerColor;
+    switch(feature.get('description').substring(0,4)) {
+    case 'Post':
+      markerColor = '#FF0000';
+      break;
+    case 'Lamp':
+      markerColor = '#FFFF22';
+      break;
+    case 'Plaq':
+      markerColor = '#0000CC';
+      break;
+    case 'Benc':
+      markerColor = '#000000';
+      break;
+    case 'Cont':
+      markerColor = '#DD22FF';
+      break;
+    default:
+      markerColor = '#3399CC';
+  }
+
+    var fill = new Fill({
+       //color: 'rgba(255,255,255,0.4)'
+       color: markerColor + '40'
+     });
+     var stroke = new Stroke({
+       color: markerColor,
+       width: 1.75
+     });
+     return [
+       new Style({
+        image: new Circle({
+           fill: fill,
+           stroke: stroke,
+           radius: 5
+         }),
+         fill: fill,
+         stroke: stroke
+       })
+     ]
+ }
+ else {
+   return [
+     new Style({
+       stroke: new Stroke({
+         color: 'blue',
+         width: 1.25
+       })
+     })
+   ]
+ }
+};
 
 var contentStyle = new Style({ fill: new Fill({ color: [200, 200, 200, 0.3]})
 
@@ -400,12 +467,12 @@ function init()
 
   $('#tempLayer').change(function() {
     if (this.checked) {
-      $('#c_poi_dist').prop('disabled', true);
-      $("label[for='c_poi_dist']").addClass( "grey" );
+      //$('#c_poi_dist').prop('disabled', true);
+      //$("label[for='c_poi_dist']").addClass( "grey" );
       $("#layerMessage").show();
     } else {
-      $('#c_poi_dist').prop('disabled', false);
-      $("label[for='c_poi_dist']").removeClass( "grey" );
+      //$('#c_poi_dist').prop('disabled', false);
+      //$("label[for='c_poi_dist']").removeClass( "grey" );
       $("#layerMessage").hide();
     }
   });
@@ -488,7 +555,7 @@ function init()
     updateWhileAnimating: true, zIndex: 4});
   layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 4 });
   layerPreview = new ImageLayer({ name: "Georef",  zIndex: 3});
-  layerGPX = new VectorLayer({ title: "GPX", source: sourceGPX, zIndex: 4 });
+  layerGPX = new VectorLayer({ title: "GPX", style: markerStyle, source: sourceGPX, zIndex: 4 });
 
   //layerPreview = new GeoImageLayer({title: "preview", visible: true, zIndex: 3});
 
@@ -535,7 +602,7 @@ function init()
         layerPreview,
         layerGPX
 		],
-
+    overlays: [overlay],
 		controls: defaultControls({rotateOptions: {
       label: "M",
       autoHide: false,
@@ -582,6 +649,25 @@ function init()
   olMap.on("dblclick", function(evt) {
     handleDblClick(evt);
 	});
+
+  let selected = null;
+  olMap.on('pointermove', function (evt) {
+    if (selected !== null) {
+      selected = null;
+    }
+
+    olMap.forEachFeatureAtPixel(evt.pixel, function (f) {
+      selected = f;
+      return true;
+    });
+
+    if (selected) {
+      content.innerHTML = selected.get('description');
+      overlay.setPosition(evt.coordinate);
+    } else {
+      overlay.setPosition(undefined);
+    }
+  });
 
 	olMap.getView().on('propertychange', handleRotate);
 
@@ -731,6 +817,10 @@ function init()
 				fences = $('#fence').is(':checked');
         linear = $('#linear').is(':checked');
         layerLines.setVisible(linear);
+        if(linear){
+          $(".scorecol").addClass('hidden');
+          rebuildDescriptions();
+        }
 				dpi = parseInt($('#dpi').val());
 				if (isNaN(dpi)) { dpi = 150; }
 
@@ -1553,7 +1643,11 @@ function handleClick(evt)
 	olMap.forEachFeatureAtPixel(pixel, function(feature, layer)
 	{
 		//Has a map feature been clicked?
-		if (feature && $.inArray(layer.get('title'), ['mapcentre', 'controls', 'GPX']) >= 0)
+    if (feature && $.inArray(layer.get('title'), ['GPX']) >= 0){
+      evt.stopPropagation();  //Don't highlight GPX points, and stop event processing.
+      centreClick = true;
+    }
+    if (feature && $.inArray(layer.get('title'), ['mapcentre', 'controls']) >= 0)
 		{
 			centreClick = true;
 		}
@@ -2047,6 +2141,22 @@ function getSortedControls(type = null)
   return list;
 }
 
+function getMarkers()
+{
+  var list = layerGPX.getSource().getFeatures().filter(feat=>feat.getGeometry().getType() == 'Point');
+  list.forEach(function(feat,i)
+  {
+    list[i] = feat.getProperties();
+    [list[i].lon, list[i].lat] = list[i].geometry.flatCoordinates;
+    [list[i].wgs84lon, list[i].wgs84lat] = olProj.transform(list[i].geometry.flatCoordinates, "EPSG:3857", "EPSG:4326");
+    list[i].geometry = undefined;
+  });
+
+  if(debug){console.log(list);}
+  return list;
+}
+
+
 function rebuildMapSheet()
 {
 	if (debug) { console.log("rebuildMapSheet"); }
@@ -2118,7 +2228,8 @@ function rebuildMapSheet()
 
 	var title = new Feature({
 		geometry: new Point([ sheetCentreLL[0]-map_dlon/2, sheetCentreLL[1]+map_dlat/2+map_nm_dlat/2]),
-		type: 'centre'
+		type: 'centre',
+    description: 'Map Title'
 	 });
 	title.set('fontSizeFromArr',  fontSizeFromArr);
 	title.set('mapTitleDisplay',  mapTitleDisplay);
@@ -2132,7 +2243,8 @@ function rebuildMapSheet()
 	var southMargin = new Feature({ geometry: PolyFromExtent(paperSMBound) });
 	var centreMarker = new Feature({
 		geometry: new Point(sheetCentreLL),
-		type: 'centre'
+		type: 'centre',
+    description: 'Map centre.  Click then drag to move.'
 	 });
 
 	var titleFeature = new Feature({ geometry: new Point([mapBound[0], mapBound[3] + (0.002 * trueScale)])});
@@ -2228,7 +2340,7 @@ function rebuildDescriptions()
 				.append($('<td>')
 					.append(control.number)
 				  )
-				.append($('<td>')
+				.append($('<td class="scorecol">')
 					.append(control.score)
 				  )
 				.append($('<td>').attr('colspan', '2')
@@ -2309,15 +2421,16 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
         for(var i = 0; i < result.elements.length; i++)
     		{
     			var dupe = false;
-          var p1 = new Point(olProj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857"));
-
-          if(getSortedControls('c_regular').length > 0)
+          var featureList = getSortedControls('c_regular');
+          if (boolTemp) { featureList = featureList.concat(getMarkers()); }  //add in marker layer features if results are going to feat layer.
+          if(featureList.length > 0) //Check for nearby existing controls
           {
-            getSortedControls('c_regular').forEach(function(c)
+            featureList.forEach(function(c)
             {
               if (getDistance([result.elements[i].lon, result.elements[i].lat],[c.wgs84lon, c.wgs84lat]) <= (radius+1)) {		dupe = true;	};
             });
           }
+          if (debug) {console.log(dupe);}
     			if (!dupe)
     			{
             var control = new Feature({
