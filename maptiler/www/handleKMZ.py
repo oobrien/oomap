@@ -1,8 +1,7 @@
 import os, os.path, platform, mapnik
 import math
 import time
-
-from oomf import *  #reused functions from oomf.py in same directory
+from oomf import *
 
 EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
 
@@ -11,12 +10,13 @@ MAP_EM = 0.008
 MAP_SM = 0.013
 MAP_WM = 0.008
 
-def processRequest(req):
-    path = req.args
+def processRequest(environ):
+    path = environ['QUERY_STRING']
     p = parse_query(path)
+    if isStr(p):
+        return (p, 'new')
     mapid = p.get('mapid', 'new')
-    outf = createKMZ(path)
-    return req_write(outf, req, mapid, 'kmz')
+    return createKMZ(path), mapid
 
 def createKMZ(path):
     import tempfile

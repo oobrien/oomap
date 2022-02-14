@@ -7,12 +7,12 @@
 
 sleep(0.5);
 
-include_once "../db.php";
+include_once "db.php";
 
 global $pc;
 
-if (!empty($_GET) && isset($_GET['pc'])) 
-{ 
+if (!empty($_GET) && isset($_GET['pc']))
+{
 	$postcode = $_GET['pc'];
 }
 else if ($pc != null)
@@ -31,7 +31,7 @@ $postcode = str_replace(" ", "", $postcode);
 $postcode = str_replace("'", "", $postcode);
 $postcode = substr($postcode, 0, 7);
 
-$conn = @mysqli_connect($dbhost, $dbuser, $dbpass); 
+$conn = @mysqli_connect($dbhost, $dbuser, $dbpass);
 
 if (!$conn)
 {
@@ -47,7 +47,7 @@ if (strlen($postcode) < 5 || strlen($postcode) > 7)
 
 $postcode = mysqli_real_escape_string($conn, $postcode);
 
-mysqli_select_db($conn, $dbdb); 
+mysqli_select_db($conn, $dbdb);
 $rows = array();
 
 //Form postcode_7 from postcode_ns
@@ -66,26 +66,26 @@ if (strlen($outcode) == 2)
 
 $query1 = "SELECT easting, northing, postcode_7 FROM postcodes WHERE postcode_7 = '" . $postcode_7 . "' LIMIT 1";
 
-$result = mysqli_query($conn, $query1);    
+$result = mysqli_query($conn, $query1);
 
-if (mysqli_num_rows($result) == 0) 
+if (mysqli_num_rows($result) == 0)
 {
 	echo json_encode(array('success'=>false, 'message'=>'Unable to find that postcode in the database.'));
-}	
+}
 else
-{	
+{
 	$row = mysqli_fetch_assoc($result);
 	//$rows['easting'] = $row[0];
 	//$rows['northing'] = $row[1];
 	//$rows['postcode_7'] = $row[2];
 	//$result =  $rows['easting'] . "," . $rows['northing'] . "," . $rows['postcode_7'];
 
-	$query2 = "INSERT INTO pcrequests (postcode_7, hits, source) value('$postcode_7', 1, 'oomap') 
+	$query2 = "INSERT INTO pcrequests (postcode_7, hits, source) value('$postcode_7', 1, 'oomap')
 	ON DUPLICATE KEY UPDATE hits = hits + 1";
 	mysqli_query($conn, $query2);
 	$returnData = array('success'=>true, 'message'=>'', 'easting'=>$row['easting'], 'northing'=>$row['northing'], 'postcode_7'=>$row['postcode_7']);
 	echo json_encode($returnData);
-	//return '(' . json_encode($row) . ")";	
+	//return '(' . json_encode($row) . ")";
 }
 
 ?>

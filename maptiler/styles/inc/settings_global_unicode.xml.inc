@@ -2,5 +2,6 @@
 %fontset-settings;
 <!ENTITY % entities-common SYSTEM "entities.xml.inc">
 %entities-common;
-<!ENTITY prefix "planet2_osm">
-<!ENTITY datasource-settings SYSTEM "db_global.xml.inc">
+<!ENTITY datasource-settings SYSTEM "db.xml.inc">
+<!ENTITY datasource-settings-contours SYSTEM "db_contours.xml.inc">
+<!ENTITY datasource-settings-otf SYSTEM "db_otf.xml.inc">

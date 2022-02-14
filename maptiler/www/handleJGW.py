@@ -1,15 +1,15 @@
 import os, os.path, platform, mapnik
 import math
 import time
+from oomf import *
 
-from oomf import *  #reused functions from oomf.py in same directory
-
-def processRequest(req):
-    path = req.args
+def processRequest(environ):
+    path = environ['QUERY_STRING']
     p = parse_query(path)
-    outf = createJGW(path)
+    if isStr(p):
+        return (p, 'new')
     mapid = p.get('mapid', 'new')
-    return req_write(outf, req, mapid, 'jgw')
+    return createJGW(path), mapid
 
 def createJGW(path):
     import tempfile
@@ -33,7 +33,7 @@ def createJGW(path):
     centre = p['centre']
     clat = int(centre.split(",")[0])
     clon = int(centre.split(",")[1])
-    rotation=float(p['rotation'])
+    rotation=float(p.get('rotation','0'))
 
     projection = mapnik.Projection(EPSG900913)
     wgs84lat = mapnik.Coord(clon, clat).inverse(projection).y
@@ -58,13 +58,14 @@ def createJGW(path):
     TopLeftLat = clat + (MAP_H/2+MAP_NM)*scaleCorrected*math.cos(rotation) - (MAP_W/2+MAP_WM)*scaleCorrected*math.sin(rotation)
     TopLeftLon = clon - (MAP_W/2+MAP_WM)*scaleCorrected*math.cos(rotation) - (MAP_H/2+MAP_NM)*scaleCorrected*math.sin(rotation)
 
-    fworld = tempfile.NamedTemporaryFile(mode='w+')
-    fworld.write(str((paperELon - paperWLon)*math.cos(rotation)/PIXEL_W) + "\n")
-    fworld.write(str((paperELon - paperWLon)*math.sin(rotation)/PIXEL_W) + "\n")
-    fworld.write(str((paperNLat - paperSLat)*math.sin(rotation)/PIXEL_H) + "\n")
-    fworld.write(str((paperSLat - paperNLat)*math.cos(rotation)/PIXEL_H) + "\n")
-    fworld.write(str(TopLeftLon) + "\n")
-    fworld.write(str(TopLeftLat) + "\n")
+    fworld = tempfile.NamedTemporaryFile()
+    jgwString = str((paperELon - paperWLon)*math.cos(rotation)/PIXEL_W) + "\n" + \
+    str((paperELon - paperWLon)*math.sin(rotation)/PIXEL_W) + "\n" + \
+    str((paperNLat - paperSLat)*math.sin(rotation)/PIXEL_H) + "\n" + \
+    str((paperSLat - paperNLat)*math.cos(rotation)/PIXEL_H) + "\n" + \
+    str(TopLeftLon) + "\n" + \
+    str(TopLeftLat) + "\n"
+    fworld.write(jgwString.encode('utf-8'))
     fworld.seek(0)
     return fworld
 
@@ -73,7 +74,7 @@ def test(path):
     if isStr(outf):
         print (outf)
     else:
-        fd = open('test.jgw', 'w')
+        fd = open('test.jgw', 'wb')
         fd.write(outf.read())
         fd.close()
 

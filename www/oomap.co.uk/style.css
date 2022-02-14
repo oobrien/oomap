@@ -39,7 +39,6 @@ h1, h2
 	color: white;
 	background-color: #cc0032;
 	font-variant: small-caps;
-	-moz-border-bottom-right-radius: 80px;
 	border-bottom-right-radius: 80px;
 }
 
@@ -224,7 +223,7 @@ h1, h2
 	right: 0;
 	top: 0;
 	width: 302px;
-	bottom: 325px;
+	bottom: 140px;
 	margin: 0 7px 0 0;
 	padding: 0 1px 12px 1px;
 	overflow: auto;
@@ -266,11 +265,8 @@ h1, h2
 	width: 300px;
 	height: 250px;
 	bottom: 85px;
-	//-moz-border-top-left-radius: 150px;
-	//border-top-left-radius: 150px;
-	//border: 1px solid #006699;
 	text-align: center;
-	vertical-align: center;
+	vertical-align: middle;
 }
 
 #supported
@@ -282,7 +278,7 @@ h1, h2
 	height: 150px;
 	bottom: 65px;
 	text-align: center;
-	vertical-align: center;
+	vertical-align: middle;
 }
 
 #sponsor div { padding: 50px; color: #006699; font-style: italic; font-size: 11px; clear: both; }
@@ -299,7 +295,7 @@ h1, h2
         margin: 10px;
 		padding: 5px 10px;
         width: 278px;
-        height: 70px;
+        height: 105px;
         bottom: 0;
         border: 1px solid #006699;
         text-align: center;
@@ -385,10 +381,63 @@ h1, h2
 	border-top: 3px solid black !IMPORTANT;
 }
 
+#layerMessage
+{
+	font-size: 10px;
+	display: none;
+}
+
+.loading
+{
+    color:red !IMPORTANT;
+}
+
+.grey
+{
+    color:grey !IMPORTANT;
+}
+
+.hidden
+{
+	display: none;
+}
 /* OpenLayers */
 
 .olControlPermalink { position: absolute; left: 0; bottom: 50px; margin: 30px 10px; }
 .olControlPermalink a { font-weight: normal; color: black; font-size: 10px; text-decoration: underline; }
+
+.ol-popup {
+        position: absolute;
+        background-color: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        padding: 5px;
+        border-radius: 10px;
+        border: 1px solid #cccccc;
+        bottom: 12px;
+        left: -50px;
+        min-width: 130px;
+      }
+      .ol-popup:after, .ol-popup:before {
+        top: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+      }
+      .ol-popup:after {
+        border-top-color: white;
+        border-width: 10px;
+        left: 48px;
+        margin-left: -10px;
+      }
+      .ol-popup:before {
+        border-top-color: #cccccc;
+        border-width: 11px;
+        left: 48px;
+        margin-left: -11px;
+      }
 
 @media screen and (min-width: 0px) and (max-width: 800px)
 {
@@ -422,4 +471,27 @@ h1, h2
 @media screen and (min-width: 0px) and (max-width: 950px)
 {
 	#messagePanelHolder { display: none; }
+}
+
+.features
+{
+	mix-blend-mode: multiply;
+}
+/* jQuery-ui edits */
+
+.ui-checkboxradio-radio-label .ui-icon-background {
+	visibility:hidden !important;
+	width: 0px !important;
+	height: 0px !important;
+}
+
+.ui-checkboxradio-radio-label.ui-checkboxradio-checked .ui-icon,
+.ui-checkboxradio-radio-label.ui-checkboxradio-checked:hover .ui-icon {
+	visibility:hidden !important;
+	width: 0px !important;
+	height: 0px !important;
+}
+
+.ui-button {
+	padding: .4em 0.7em !important;
 }

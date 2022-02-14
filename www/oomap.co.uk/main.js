@@ -1,17 +1,55 @@
-proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
+
+import $ from 'jquery';
+import  'jquery-ui-dist/jquery-ui';
+import './lib/jquery.knob.js';
+import './lib/jquery.jqprint-0.31.js';
+import Proj4 from 'proj4';
+import {Map, View} from 'ol';
+import TileLayer from 'ol/layer/Tile';
+import VectorLayer from 'ol/layer/Vector';
+import ImageLayer from 'ol/layer/Image';
+import GeoImageLayer from 'ol-ext/layer/GeoImage';
+import VectorSource from 'ol/source/Vector';
+import Static from 'ol/source/ImageStatic';
+import Feature from 'ol/feature';
+import {OSM, XYZ} from 'ol/source';
+import Select from 'ol/interaction/Select';
+import {Fill, Stroke, Style, Text, Circle, RegularShape} from 'ol/style';
+import {ScaleLine, defaults as defaultControls} from 'ol/control';
+import * as olProj from 'ol/proj';
+import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteractions,} from 'ol/interaction';
+import GPX from 'ol/format/GPX';
+import {Point, Polygon, LineString} from 'ol/geom';
+import {fromExtent as PolyFromExtent} from 'ol/geom/Polygon';
+import {getDistance} from 'ol/sphere';
+import GeoImage from 'ol-ext/source/GeoImage';
+import Overlay from 'ol/Overlay';
+import './lib/jquery-ui.min.css';
+import 'ol/ol.css';
+import './style.css';
+
+Proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
 
 var debug = false;
 
+//Site-specific constants - change these as required:
+var prefix1 = "https://tile.dna-software.co.uk/";
+var prefix2 = "https://tile.dna-software.co.uk/";
+var prefix3 = "https://tile.dna-software.co.uk/";
 var defaultMapTitle = "OpenOrienteeringMap";
 var defaultRaceDescription = "Race instructions";
 
+//var apiServer = "https://overpass-api.de/api/interpreter";
+var apiServer = "https://overpass.kumi.systems/api/interpreter";
+
 var currentID = null;
 var currentNumber = null;
-var topID = 0;
-var topNumber = 1;
+var topID = 0;  //assign features unique ids starting from 0 (start = "S")
+var topNumber = 0; //assign controls unique numbers
 
 var rotAngle = 0;
-var magDec;
+var magDec = null; //magnetic declination for map centre
+const hitTol = 8;	//pixel tolerance when selecting map features
 
 var mapTitle = defaultMapTitle;
 var mapTitleDisplay = mapTitle;
@@ -19,7 +57,9 @@ var raceDescription = defaultRaceDescription;
 var mapStyleID = "streeto-NONE-0";
 var mapStyleIDOnSource;
 var paper;
+var paper_pieces = [];
 var scale;
+var trueScale = 10000;  //scale corrected for latitude, with sensible initial default
 var tips;
 var eventdate = "";
 var fontSizeFromArr;
@@ -27,17 +67,18 @@ var mapID = "new";
 var reqMapID = "new";
 var select;
 var contourSeparation;
+var previewWarning = true;
 
-
-var controlsSF = [];
-var controlsX = [];
-var controlsCP = [];
-var controls = [];
-var dpi=150;
+var dpi=150;  //advanced rendering options & defualt values
 var drives=false;
 var rail=true;
 var walls=true;
 var grid=true;
+var trees=true;
+var hedges=true;
+var fences=true;
+var linear=false;
+var preview=false;
 
 //OpenLayers single-instance objects
 var olMap;
@@ -49,143 +90,289 @@ var layerMapCentre;
 var layerMapSheet;
 var layerMapTitle;
 var layerMapContent;
-var layerSF;
-var layerX;
-var layerCP;
 var layerControls;
+var layerGPX;
+var layerLines;
+var layerPreview;
 var titleFeature;
-var dragControl;
 var sheetCentreLL;
 var newControlLL = [0, 0];
 var mapBound;
 var wgs84Poly;
-var orienteeringAttribution;
+var purple = 'rgba(220, 40, 255, 1)';
+
+const container = document.getElementById('popup');
+const content = document.getElementById('popup-content');
+const overlay = new Overlay({
+  element: container,
+  autoPan: {
+    animation: {
+      duration: 250,
+    },
+  },
+});
 
 //State
 //initialzoom, placepaper, addcontrols
 var state = "initialzoom";
 var controloptstate = "add";
 
-function controlStyle(feature, resolution)
-{
-	return [
-	new ol.style.Style({
-		image: new ol.style.Circle({
-			fill: new ol.style.Fill({ color: 'rgba(255, 0, 255, 1)'}),
-			radius: 2
-		})
-	}),
-	new ol.style.Style({
-		image: new ol.style.Circle ({
-			stroke: new ol.style.Stroke({color: 'rgba(255,0,255,1)', width: 2}),
-			radius: 15
-		}),
-		text: new ol.style.Text({
-			  textAlign: "center",
-			  font: "bold 24px arial, verdana, sans-serif",
-			  text: feature.get('number'),
-			  fill: new ol.style.Fill({color: 'rgba(255,0,255,1)'}),
-			  offsetX: feature.get('xoff'),
-			  offsetY: feature.get('yoff')
-		})
-	})
-]};
+//var x;
+//var list;
 
-var dotStyle = new ol.style.Style({
-});
+let dragAndDropInteraction;
 
-var sfStyle = new ol.style.Style({
-	image: new ol.style.Circle({
-		stroke: new ol.style.Stroke({color: 'rgba(255,0,255,1)', width: 2}),
-		radius: 15
-	}),
-	text: new ol.style.Text({
-          textAlign: "center",
-          font: "bold 15px arial, verdana, sans-serif",
-          text: "S/F",
-          fill: new ol.style.Fill({color: 'rgba(255,0,255,1)'}),
-          offsetX: 0,
-          offsetY: 0
-    })
-});
-
-var sfStyleOuter = new ol.style.Style({
-	image: new ol.style.Circle({
-		stroke: new ol.style.Stroke({color: 'rgba(255,0,255,1)', width: 2}),
-		radius: 20
-	})
-});
-
-var xStyle = new ol.style.Style({
-	image: new ol.style.Circle({
-		stroke: new ol.style.Stroke({color: 'rgba(255,0,0,1)', width: 0.5}),
-		radius: 1
-	}),
-	text: new ol.style.Text({
-          textAlign: "center",
-          baseAlign: "middle",
-          font: "18px arial, verdana, sans-serif",
-          text: "X",
-          fill: new ol.style.Fill({color: 'rgba(255,0,0,1)'}),
-          offsetX: 0,
-          offsetY: 0
-    })
-});
-
-function cpStyle(feature, resolution)
-{
-	return [
-		new ol.style.Style({
-			image: new ol.style.Circle({
-				stroke: new ol.style.Stroke({color: 'rgba(255,0,0,0)', width: 0.5}),
-				radius: 1
-			}),
-			text: new ol.style.Text({
-				  textAlign: "center",
-				  baseAlign: "middle",
-				  font: "18px arial, verdana, sans-serif",
-				  text: "][",
-				  fill: new ol.style.Fill({color: 'rgba(255,0,0,1)'}),
-				  offsetX: 0,
-				  offsetY: 0,
-				  rotation: feature.get('angle')*Math.PI/180
-			})
-		})
-	]
+function setInteraction() {
+  if (dragAndDropInteraction) {
+    olMap.removeInteraction(dragAndDropInteraction);
+  }
+  dragAndDropInteraction = new DragAndDrop({
+    formatConstructors: [GPX, ],
+  });
+  dragAndDropInteraction.on('addfeatures', function (event) {
+    //const vectorSource = new VectorSource({
+    //  features: event.features,
+    //});
+    //layerGPX.setSource(vectorSource);
+    layerGPX.getSource().addFeatures(event.features);
+    olMap.getView().fit(layerGPX.getSource().getExtent());
+    $( "#deleteMarkers" ).button("enable");
+  });
+  olMap.addInteraction(dragAndDropInteraction);
 }
 
-var marginStyle = new ol.style.Style({
-	fill: new ol.style.Fill({ color: [255, 255, 255, 1]})
+
+function controlStyle(feature, resolution)
+{
+	var size = trueScale/(resolution * 16000);
+  var type = feature.getProperties().type;
+  switch(type)
+  {
+  case "c_regular": //control - circle & number
+    return [
+  	new Style({
+  		image: new Circle({
+  			fill: new Fill({ color: purple}),
+  			radius: 10 * size
+  		})
+  	}),
+  	new Style({
+  		image: new Circle ({
+  			stroke: new Stroke({color: purple, width: 10 * size}),
+  			radius: 75 * size
+  		}),
+  		text: new Text({
+  			  textAlign: "center",
+  			  font: 120 * size + "px arial, verdana, sans-serif",
+  			  text: feature.get('number'),
+  			  fill: new Fill({color: purple}),
+  			  offsetX:  5 * size * 35 * Math.sin((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation()),
+  			  offsetY:  5 * size * -35 * Math.cos((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation())
+  		})
+  	})]
+  break;
+  case "c_startfinish": //start/finish - triangle & double circle
+    var boolFinish = layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_finish').length > 0 ;
+    if (boolFinish) //If a finish exists, just draw a triangle. Otherwise add finish circles.
+    {
+      return [
+    		new Style({
+    			image: new RegularShape({
+    				points: 3,
+    				stroke: new Stroke({color: purple, width: 10 * size}),
+    				radius: 110 * size
+    			})
+    		})]
+    }
+    else
+    {
+      return [
+        new Style({
+          image: new RegularShape({
+            points: 3,
+            stroke: new Stroke({color: purple, width: 10 * size}),
+            radius: 110 * size
+          })
+        }),
+        new Style({
+          image: new Circle({
+            stroke: new Stroke({color: purple, width: 10 * size}),
+            radius: 70 * size
+          })
+        }),
+        new Style({
+          image: new Circle({
+            stroke: new Stroke({color: purple, width: 10 * size}),
+            radius: 90 * size
+        })
+      })]
+    }
+    break;
+    case "c_finish": //finish - double circle
+      return [
+    		new Style({
+    			image: new Circle({
+    				stroke: new Stroke({color: purple, width: 10 * size}),
+    				radius: 70 * size
+    			})
+    		}),
+    		new Style({
+    			image: new Circle({
+    				stroke: new Stroke({color: purple, width: 10 * size}),
+    				radius: 90 * size
+        })
+    	})]
+      break;
+    case "c_cross": //text "X"
+      return [
+    	new Style({
+    		text: new Text({
+    			  textAlign: "center",
+    				baseAlign: "middle",
+    			  font: "bold " + 90 * size + "px arial, verdana, sans-serif",
+    			  text: "X",
+    			  fill: new Fill({color: purple}),
+    			  offsetX: 0,
+    			  offsetY: 0
+    		})
+    	})]
+    break;
+    case "c_crossingpoint": //text "]["
+      return [
+    		new Style({
+    			text: new Text({
+    				  textAlign: "center",
+    				  baseAlign: "middle",
+    				  font: 90 * size + "px arial, verdana, sans-serif",
+    				  text: "][",
+    				  fill: new Fill({color: purple}),
+    				  offsetX: 0,
+    				  offsetY: 0,
+    				  rotation: feature.get('angle')*Math.PI/180 + olMap.getView().getRotation()
+    			})
+    		})]
+      break;
+  }
+};
+
+
+function lineStyle(feature, resolution) //Lines between controls
+{
+  const geometry = feature.getGeometry();
+  var size = trueScale/(resolution * 16000);
+  const styles = [];
+  geometry.forEachSegment(function (start, end) {
+     const scale = trueScale/200;
+     const dx = end[0] - start[0];
+     const dy = end[1] - start[1];
+     const rotation = Math.atan2(dy, dx);
+     const start2 = [start[0] + Math.cos(rotation) * scale, start[1] + Math.sin(rotation) * scale]
+     const end2 = [end[0]-Math.cos(rotation) * scale, end[1]-Math.sin(rotation) * scale]
+     // arrows
+     styles.push(
+       new Style({
+         geometry: new LineString([start2,end2]), //shorten lines at ends
+           stroke: new Stroke({
+             color: purple,
+             width: 10 * size,
+           })
+         }),
+       )
+     });
+   return styles;
+};
+
+var dotStyle = new Style({
 });
 
-var sheetStyle  = new ol.style.Style({
-	stroke: new ol.style.Stroke({ color: [0, 0, 0, 1], width: 1})
+var marginStyle = new Style({
+	fill: new Fill({ color: [255, 255, 255, 1]})
+});
+
+var sheetStyle  = new Style({
+	stroke: new Stroke({ color: [0, 0, 0, 1], width: 1})
 });
 
 function titleStyle(feature, resolution)
 {
+	var size = trueScale/(resolution * 16000);
 	return [
-	 new ol.style.Style({
-		text: new ol.style.Text({
+	 new Style({
+		text: new Text({
 			text: feature.get('mapTitleDisplay'),
 			textAlign: "left",
 			textBaseline: "middle",
-          	fill: new ol.style.Fill({color: 'rgba(0,0,0,1)'}),
-			font: "italic " + feature.get('fontSizeFromArr') + "px arial, verdana, sans-serif",
+          	fill: new Fill({color: 'rgba(0,0,0,1)'}),
+			font: "italic " + 150 * size + "px arial, verdana, sans-serif",
           	offsetX: feature.get('xoff'),
           	offsetY: feature.get('yoff'),
 		})
 	})
 ]};
 
+function markerStyle(feature)
+{
+  if (feature.getGeometry().getType() == 'Point') {
+    var markerColor;
+    switch(feature.get('description').substring(0,4)) {
+    case 'Post':
+      markerColor = '#FF0000';
+      break;
+    case 'Lamp':
+      markerColor = '#FFFF22';
+      break;
+    case 'Plaq':
+      markerColor = '#0000CC';
+      break;
+    case 'Benc':
+      markerColor = '#000000';
+      break;
+    case 'Cont':
+      markerColor = '#DD22FF';
+      break;
+    default:
+      markerColor = '#3399CC';
+  }
 
-var contentStyle = new ol.style.Style({ fill: new ol.style.Fill({ color: [200, 200, 200, 0.3]})
+    var fill = new Fill({
+       //color: 'rgba(255,255,255,0.4)'
+       color: markerColor + '40'
+     });
+     var stroke = new Stroke({
+       color: markerColor,
+       width: 1.75
+     });
+     return [
+       new Style({
+        image: new Circle({
+           fill: fill,
+           stroke: stroke,
+           radius: 5
+         }),
+         fill: fill,
+         stroke: stroke
+       })
+     ]
+ }
+ else {
+   return [
+     new Style({
+       stroke: new Stroke({
+         color: 'blue',
+         width: 1.25
+       })
+     })
+   ]
+ }
+};
+
+var contentStyle = new Style({ fill: new Fill({ color: [200, 200, 200, 0.3]})
 
 });
-var centreStyle = new ol.style.Style({
-	image: new ol.style.Circle({
-		stroke: new ol.style.Stroke({color: 'rgba(0,0,255,1)', width: 1}),
-		fill: new ol.style.Stroke({color: 'rgba(0,0,255,0.5)'}),
+var centreStyle = new Style({
+	image: new Circle({
+		stroke: new Stroke({color: 'rgba(0,0,255,1)', width: 1}),
+		fill: new Stroke({color: 'rgba(0,0,255,0.5)'}),
 		radius: 5
 	})
 });
@@ -215,45 +402,51 @@ function setDefaults()
 	}
 }
 
-//var controlsClick  = new OpenLayers.Control.ControlsClick();
-
 /* Initialisation */
 
 function init()
 {
-	$( "#mapstyle" ).buttonset();
+	$( "#mapstyle" ).controlgroup();
 
-	$( "#mapscale" ).buttonset();
-	$( "#papersize" ).buttonset();
-	$( "#paperorientation" ).buttonset();
+	$( "#mapscale" ).controlgroup();
+	$( "#papersize" ).controlgroup();
+	$( "#paperorientation" ).controlgroup();
 
-	$( "#contours" ).buttonset();
+	$( "#contours" ).controlgroup();
 
-	$("#portrait").button( { icons: {primary:'ui-icon-document'} } );
-	$("#landscape").button( { icons: {primary:'ui-icon-document-b'} } );
+	$( "#portrait" ).button( { icons: {primary: 'ui-icon-document'} } );
+	$( "#landscape" ).button( { icons: {primary: 'ui-icon-document-b'} } );
 
-	$( "#c_type" ).buttonset();
-	$( "#c_score" ).buttonset();
+	$( "#c_type" ).controlgroup();
+	$( "#c_score" ).controlgroup();
 
-	$( "#mapstyle input[type=radio]" ).change(handleStyleChange);
-	$( "#mapscale input[type=radio]" ).change(handleOptionChange);
-	$( "#papersize input[type=radio]" ).change(handleOptionChange);
-	$( "#paperorientation input[type=radio]" ).change(handleOptionChange);
-	$( "#c_type input[type=radio]" ).change(handleControlTypeChange);
+	$( "#mapstyle input[type=radio]" ).on('change', handleStyleChange);
+	$( "#mapscale input[type=radio]" ).on('change', handleOptionChange);
+	$( "#papersize input[type=radio]" ).on('change', handleOptionChange);
+	$( "#paperorientation input[type=radio]" ).on('change', handleOptionChange);
+	$( "#c_type input[type=radio]" ).on('change', handleControlTypeChange);
+	$( "#contours input[type=radio]" ).on('change', handleStyleChange);
 
-	$( "#contours input[type=radio]" ).change(handleStyleChange);
-
-	$( "#createmap" ).button({ icons: { primary: "ui-icon-disk" } }).click(function() { handleGenerateMap(); });
-	$( "#getraster" ).button().click(function() { generateMap("jpg"); });
-	$( "#getworldfile" ).button().click(function() {generateMap("jgw"); });
-	$( "#getkmz" ).button().click(function() {generateMap("kmz"); });
-	$( "#getkml" ).button().click(function() {generateKML(); });
-	$( "#opts" ).button().click(function() {handleAdvancedOptions(); });
-	$( "#createclue" ).button().click(function() { handleGenerateClue(); });
-	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteSheet(); });
-	$( "#deleteXs" ).button({ icons: { primary: "ui-icon-trash" } }).click(function() { handleDeleteXs(); });
-	$( "#getPostboxes" ).button({ icons: { primary: "ui-icon-pin-s" } }).click(function() { handleGetPostboxes(); });
-	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).click(function() { handleGetOpenplaques(); });
+	$( "#createmap" ).button({ icons: { primary: "ui-icon-disk" } }).on('click', function() { handleGenerateMap(); });
+	$( "#getraster" ).button().on('click', function() { generateMap("jpg"); });
+	$( "#getworldfile" ).button().on('click', function() {generateMap("jgw"); });
+	$( "#getkmz" ).button().on('click', function() {generateMap("kmz"); });
+	$( "#getkml" ).button().on('click', function() {generateKML(); });
+	$( "#opts" ).button().on('click', function() {handleAdvancedOptions(); });
+	$( "#preview" ).button().on('click', function() {
+    if (previewWarning == false || preview == true) {
+      handlePreview();
+    }
+    else {
+      $('#prevAccept').prop('checked', !previewWarning);
+      $("#prevWarn").dialog('open');
+    }
+  });
+	$( "#createclue" ).button().on('click', function() { handleGenerateClue(); });
+	$( "#deletesheet" ).button({ icons: { primary: "ui-icon-trash" } }).on('click', function() { handleDeleteSheet(); });
+  $( "#deleteMarkers" ).button().on('click', function() { handleDeleteMarkers(); });
+	$( "#getPostboxes" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() {   $( "#pois" ).dialog( "open" ) });
+	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() { handleGetOpenplaques(); });
 
 	$( "#createmap" ).button("disable");
 	$( "#getraster" ).button("disable");
@@ -262,12 +455,27 @@ function init()
 	$( "#getkml" ).button("disable");
 	$( "#createclue" ).button("disable");
 	$( "#deletesheet" ).button("disable");
-	$( "#deleteXs" ).button("disable");
+  $( "#deleteMarkers" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getPlaques" ).button("disable");
+	$( "#preview" ).button("disable");
 
-	$( "#edittitle" ).click(function() { handleTitleEdit(); })
-	$( "#editinstructions" ).click(function() { handleRaceDescriptionEdit(); })
+	$( "#edittitle" ).on('click', function() { handleTitleEdit(); })
+	$( "#editinstructions" ).on('click', function() { handleRaceDescriptionEdit(); })
+  $("#s_poi_key").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
+  $("#s_poi_value").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
+
+  $('#tempLayer').change(function() {
+    if (this.checked) {
+      //$('#c_poi_dist').prop('disabled', true);
+      //$("label[for='c_poi_dist']").addClass( "grey" );
+      $("#layerMessage").show();
+    } else {
+      //$('#c_poi_dist').prop('disabled', false);
+      //$("label[for='c_poi_dist']").removeClass( "grey" );
+      $("#layerMessage").hide();
+    }
+  });
 
 	$( "#eventdate").datepicker({
 		dateFormat: "D d M yy",
@@ -277,6 +485,11 @@ function init()
 
     tips = $( ".validateTips" );
 
+    $('#about').click(function(event) {
+      event.preventDefault();
+      $("#welcome").dialog('open');
+    });
+
 	setDefaults();
 
 	var currentLat = 51.1;
@@ -284,25 +497,7 @@ function init()
 	var currentZoom = 4;
 	var minZoom = 1;
 
-	if (country == "ioa")
-	{
-		minZoom = 1;
-		mapStyleID = "streeto-NONE-0";
-	}
-	if (country == "dk")
-	{
-		minZoom = 1;
-		mapStyleID = "streeto-NONE-0";
-	}
-	if (country == "bof")
-	{
-		minZoom = 1;
-		mapStyleID = "streeto-OS-10";
-	}
-	if (country == "blueprint")
-	{
-		mapStyleID = "blueprint-NONE-0";
-	}
+	mapStyleID = "streeto-LIDAR-5";
 
 	if (args['zoom'])
 	{
@@ -310,10 +505,7 @@ function init()
 	}
 	else
 	{
-		if (country == "ioa" || country == "bof" || country == "dk")
-		{
 			currentZoom = 8;
-		}
 	}
 	if (args['lat'] && args['lon'])
 	{
@@ -322,76 +514,78 @@ function init()
 	}
 	else
 	{
-		if (country == "ioa")
-		{
-			currentLat = 52.9;
-			currentLon = -8.3;
-		}
-		else if (country == "dk")
-		{
-			currentLat = 56.1;
-			currentLon = 10.8;
-		}
-		else if (country == "bof")
-		{
-			currentLat = 51.8;
-			currentLon = -0.9;
-		}
+		currentLat = 51.8;
+		currentLon = -0.9;
 	}
 	if (args['mapID'])
 	{
 		reqMapID = args['mapID'];
 	}
 
- 	layerMapnik = new ol.layer.Tile({ title: "OpenStreetMap", source: new ol.source.OSM({ "wrapX": true})});
-	layerOrienteering = new ol.layer.Tile({opacity: 1, zIndex: 1});
-	layerMapBorder = new ol.layer.Vector({ title: "mapborder", style: marginStyle, source: new ol.source.Vector({}) , zIndex: 2});
-	layerMapCentre = new ol.layer.Vector({ title: "mapcentre", style: centreStyle, source: new ol.source.Vector({}) , zIndex: 2});
-	layerMapSheet = new ol.layer.Vector({ title: "mapsheet", style: sheetStyle, source: new ol.source.Vector({}), zIndex: 2});
-	layerMapTitle = new ol.layer.Vector({ title: "maptitle", style: titleStyle, source: new ol.source.Vector({}) , zIndex: 2});
-	layerMapContent = new ol.layer.Vector({ title: "mapcontent", style: contentStyle, source: new ol.source.Vector({}) });
-	layerSF = new ol.layer.Vector({ title: "controlsSF", style: [ sfStyle, sfStyleOuter], source: new ol.source.Vector({}) });
-	layerX = new ol.layer.Vector({ title: "controlsX", style: xStyle, source: new ol.source.Vector({}) });
-	layerCP = new ol.layer.Vector({ title: "controlsCP", style: cpStyle, source: new ol.source.Vector({}) });
-	layerControls = new ol.layer.Vector({ title: "controls", style: controlStyle, source: new ol.source.Vector({})});
+ 	layerMapnik = new TileLayer({ title: "OpenStreetMap", source: new OSM({
+		"wrapX": true,
+		attributions: [
+			'Alt-Shift-Drag to rotate. Try drag & dropping a GPX file!<br>',
+      '&#169; ' +
+          '<a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> ' +
+          'contributors.',
+		],
+		crossOrigin: null
+	})});
 
-	orienteeringAttribution = new ol.Attribution({ 'html': 'Copyright OpenStreetMap contributors and OS Crown Copyright & Database Right Ordnance Survey 2016.'});
+    const sourceMB = new VectorSource({});
+    const sourceMC = new VectorSource({});
+    const sourceMS = new VectorSource({});
+    const sourceMT = new VectorSource({});
+    const sourceContent = new VectorSource({});
+    const sourceCons = new VectorSource({});
+    const sourceLines = new VectorSource({});
+    const sourceGPX = new VectorSource({});
+
+  layerOrienteering = new TileLayer({opacity: 1, zIndex: 1, className: 'features'});
+	layerMapBorder = new VectorLayer({ title: "mapborder", style: marginStyle, source: sourceMB, zIndex: 2,
+    updateWhileAnimating: true});
+	layerMapCentre = new VectorLayer({ title: "mapcentre", style: centreStyle, source: sourceMC, zIndex: 4});
+	layerMapSheet = new VectorLayer({ title: "mapsheet", style: sheetStyle, source: sourceMS, zIndex: 2,
+    updateWhileAnimating: true});
+	layerMapTitle = new VectorLayer({ title: "maptitle", style: titleStyle, source: sourceMT, zIndex: 2,
+    updateWhileAnimating: true});
+	layerMapContent = new VectorLayer({ title: "mapcontent", style: contentStyle, source: sourceContent });
+	layerControls = new VectorLayer({ title: "controls", style: controlStyle, source: sourceCons, className: 'features',
+    updateWhileAnimating: true, zIndex: 4});
+  layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 4 });
+  layerPreview = new ImageLayer({ name: "Georef",  zIndex: 3});
+  layerGPX = new VectorLayer({ title: "GPX", style: markerStyle, source: sourceGPX, zIndex: 4 });
+
+  //layerPreview = new GeoImageLayer({title: "preview", visible: true, zIndex: 3});
 
 	if (args['mapStyleID'])
 	{
 		mapStyleID = args['mapStyleID'];
  	}
 	$('#' + mapStyleID.split("-")[0]).prop('checked', true);
-	$('#mapstyle').buttonset('refresh');
+	$('#mapstyle').controlgroup('refresh');
 	$('#' + mapStyleID.split("-")[1]+"-"+mapStyleID.split("-")[2]).prop('checked', true);
-	$('#contours').buttonset('refresh');
- 	var theRestrictedExtent = undefined;
- 	if (country == "ioa" || country == "bof")
-	{
- 		//theRestrictedExtent = ol.proj.transformExtent([-12, 47, 8, 63], "EPSG:4326", "EPSG:3857");
-	}
- 	if (country == "dk")
-	{
- 		theRestrictedExtent = ol.proj.transformExtent([7, 53, 13, 59], "EPSG:4326", "EPSG:3857");
-	}
+	$('#contours').controlgroup('refresh');
 
-	if (country == "blueprint")
+	if (mapStyleID.split("-")[0] == "blueprint")
 	{
 		mapTitle = "Blueprint";
 	}
 
-	select = new ol.interaction.Select({
-		layers: [layerMapCentre]
+	select = new Select({
+		layers: [layerMapCentre, layerControls, layerGPX],
+    hitTolerance: hitTol,
 	});
 
-     var translate = new ol.interaction.Translate({
-   			features: select.getFeatures()
-   	   });
+	var translate = new Translate({
+    layers: [layerMapCentre, layerControls],
+  	//features: select.getFeatures()
+	});
 
-   	 translate.on('translateend', handleDrag)
+	translate.on('translateend', handleDrag)
 
-
-	olMap = new ol.Map(
+	olMap = new Map(
 	{
 		target: "map",
 		layers:
@@ -400,28 +594,50 @@ function init()
 			layerOrienteering,
 	  		layerMapBorder,
 	  		layerMapContent,
-	  		layerMapSheet,
+  		  layerMapSheet,
 	  		layerMapTitle,
 	  		layerMapCentre,
-	  		layerSF,
-	  		layerX,
-	  		layerCP,
-	  		layerControls
+	  		layerControls,
+        layerLines,
+        layerPreview,
+        layerGPX
 		],
-
-		controls: ol.control.defaults({ }).extend(
+    overlays: [overlay],
+		controls: defaultControls({rotateOptions: {
+      label: "M",
+      autoHide: false,
+      tipLabel: "M: To Mag North / N: to True North",
+      resetNorth: function()
+      {
+        if (magDec == null) { //If no mag N details available, look up.
+          var coords = olMap.getView().getCenter();
+          //Use view centre unless sheet has been placed.
+          if (state != 'initialzoom' && state != 'placepaper') { coords = sheetCentreLL; }
+          lookupMag(olProj.transform(coords, "EPSG:3857", "EPSG:4326")[1],olProj.transform(coords, "EPSG:3857", "EPSG:4326")[0]);
+          this.label_.innerHTML = 'N';
+        }
+        else if (Math.PI - Math.abs(Math.abs((-magDec * Math.PI/180) - olMap.getView().getRotation()) - Math.PI) > 0.016) { //If mag N available, and not current orientation, change to Mag N
+          olMap.getView().setRotation(-magDec * Math.PI/180);
+          this.label_.innerHTML = 'N';
+        }
+        else {  //Otherwise rotate to True N
+          olMap.getView().setRotation(0);
+                    this.label_.innerHTML = 'M';
+        }
+      }
+    } }).extend(
 		[
-			new ol.control.ScaleLine({'geodesic': true, 'units': 'metric'})
+			new ScaleLine({'geodesic': true, 'units': 'metric'})
 		]),
-		view: new ol.View({
+		view: new View({
 			projection: "EPSG:3857",
 			maxZoom: 20,
 			minZoom: minZoom,
 			zoom: currentZoom,
-			center: ol.proj.transform([currentLon, currentLat], "EPSG:4326", "EPSG:3857"),
-			extent: theRestrictedExtent
+			center: olProj.transform([currentLon, currentLat], "EPSG:4326", "EPSG:3857"),
+      constrainRotation: false
 		}),
-		interactions: ol.interaction.defaults().extend([select, translate]),
+		interactions: defaultInteractions().extend([select, translate]),
 	});
 
  	olMap.getView().on('change:resolution', handleZoom);
@@ -430,32 +646,39 @@ function init()
 	olMap.on("singleclick", function(evt) {
 		handleClick(evt);
 	});
+  olMap.on("dblclick", function(evt) {
+    handleDblClick(evt);
+	});
+
+  let selected = null;
+  olMap.on('pointermove', function (evt) {
+    if (selected !== null) {
+      selected = null;
+    }
+
+    olMap.forEachFeatureAtPixel(evt.pixel, function (f) {
+      selected = f;
+      return true;
+    });
+
+    if (selected) {
+      content.innerHTML = selected.get('description');
+      overlay.setPosition(evt.coordinate);
+    } else {
+      overlay.setPosition(undefined);
+    }
+  });
 
 	olMap.getView().on('propertychange', handleRotate);
 
-	/* TODO - interactions here with both the sheetCentre control (drag it) and the controls themselves (bring up box)
-	dragControl = new OpenLayers.Control.DragFeature(layerMapCentre, {
-		onComplete: function(feature, pixel) {
-			dragControl.deactivate();
-			sheetCentreLL = [feature.geometry.getCentroid().x, feature.geometry.getCentroid().y];
-			rebuildMapSheet();
-		}
-	});
-	map.addControl(dragControl);
-	dragControl.activate();
-
-	map.addControl(controlsClick);
-	controlsClick.activate();
-	*/
-
-
+	setInteraction();  //Activate listener for GPX loading
 
 	handleZoom();
 	updateUrl();
 	initDescriptions();
-	if(!!document.createElement('canvas').getContext)
-	{
-		$( ".knob" ).knob({
+	//if(!document.createElement('canvas').getContext)
+	//{
+	$( ".knob" ).knob({
 		'width':65,
 		'fgColor':"#222222",
 		'cursor':30,
@@ -464,32 +687,29 @@ function init()
 		'max':360,
 		'height':65,
 		'release' : function (v) { }
-		});
-	}
+	});
+	//}
 	var c_number = $( "#c_number" ),
-      allFields = $( [] ).add( c_number );
+  allFields = $( [] ).add( c_number );
 
-    function checkNumber( o, n, type )
-    {
-    	if (type == "c_startfinish" || type == "c_cross" || type == "c_crossingpoint")
-    	{
-    		return true;
-    	}
-
+  function checkNumber( o, n, type )
+  {
+  	if (type == "c_startfinish" ||type == "c_finish" || type == "c_cross" || type == "c_crossingpoint")
+  	{
+  		return true;
+  	}
 		if (o.val() == null || o.val().length < 1)
 		{
 			o.addClass( "ui-state-error" );
 			updateTips( "You must enter a number." );
 			return false;
 		}
-		for(var i = 0; i < controls.length; i++)
+		if (o.val() != currentNumber &&
+			layerControls.getSource().getFeatures().filter(feat=>feat.get('number')==o.val()).length > 0)
 		{
-			if (o.val() == controls[i].number && o.val() != currentNumber)
-			{
-				o.addClass( "ui-state-error" );
-				updateTips( "This number has already been used." );
-				return false;
-			}
+			o.addClass( "ui-state-error" );
+			updateTips( "This number has already been used." );
+			return false;
 		}
 		return true;
 	}
@@ -497,121 +717,82 @@ function init()
 	$( "#newcontroloptions" ).dialog({
 	  autoOpen: false,
 	  height: 370,
-	  width: 550,
+	  width: 610,
 	  modal: true,
 	  buttons: {
-		OK: function() {
+      Delete: function() {
+        handleControlDelete('d'+currentID);
+        $( this ).dialog( "close" );
+      },
+      OK: function() {
+
 		  var bValid = true;
 		  allFields.removeClass( "ui-state-error" );
 
 		  bValid = bValid && checkNumber( c_number, "Number", $("#c_type :radio:checked").attr("id"));
 
 		  if ( bValid ) {
-		  	var control = new Object();
 
-		  	control.id = topID++;
-
-		  	control.number = c_number.val();
-			if (!isNaN(parseInt(control.number)))
-			{
-				control.number = parseInt(control.number);
-				if (control.number > topNumber)
+				var newNumber = c_number.val();
+				if (!isNaN(parseInt(newNumber)) && $("#c_type :radio:checked").attr("id") == "c_regular")
 				{
-					topNumber = control.number;
+					newNumber = parseInt(newNumber);
+					if (newNumber > topNumber) {	topNumber = newNumber; }
 				}
-			}
+				var control = new Feature({
+					geometry: new Point(newControlLL),
+					number: "" + newNumber,
+					angle: parseInt($("#c_angle").val()),
+					type: $("#c_type :radio:checked").attr("id"),
+					score: parseInt($("#c_score :radio:checked").val()),
+					description: $('<div>').text($("#c_description").val()).html()
+				});
 
-		  	control.angle = $("#c_angle").val();
-			control.angle = parseInt(control.angle);
-
-			control.score = $("#c_score :radio:checked").val();
-			control.score = parseInt(control.score);
-			//control.score_id = $("#c_score :radio:checked").attr("id");
-
-			control.type = $("#c_type :radio:checked").attr("id");
-
-			control.description = $("#c_description").val();
-
-			control.lat = newControlLL[1];
-			control.lon = newControlLL[0];
-
-			control.wgs84lat = ol.proj.transform([control.lon, control.lat], "EPSG:3857", "EPSG:4326")[1];
-			control.wgs84lon = ol.proj.transform([control.lon, control.lat], "EPSG:3857", "EPSG:4326")[0];
-
-			if (control.type == "c_startfinish")
-			{
-				control.score = 0;
-
-				//Delete any existing S/F control
-				controlsSF = [];
-				controlsSF.push(control);
-  			}
-  			else if (control.type == "c_cross")
-  			{
-  				if (controloptstate == "new")
-  				{
-  					controlsX.push(control);
-				}
-				else if (controloptstate == "edit")
+				if (control.get('type') == "c_startfinish")
 				{
-					for (var i = 0; i < controlsX.length; i++)
+					control.set('score', 0);
+					control.setId('S');
+					control.set('id', 'S');
+					if (layerControls.getSource().getFeatureById('S')) 	//Delete any old starts
 					{
-						if (currentID == controlsX[i].id)
-						{
-							controlsX[i] = control;
-						}
+						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById('S'))
+					}
+	  		}
+        else 	if (control.get('type') == "c_finish")
+				{
+					control.set('score', 0);
+					control.setId('F');
+					control.set('id', 'F');
+					if (layerControls.getSource().getFeatureById('F')) 	//Delete any old starts
+					{
+						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById('F'))
+					}
+	  		}
+				else
+				{
+					control.set('id', topID);
+					control.setId(topID++);
+
+					if (controloptstate == "edit")	{	//delete old point if being edited
+						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById(currentID))
 					}
 				}
-  			}
-  			else if (control.type == "c_crossingpoint")
-  			{
-  				if (controloptstate == "new")
-  				{
-  					controlsCP.push(control);
-				}
-				else if (controloptstate == "edit")
+				layerControls.getSource().addFeature(control); //add new control
+
+				if (mapID != "new")
 				{
-					for (var i = 0; i < controlsCP.length; i++)
-					{
-						if (currentID == controlsCP[i].id)
-						{
-							controlsCP[i] = control;
-						}
-					}
+					mapID = "new";
+					updateUrl();
 				}
-  			}
-  			else
-  			{
-  				if (controloptstate == "new")
-  				{
-  					controls.push(control);
-				}
-				else if (controloptstate == "edit")
-				{
-					for (var i = 0; i < controls.length; i++)
-					{
-						if (currentID == controls[i].id)
-						{
-							controls[i] = control;
-						}
-					}
-				}
-  			}
 
-			if (mapID != "new")
-			{
-				mapID = "new";
-				updateUrl();
-			}
+				$( "#getraster" ).button("disable");
+				$( "#getworldfile" ).button("disable");
+				$( "#getkmz" ).button("disable");
 
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
+			  	rebuildMapControls();
+			  	rebuildDescriptions();
 
-		  	rebuildMapControls();
-		  	rebuildDescriptions();
-
-			$( this ).dialog( "close" );
+				$( this ).dialog( "close" );
 		  }
 		},
 		Cancel: function() {
@@ -626,21 +807,47 @@ function init()
 	  width: 550,
 	  modal: true,
 	  buttons: {
-		OK: function() {
-			rail = $('#rail').is(':checked');
-			grid = $('#grid').is(':checked');
-			drives = $('#drive').is(':checked');
-			walls = $('#wall').is(':checked');
-			dpi = parseInt($('#dpi').val());
-			if (isNaN(dpi)) { dpi = 150; }
+			OK: function() {
+				rail = $('#rail').is(':checked');
+				grid = $('#grid').is(':checked');
+				drives = $('#drive').is(':checked');
+				walls = $('#wall').is(':checked');
+				trees = $('#tree').is(':checked');
+				hedges = $('#hedges').is(':checked');
+				fences = $('#fence').is(':checked');
+        linear = $('#linear').is(':checked');
+        layerLines.setVisible(linear);
+        if(linear){
+          $(".scorecol").addClass('hidden');
+          rebuildDescriptions();
+        }
+				dpi = parseInt($('#dpi').val());
+				if (isNaN(dpi)) { dpi = 150; }
 
-			$( this ).dialog( "close" );
-		},
-		Cancel: function() {
-		  $( this ).dialog( "close" );
-		}
+				$( this ).dialog( "close" );
+			},
+			Cancel: function() {
+			  $( this ).dialog( "close" );
+			}
 	  }
 	});
+
+  $( "#prevWarn" ).dialog({
+    autoOpen: false,
+    height: 300,
+    width: 550,
+    modal: true,
+    buttons: {
+      OK: function() {
+        previewWarning = !$('#prevAccept').is(':checked');
+        handlePreview();
+        $( this ).dialog( "close" );
+      },
+      Cancel: function() {
+        $( this ).dialog( "close" );
+      }
+    }
+  });
 
 	$( "#setmaptitle" ).dialog({
 	  autoOpen: false,
@@ -672,13 +879,13 @@ function init()
 		Cancel: function() {
 		  $( this ).dialog( "close" );
 		}
-	  }
+  }
 	});
 
 	$( "#setracedescription" ).dialog({
 	  autoOpen: false,
 	  height: 350,
-	  width: 700,
+	  width: 845,
 	  modal: true,
 	  buttons: {
 		OK: function()
@@ -832,24 +1039,44 @@ function init()
 	  autoOpen: true,
 	  width: 760,
 	  modal: true,
-	  buttons: {
-		"      OK      ": function() {
-		  $( this ).dialog( "close" );
-		}
-	  }
+	  buttons:  [ { text: "Ok", click: function() { $( this ).dialog( "close" ); } } ]
 	});
 
+  $( "#pois" ).dialog({
+    autoOpen: false,
+    height: 440,
+    width: 530,
+    modal: true,
+    buttons: {
+      OK: function() {
+        var rVal = $("input[name='c_pois']:checked").val().split(",");
+        if (rVal[0]=='custom')
+        {
+          rVal = [ $("input[name='poi_key']").val() + "=" +  $("input[name='poi_value']").val(),$("input[name='poi_value']").val() + ': ','name', ''];
+        }
+        //rVal = [key=value, description prefix, field for description, sort field]
+        rVal.push(parseInt($("input[name='poi_dist']").val()));
+        rVal.push($("#tempLayer").prop('checked'));
+        if (debug) {console.log(rVal);}
+        handleGetPois(rVal);
+        $( this ).dialog( "close" );
+      },
+      Cancel: function() {
+        $( this ).dialog( "close" );
+      }
+    }
+  });
 
-	$("#search").submit(function() { handleSearchPostcode(); return false });
-	$("#load").submit(function() { handleLoadMap(); return false; });
+	$("#search").on('submit', function() { handleSearchPostcode(); return false });
+	$("#load").on('submit', function() { handleLoadMap(); return false; });
 
-	$( "#searchButton" ).button().css('font-size', 10);
-	$( "#loadButton" ).button().css('font-size', 10);
+	$( "#searchButton" ).button().css('font-size', '10px');
+	$( "#loadButton" ).button().css('font-size', '10px');
 
 	//Handle loading in a map with ID.
 	if (reqMapID != "new")
 	{
-		$.post('/load.php', {"shortcode":reqMapID}, handleLoadCallback);
+		$.post('/php/load.php', {"shortcode":reqMapID}, handleLoadCallback);
 	}
 
 }
@@ -882,35 +1109,32 @@ function resetControlAddDialog(pid)
 	$("#c_number").removeAttr('disabled');
 	$("#c_description").removeAttr('disabled');
 
-	$('[for=c_regular]').click(); //Overlying label
-	$("#c_regular").click(); //Underlying button
+  $("#c_regular").prop("checked", true);
+  $('#c_type').controlgroup('refresh');
 
+	//set dialog defaults:
+	$("#c_angle").val(45).trigger('change');
+	//$("#c_score").val(10); //Don't change this - useful to keep current value.
+	$("#c_number").val(""+(topNumber+1));
+	$("#c_description").val("");
+
+	//override defaults if control id specified and it exists
 	if (pid != null)
 	{
-		var control;
-		for (var i = 0; i < controls.length; i++)
+		var control = layerControls.getSource().getFeatureById(pid.substring(1));
+		if(control)
 		{
-			if (controls[i].id == parseInt(pid.substring(1)))
-			{
-				control = controls[i];
-				break;
-			}
+			$("#c_angle").val(control.get('angle')).trigger('change');
+			$('[for=c_score' + control.get('score') + ']').trigger( "click" ); //Overlying label
+			$("#c_score" + control.get('score')).trigger( "click" ); //Underlying button
+			$("#c_number").val(control.get('number'));
+			$("#c_description").val(control.get('description'));
+      //$("[for=" + control.get('type') + "]").trigger( "click" ); //Overlying label
+      //$("#" + control.get('type')).trigger( "click" ); //Underlying button
+      $("#" + control.get('type')).prop("checked", true);
+      $('#c_type').controlgroup('refresh');
+			newControlLL = control.getGeometry().getFirstCoordinate();
 		}
-		$("#c_angle").val(control.angle).trigger('change');
-
-		$('[for=c_score' + control.score + ']').click(); //Overlying label
-		$("#c_score" + control.score).click(); //Underlying button
-		$("#c_number").val(control.number);
-		$("#c_description").val(control.description);
-
-		newControlLL = [control.lon, control.lat];
-	}
-	else
-	{
-		$("#c_angle").val(45).trigger('change');
-		//$("#c_score").val(10); //Don't change this - useful to keep current value.
-		$("#c_number").val("");
-		$("#c_description").val("");
 	}
 }
 
@@ -920,7 +1144,7 @@ function handleControlTypeChange()
 {
 	var type = $("#c_type :radio:checked").attr("id");
 
-	if (type == "c_startfinish" || type == "c_cross")
+	if (type == "c_startfinish" || type == "c_cross" || type == "c_finish")
 	{
 		$("#anglelabel").html('<br />&nbsp;');
 		$("#c_angle").val(45).trigger('change');
@@ -939,7 +1163,7 @@ function handleControlTypeChange()
 	}
 
 
-	if (type == "c_startfinish" || type == "c_cross" || type == "c_crossingpoint")
+	if (type == "c_startfinish" || type == "c_finish" || type == "c_cross" || type == "c_crossingpoint")
 	{
 		//$("#c_score").val(10); //Don't change this - useful to keep current value.
 		$("#c_number").val("");
@@ -961,30 +1185,36 @@ function handleStyleChange()
 {
 	mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
 	handleZoom();
-	updateUrl();
+  if (mapID != "new")
+	{
+		mapID = "new";
+		updateUrl();
+	}
+
 }
 
 function handleRotate()
 {
-	console.log('handleRotate');
-	if (!olMap)
+	if(debug) {console.log('handleRotate');}
+	if (!olMap || state == "initialzoom" || state == "placepaper")
 	{
 		return;
 	}
 	try {
-		var angle = this.getRotation();
-  	if (angle != rotAngle) {
-			if (Math.abs(angle)>Math.PI/4){
+		var angle = olMap.getView().getRotation();
+  	if (angle != rotAngle) { //if map rotation is different from previous rotation
+			if (Math.abs(angle)>Math.PI/4){  //If >45 rotation, rotate mapsheet 90deg backwards - N is always in top sector.
 				var orient;
 				if ($("#portrait").prop('checked')) {orient="landscape"}
 				else {orient="portrait"}
-				$("#" + orient).click();
-				$("[for=" + orient + "]").click();
-				if(angle>0) {angle=angle-Math.PI/2}
+				$("#" + orient).trigger( "click" );
+				$("[for=" + orient + "]").trigger( "click" );
+        if (angle>0) { angle=angle-Math.PI/2;  }
 				else {angle=angle+Math.PI/2}
-				this.setRotation(angle);
+				olMap.getView().setRotation(angle);
 			}
-			rebuildMapSheet();
+      //rotAngle = angle;
+			rebuildMapSheet();   //reposition map sheet so it remains horizontal
 			rebuildMapControls();
 		}
 	}
@@ -1004,21 +1234,16 @@ function handleZoom()
 	$( "#getworldfile" ).button("disable");
 	$( "#getkmz" ).button("disable");
 	$( "#deletesheet" ).button("disable");
-	$( "#deleteXs" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
-
-	if (controlsX.length > 0 || controlsCP.length > 0)
-	{
-		$( "#deleteXs" ).button("enable");
-	}
+  	$( "#preview" ).button("disable");
 
 /*	if (olMap.getView().getZoom() != parseInt(olMap.getView().getZoom()))
 	{
 		olMap.getView().setZoom(Math.round(olMap.getView().getZoom()));
 	}
 */
-	if (olMap.getView().getZoom() < 12)
+	if (olMap.getView().getZoom() < 12)	//if zoomed out, hide contours, and don't allow drawing
 	{
 		if (state == "placepaper")
 		{
@@ -1033,8 +1258,7 @@ function handleZoom()
 			$("#messageZoom").show("pulsate", {}, 500);
 			rebuildMapSheet();
 		}
-		layerMapnik.setVisible(true);
-		layerOrienteering.setVisible(false);
+		layerOrienteering.setVisible(false); //hide contours
 	}
 	else
 	{
@@ -1058,22 +1282,15 @@ function handleZoom()
 			$("#messageCentre").hide();
 			rebuildMapSheet();
 		}
-		if (country == "blueprint")
-		{
-			mapStyleID = "blueprint-NONE-0";
-		}
-		else
-		{
-			mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
-		}
+		mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
 
 		if (mapStyleIDOnSource != mapStyleID)
 		{
 			layerOrienteering.setSource(
-				new ol.source.XYZ(
+				new XYZ(
 					{
 						urls: [prefix1 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix2 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix3 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png"],
-						attributions: [ orienteeringAttribution ],
+						attributions: ['Contours: various - see PDF output', ],
 						"wrapX": true
 					}
 				)
@@ -1081,9 +1298,7 @@ function handleZoom()
 			mapStyleIDOnSource = mapStyleID;
 
 		}
-//		layerMapnik.setVisible(false);
-//		layerOrienteering.setVisible(true);
-		layerMapnik.setVisible(true);	//Use standard slippy map for all zoom levels; keep old code for now.
+
 		if(mapStyleID.split("-")[1] == "SRTM" || mapStyleID.split("-")[1] == "NONE" || mapStyleID.split("-")[1] == "COPE")
 		{
 			layerOrienteering.setVisible(false);
@@ -1092,26 +1307,23 @@ function handleZoom()
 		{
 			layerOrienteering.setVisible(true);
 		}
-	//updateUrl();
 }
 }
 
 function handleControlEditOptions(pid)
 {
 			controloptstate = "edit";
-			currentID = parseInt(pid.substring(1));
+      //currentID = parseInt(pid.substring(1)); //remove the 'e' prefix
+			currentID = pid.substring(1); //remove the 'e' prefix
 			currentNumber = null;
-			for (var i = 0; i < controls.length; i++)
+			var control = layerControls.getSource().getFeatureById(currentID);
+			if (control)
 			{
-				var control = controls[i];
-				if (control.id == currentID)
-				{
-					currentNumber = control.number;
-					newControlLL = [control.lon, control.lat];
-					break;
-				}
+					currentNumber = parseInt(control.get('number'));
+					newControlLL = control.getGeometry().getFirstCoordinate();
 			}
-			$( "#newcontroloptions" ).dialog( "open" );
+      $('.ui-dialog-buttonpane button:contains("Delete")').button().show();
+      $( "#newcontroloptions" ).dialog( "open");
 			resetControlAddDialog(pid);
 }
 
@@ -1121,50 +1333,45 @@ function handleAdvancedOptions(pid)
 			$('#grid').prop('checked', grid);
 			$('#drive').prop('checked', drives);
 			$('#wall').prop('checked', walls);
+			$('#tree').prop('checked', trees);
+			$('#hedges').prop('checked', hedges);
+			$('#fence').prop('checked', fences);
+      $('#linear').prop('checked', linear);
 			$('#dpi').val(dpi);
 			$( "#advanced" ).dialog( "open" );
 }
 
-function handleControlDelete(pid)
+function handleControlDelete(pid)  //pid = "d<n>"
 {
-	currentID = parseInt(pid.substring(1));
-	for (var i = 0; i < controls.length; i++)
+	currentID = pid.substring(1); //strip "d" prefix
+  var control = layerControls.getSource().getFeatureById(currentID);
+	if (control)
 	{
-		if (currentID == controls[i].id)
-		{
-			controls.splice(i, 1);
-			break;
-		}
+		layerControls.getSource().removeFeature(control)
 	}
-	for (var i = 0; i < controlsX.length; i++)
-	{
-		if (currentID == controlsX[i].id)
-		{
-			controlsX.splice(i, 1);
-			break;
-		}
-	}
-	for (var i = 0; i < controlsCP.length; i++)
-	{
-		if (currentID == controlsCP[i].id)
-		{
-			controlsCP.splice(i, 1);
-			break;
-		}
-	}
+  controlsChanged();
+}
 
-	if (mapID != "new")
-	{
-		mapID = "new";
-		updateUrl();
-	}
+function controlsChanged()
+{
+  if (mapID != "new")
+  {
+    mapID = "new";
+    updateUrl();
+  }
 
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
+  $( "#getraster" ).button("disable");
+  $( "#getworldfile" ).button("disable");
+  $( "#getkmz" ).button("disable");
 
-	rebuildMapControls();
-	rebuildDescriptions();
+  rebuildMapControls();
+  rebuildDescriptions();
+}
+
+function handleDeleteMarkers()
+{
+  layerGPX.getSource().clear();
+  $( "#deleteMarkers" ).button("disable");
 }
 
 function handleDeleteSheet()
@@ -1174,51 +1381,22 @@ function handleDeleteSheet()
 	layerMapSheet.getSource().clear();
 	layerMapTitle.getSource().clear();
 	layerMapContent.getSource().clear();
-
-	controls = [];
-	controlsSF = [];
-	controlsX = [];
-	controlsCP = [];
+	layerControls.getSource().clear();
 
 	topID = 0;
-	topNumber = 1;
+	topNumber = 0;
 	magDec = undefined;
 
-	rebuildMapControls();
-	rebuildDescriptions();
-	state = "initialzoom";
+  controlsChanged();
+  layerPreview.setSource();
+  preview=false;
+  state = "initialzoom";
 	handleZoom();
-
-	if (mapID != "new")
-	{
-		mapID = "new";
-	}
-	updateUrl();
-
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
 
 	$( "#deletesheet" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
-}
-
-function handleDeleteXs()
-{
-	if (mapID != "new")
-	{
-		mapID = "new";
-		updateUrl();
-	}
-	controlsX = [];
-	controlsCP = [];
-	rebuildMapControls();
-	$( "#deleteXs" ).button("disable");
-
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
+  $( "#preview" ).button("disable");
 }
 
 function handleTitleEdit()
@@ -1238,7 +1416,7 @@ function handleRaceDescriptionEdit()
 function handleLoadMap()
 {
 	reqMapID = $("#savedMapID").val();
-	$.post('/load.php', {"shortcode":reqMapID}, handleLoadCallback);
+	$.post('/php/load.php', {"shortcode":reqMapID}, handleLoadCallback);
 }
 
 function handleGenerateMap()
@@ -1266,11 +1444,12 @@ function validate()
 		validationMsg += "Race instructions not changed from default.<br />";
 	}
 
-	var currScore = 0;
+  var controls = getSortedControls('c_regular');
+  var currScore = 0;
 	for (var i = 0; i < controls.length; i++)
 	{
 		var control = controls[i];
-		if (control.score < currScore)
+		if (control.score < currScore) //Assumes controls are sorted by number!
 		{
 			validationMsg += "One or more controls with higher number but lower score.<br />";
 			break;
@@ -1282,7 +1461,7 @@ function validate()
 	for (var i = 0; i < controls.length; i++)
 	{
 		var control = controls[i];
-		if ($.inArray(control.number, controlNumbers) > -1 && control.type != "c_startfinish" && control.type != "c_cross" &&  control.type != "c_crossingpoint")
+		if ($.inArray(control.number, controlNumbers) > -1)
 		{
 			validationMsg += "Two or more controls have the same number.<br />";
 			if (debug) { console.log(controlNumbers); console.log(control.number); }
@@ -1303,18 +1482,25 @@ function validate()
 	}
 }
 
-function handleDrag()
+function handleDrag()	//Vector element has been dragged - update arrays to match UI
 {
-	if (debug) { console.log('handleDrag'); }
-	//sheetCentreLL = ol.proj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
-	sheetCentreLL = (layerMapCentre.getSource().getFeatures()[0]).getGeometry().getFirstCoordinate();
-	select.getFeatures().clear()
-	rebuildMapSheet()
+	//console.log('drag ');
+	var feats = select.getFeatures();
+	feats.forEach((feat) => {
+		if (debug) { console.log('handleDrag'); }
+		if (feat.get('type') == 'centre')
+		{
+			sheetCentreLL = (layerMapCentre.getSource().getFeatures()[0]).getGeometry().getFirstCoordinate();
+		}
+	});
+	select.getFeatures().clear();
+  rebuildMapSheet();
+  controlsChanged();
 }
 
 function handleSaveCallback(json)
 {
-	$( "#saving" ).dialog( "close" );
+  $( "#saving" ).dialog( "close" );
 	var result = JSON.parse(json);
 	if (result.success)
 	{
@@ -1324,6 +1510,7 @@ function handleSaveCallback(json)
 		updateUrl();
 		if (debug) { console.log(result.data); }
 		generateMap("pdf");
+
 	}
 	else
 	{
@@ -1347,11 +1534,39 @@ function handleLoadCallback(json)
 	}
 	else
 	{
+	//	$( "#loaderror" ).dialog( "open" );
+	//	$( "#loaderror_text" ).html(result.message);
+
+	//If failed, try looking up from oomap.co.uk load.php instead before giving up.
+		reqMapID = $("#savedMapID").val();
+		$.post('https://oomap.co.uk/load.php', {"shortcode":reqMapID}, handleLoadOldCallback);
+	}
+}
+
+//Old save lookup callback - delete when function becomes redundant
+function handleLoadOldCallback(json)
+{
+	$("#loaderror_text").html("");
+
+	var result = JSON.parse(json);
+	if (result.success)
+	{
+		if (debug) { console.log(result.data); }
+		//If successful, need to convert old-style data to updated format (different styles, added rotation value)
+		result.data.rotation='0';
+		if (result.data.style == 'streeto') {result.data.style = 'streeto-OS-10'; }
+		if ((result.data.style + "padding").substring(0,8) == 'streeto_') {result.data.style = 'streeto-NONE-0'; }
+		if (result.data.style == 'oterrain') {result.data.style = 'oterrain-OS-10'; }
+		if ((result.data.style + "padding").substring(0,9) == 'oterrain_') {result.data.style = 'oterrain-NONE-0'; }
+		if (result.data.style == 'blueprint') {result.data.style = 'blueprint-NONE-0'; }
+		loadMap(result.data);
+	}
+	else
+	{
 		$( "#loaderror" ).dialog( "open" );
 		$( "#loaderror_text" ).html(result.message);
 	}
 }
-
 function handleGenerateClue()
 {
 	//TODO Do warning that this action does not save - person needs to press Create Map Sheet.
@@ -1372,53 +1587,27 @@ function handleGenerateClue()
 
 	var currentScore = 0;
 	var emphasise = false;
+  var controls = getSortedControls('c_regular');
 	for (var i = 0; i < controls.length; i++)
 	{
 		var control  = controls[i];
-		if (currentScore != control.score && currentScore != 0)
-		{
-			emphasise = true;
-		}
-		else
-		{
-			emphasise = false;
-		}
+		emphasise = (currentScore != control.score && currentScore != 0) ? 'cs_spacer' : '';
 		currentScore = control.score;
 
-		if (emphasise)
-		{
-			$("#cs_controls").find('tbody')
-				.append($('<tr>').addClass('cs_spacer')
-					.append($('<td>')
-						.append(control.number).css('width', '50').css('fontWeight', 'bold')
-					  )
-					.append($('<td>')
-						.append(control.score).css('width', '50')
-					  )
-					.append($('<td>')
-						.append(control.description).css('textAlign', 'left')
-					  )
-					.append($('<td>').css('width', '100')
-					  )
-				);
-		}
-		else
-		{
-			$("#cs_controls").find('tbody')
-				.append($('<tr>')
-					.append($('<td>')
-						.append(control.number).css('width', '50').css('fontWeight', 'bold')
-					  )
-					.append($('<td>')
-						.append(control.score).css('width', '50')
-					  )
-					.append($('<td>')
-						.append(control.description).css('textAlign', 'left')
-					  )
-					.append($('<td>').css('width', '100')
-					  )
-				);
-		}
+		$("#cs_controls").find('tbody')
+			.append($('<tr>').addClass(emphasise)
+				.append($('<td>')
+					.append(control.number).css('width', '50').css('fontWeight', 'bold')
+				  )
+				.append($('<td>')
+					.append(control.score).css('width', '50')
+				  )
+				.append($('<td>')
+					.append(control.description).css('textAlign', 'left')
+				  )
+				.append($('<td>').css('width', '100')
+				  )
+			);
 	}
 }
 
@@ -1432,7 +1621,7 @@ function handleGenerateClue()
 
 function handleOptionChange()
 {
-	//console.log(state);
+	if(debug) {console.log(state);}
 	if (state == "initialzoom")
 	{
 		$("#messageZoom").effect("pulsate", {}, 500);
@@ -1440,17 +1629,9 @@ function handleOptionChange()
 	}
 	if (state == "addcontrols" || state == "zoom")
 	{
-		if (mapID != "new")
-		{
-			mapID = "new";
-			updateUrl();
-		}
-
-		$( "#getraster" ).button("disable");
-		$( "#getworldfile" ).button("disable");
-		$( "#getkmz" ).button("disable");
-
-		rebuildMapSheet();
+    rebuildMapSheet();
+    controlsChanged();
+    layerControls.changed(); //force re-draw
 		return;
 	}
 }
@@ -1461,25 +1642,36 @@ function handleClick(evt)
 	var pixel = evt.pixel;
 	olMap.forEachFeatureAtPixel(pixel, function(feature, layer)
 	{
-		if (feature && layer.get('title') == "mapcentre")
+		//Has a map feature been clicked?
+    if (feature && $.inArray(layer.get('title'), ['GPX']) >= 0){
+      evt.stopPropagation();  //Don't highlight GPX points, and stop event processing.
+      centreClick = true;
+    }
+    if (feature && $.inArray(layer.get('title'), ['mapcentre', 'controls']) >= 0)
 		{
 			centreClick = true;
 		}
+	},
+	{
+		hitTolerance: hitTol,
 	});
-
+	//If so, stop processing click and allow openLayers event to take over.
 	if (centreClick)
 	{
 		if (debug) { console.log('returning'); }
 		return;
 	}
-
+//  if (select.getFeatures().length > 0)
+  //{
+  //  return;
+//  }
 	//console.log(state);
 	if (state == "addcontrols")
 	{
-    	var coordinate = evt.coordinate;
+  	var coordinate = evt.coordinate;
 		newControlLL = coordinate;
-		if (!(new ol.geom.Point(newControlLL).intersectsExtent(mapBound)))
-		{
+    if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(olProj.transform(newControlLL, "EPSG:3857", "EPSG:4326"))))
+		{ //if control outside map area, alert
 			$( "#newcontroloutsidemap" ).dialog({
 			  modal: true,
 			  buttons: {
@@ -1490,8 +1682,9 @@ function handleClick(evt)
 			});
 		}
 		else
-		{
+		{ //otherwise open new control dialog with default options
 			controloptstate = "new";
+      $('.ui-dialog-buttonpane button:contains("Delete")').button().hide();
 			$( "#newcontroloptions" ).dialog( "open" );
 			resetControlAddDialog(null);
 		}
@@ -1517,12 +1710,64 @@ function handleClick(evt)
 		$( "#getkmz" ).button("disable");
 
 		sheetCentreLL = evt.coordinate;
-		lookupMag(ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0]);
+		lookupMag(olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0]);
 		rebuildMapSheet();
 		state = "addcontrols";
 		$("#messageCentre").hide();
 		$("#messageAdd").effect("pulsate", {}, 500);
 	}
+}
+
+function handleDblClick(evt)
+{
+
+  var pixel = evt.pixel;
+
+	olMap.forEachFeatureAtPixel(pixel, function(feature, layer)
+	{
+		//Has a map feature been clicked?
+		if (feature && $.inArray(layer.get('title'), ['controls']) >= 0)
+		{
+      handleControlEditOptions('e'+feature.getId()); //Open edit dialog
+      evt.stopPropagation(); //Don't continue to trigger zoom
+		}
+    else if (feature && $.inArray(layer.get('title'), ['GPX']) >= 0)
+		{ //Clicked GPX/temp feature - promote to layerControls
+      if (state == 'addcontrols' && feature.getGeometry().flatCoordinates.length < 4)
+      { //only run if clicked item is a (3D) point, and a map has been placed
+        if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(olProj.transform(evt.coordinate, "EPSG:3857", "EPSG:4326"))))
+        { //if event outside map area, alert
+          $( "#newcontroloutsidemap" ).dialog({
+            modal: true,
+            buttons: {
+              Ok: function() {
+                $( this ).dialog( "close" );
+              }
+            }
+          });
+          return;
+        }
+
+        layerGPX.getSource().removeFeature(feature);
+        if (feature.get('type')!='c_regular') //if not from a POI query
+        {
+          feature.set('description',"" + feature.get('name'),true)
+        }
+        feature.set('type','c_regular',true)
+        feature.set('id',topID++,true)
+        feature.set('number',"" + ++topNumber,true)
+        feature.set('angle',45,true)
+        feature.set('score',topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,true)
+        feature.setId(feature.get('id'));
+        layerControls.getSource().addFeature(feature);
+        controlsChanged();
+      }
+      evt.stopPropagation(); //Don't continue to trigger zoom
+		}
+	},
+	{
+		hitTolerance: hitTol,
+	});
 }
 
 /* Actions */
@@ -1534,7 +1779,7 @@ function saveMap()
 		$( "#generating" ).dialog( "open" );
 		generateMap("pdf");
 	}
-	var controlsForDB = controls.concat(controlsSF).concat(controlsX).concat(controlsCP);
+	var controlsForDB = getSortedControls(); //get all features
 
 	var json = {"data":{
 		"action": "savemap",
@@ -1548,124 +1793,118 @@ function saveMap()
 		"paperorientation": $("#paperorientation :radio:checked").attr("id"),
 		"centre_lat": sheetCentreLL[1],
 		"centre_lon": sheetCentreLL[0],
-		"centre_wgs84lat": ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],
-		"centre_wgs84lon": ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0],
+		"centre_wgs84lat": olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],
+		"centre_wgs84lon": olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0],
 		"controls": controlsForDB,
-		"rotation": rotAngle
+		"rotation": olMap.getView().getRotation()
 	}};
 
-	$.post('/save.php', json, handleSaveCallback);
+	$.post('/php/save.php', json, handleSaveCallback);
+  if(debug){console.log(json);}
+
 	$( "#saving" ).dialog( "open" );
 }
 
 function generateMap(type)
 {
-	//Construct the URL to the PDF.
-	var escapeTitleText = encodeURIComponent(mapTitle);
-
-	var startText = ""
-	var xText = "";
-	var cpText = "";
-	if (controlsSF.length > 0)
-	{
-		startText = controlsSF[0].lat.toFixed(0) + "," + controlsSF[0].lon.toFixed(0);
-	}
-	if (controlsX.length > 0)
-	{
-		for (var i = 0; i < controlsX.length; i++)
-		{
-			var control = controlsX[i]
-			xText += control.lat.toFixed(0) + "," + control.lon.toFixed(0) + ",";
-		}
-		xText  = xText.substring(0, xText.length - 1);
-	}
-	if (controlsCP.length > 0)
-	{
-		for (var i = 0; i < controlsCP.length; i++)
-		{
-			var control = controlsCP[i]
-			cpText += control.angle + "," + control.lat.toFixed(0) + "," + control.lon.toFixed(0) + ",";
-		}
-		cpText = cpText.substring(0, cpText.length - 1);
-	}
-
-	url = prefix1 + type
-		+ "/?style=" + mapStyleID
-   		+ "|paper=" + paper
-		+ "|scale=" + scale
-		+ "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
-		+ "|title=" + escapeTitleText
-		+ "|club=" + $('#club').val()
-		+ "|id=";
-	if (mapID != "new")
-	{
-		url += mapID;
-	}
-
-	if (type == 'kmz')
-	{
-		url	+= "|start="
-			+ "|crosses=" + xText
-			+ "|cps=" + cpText
-			+ "|controls=";
-	}
-	else
-	{
-		url	+= "|start=" + startText
-			+ "|crosses=" + xText
-			+ "|cps=" + cpText
-			+ "|controls=";
-
-		if (controls.length > 0)
-		{
-			for (var i = 0; i < controls.length; i++)
-			{
-				var control = controls[i]
-				url += control.number + "," + control.angle + "," + control.lat.toFixed(0) + "," + control.lon.toFixed(0) + ",";
-			}
-			url  = url.substring(0, url.length - 1);
-		}
-	}
-	url	+= "|rotation=" + rotAngle.toFixed(4);
-	if (grid) {url += "|grid=yes"; } else {url += "|grid=no"; }
-	if (rail) {url += "|rail=yes"; } else {url += "|rail=no"; }
-	if (walls) {url += "|walls=yes"; } else {url += "|walls=no"; }
-	if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
-	url += "|dpi=" + dpi;
-
-	if (debug) { console.log(url); }
-	self.location=url;
+		self.location=getURL(type);
 }
-/*
-function getCrosspointStyleKML(angle)
+
+function getURL(type)
 {
-	return '<Style id="crossingpoint'
-		+ angle
-		+ '"><IconStyle><color>ffff00ff</color><heading>'
-		+ angle
-		+ '</heading><scale>1.0</scale><Icon><href>https://oomap.co.uk/images/kml_crossingpoint.png</href></Icon></IconStyle><BalloonStyle></BalloonStyle><ListStyle></ListStyle></Style>';
-}
+  //Construct the URL to the download file/image.
+  var escapeTitleText = encodeURIComponent(mapTitle);
 
-function getCrosspointKML(control)
-{
-	return '<Placemark><styleUrl>#crossingpoint'
-		+ control.angle
-		+ '</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
-		+ control.wgs84lon
-		+ ","
-		+ control.wgs84lat
-		+ ',0</coordinates></Point></Placemark>';
-}
+  var startText = "";
+  var finishText = "";
+  var xText = "";
+  var cpText = "";
+  if(getSortedControls('c_startfinish').length > 0)
+  {
+    getSortedControls('c_startfinish').forEach(function(c)
+    {
+      startText += c.lat.toFixed(0) + "," + c.lon.toFixed(0) + ",";
+    })
+    startText  = startText.substring(0, startText.length - 1);
+  }
+  if(getSortedControls('c_finish').length > 0)
+  {
+    getSortedControls('c_finish').forEach(function(c)
+    {
+      finishText += c.lat.toFixed(0) + "," + c.lon.toFixed(0) + ",";
+    })
+    finishText  = finishText.substring(0, finishText.length - 1);
+  }  if(getSortedControls('c_cross').length > 0)
+  {
+    getSortedControls('c_cross').forEach(function(c)
+    {
+      xText += c.lat.toFixed(0) + "," + c.lon.toFixed(0) + ",";
+    })
+    xText  = xText.substring(0, xText.length - 1);
+  }
+  if(getSortedControls('c_crossingpoint').length > 0)
+  {
+    getSortedControls('c_crossingpoint').forEach(function(c)
+    {
+      cpText += c.angle + "," + c.lat.toFixed(0) + "," + c.lon.toFixed(0) + ",";
+    })
+    cpText  = cpText.substring(0, cpText.length - 1);
+  }
 
-function getDoNotCrossKML(control)
-{
-	return '<Placemark><styleUrl>#donotcross</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
-		+ control.wgs84lon
-		+ ","
-		+ control.wgs84lat
-		+ ',0</coordinates></Point></Placemark>';
+  var site_href = window.location.href
+  var arr = site_href.split("/");
+  var url = arr[0] + "//" + arr[2] + "/render/" + type
+    + "/?style=" + mapStyleID
+    + "|paper=" + paper_pieces[0].toFixed(3) + "," + paper_pieces[1].toFixed(3)	//trim numbers in string to 3dp
+    + "|scale=" + scale
+    + "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
+    + "|title=" + escapeTitleText
+    + "|club=" + $('#club').val()
+    + "|id=";
+  if (mapID != "new")
+  {
+    url += mapID;
+  }
+
+  if (type == 'kmz')
+  {
+    url	+= "|start="
+      + "|crosses=" + xText
+      + "|cps=" + cpText
+      + "|controls=";
+  }
+  else if (type == 'pre') {} //don't add features to preview image
+  else
+  {
+    url	+= "|start=" + startText
+      + "|finish=" + finishText
+      + "|crosses=" + xText
+      + "|cps=" + cpText
+      + "|controls=";
+
+    if(getSortedControls('c_regular').length > 0)
+    {
+      getSortedControls('c_regular').forEach(function(c)
+      {
+        url += c.number + "," + c.angle + "," + c.lat.toFixed(0) + "," + c.lon.toFixed(0) + ",";
+      })
+      url  = url.substring(0, url.length - 1);
+    }
+  }
+  url	+= "|rotation=" + olMap.getView().getRotation().toFixed(4);
+  if (grid) {url += "|grid=yes"; } else {url += "|grid=no"; }
+  if (rail) {url += "|rail=yes"; } else {url += "|rail=no"; }
+  if (walls) {url += "|walls=yes"; } else {url += "|walls=no"; }
+  if (trees) {url += "|trees=yes"; } else {url += "|trees=no"; }
+  if (hedges) {url += "|hedges=yes"; } else {url += "|hedges=no"; }
+  if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
+  if (fences) {url += "|fences=yes"; } else {url += "|fences=no"; }
+  if (linear) {url += "|linear=yes"; } else {url += "|linear=no"; }
+  url += "|dpi=" + dpi;
+
+  if (debug) { console.log(url); }
+  return url;
 }
-*/
 
 function getStartKML(control, i)
 {
@@ -1691,7 +1930,7 @@ function getFinishKML(control, i)
 
 function getControlKML(control)
 {
-	//var geom = ol.proj.transform(feature.getGeometry().getCoordinates(), "EPSG:3857", "EPSG:4326")
+	//var geom = olProj.transform(feature.getGeometry().getCoordinates(), "EPSG:3857", "EPSG:4326")
 	return '<Placemark><name>'
 		+ control.number
 		+ '</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
@@ -1715,52 +1954,30 @@ function generateKML()
 	var kmlfooter = '</Folder>\n</Document>\n</kml>';
 
 	kml += kmlintro;
-
-/*
-	var angles = [];
-	for (var i = 0 ; i < controlsCP.length; i++)
-	{
-		angles.push(controlsCP[i].angle);
-	}
-
-	var anglesUniq = Array.from(new Set(angles));
-
-	console.log(angles);
-	console.log(anglesUniq);
-
-	for (var i = 0; i < anglesUniq.length; i++)
-	{
-		kml += getCrosspointStyleKML(anglesUniq[i]);
-	}
-*/
-
 	kml += kmlheader;
 
-	for (var i = 0; i < controlsSF.length; i++)
+  var list = getSortedControls('c_startfinish');
+	for (var i = 0; i < list.length; i++)
 	{
-		kml += getStartKML(controlsSF[i], i);
+		kml += getStartKML(list[i], i);
 		kml += '\n';
 	}
 
-	for (var i = 0; i < controls.length; i++)
+  list = getSortedControls('c_regular');
+  for (var i = 0; i < list.length; i++)
 	{
-		kml += getControlKML(controls[i]);
+		kml += getControlKML(list[i]);
 		kml += '\n';
 	}
-/*
-	for (var i = 0; i < controlsCP.length; i++)
-	{
-		kml += getCrosspointKML(controlsCP[i]);
-	}
 
-	for (var i = 0; i < controlsX.length; i++)
+  list = getSortedControls('c_finish');
+  if (list.length == 0) //If no finish, reuse start
+  {
+    list = getSortedControls('c_startfinish');
+  }
+	for (var i = 0; i < list.length; i++)
 	{
-		kml += getDoNotCrossKML(controlsX[i]);
-	}
-*/
-	for (var i = 0; i < controlsSF.length; i++)
-	{
-		kml += getFinishKML(controlsSF[i], i);
+		kml += getFinishKML(list[i], i);
 		kml += '\n';
 	}
 
@@ -1812,19 +2029,18 @@ function loadMap(data)
 	//$('#eventdate').datepicker("refresh");
 	//TODO Implement loading of saved club.
 
-	$style.click();
-	$styleL.click();
-	$scale.click();
-	$scaleL.click();
-	$papersize.click();
-	$papersizeL.click();
-	$paperorientation.click();
-	$paperorientationL.click();
-	$contours.click();
-	$contoursL.click();
+	$style.trigger( "click" );
+  $scale.trigger( "click" );
+	$papersize.trigger( "click" );
+	$paperorientation.trigger( "click" );
+	$contours.trigger( "click" );
 
-	sheetCentreLL = ol.proj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
+  layerControls.getSource().clear();
+  topID=0;
+
+	sheetCentreLL = olProj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
 	olMap.getView().setCenter(sheetCentreLL);
+  olMap.getView().setRotation(parseFloat(data.rotation));
 	if (data.scale == "s7500" || data.scale == "s5000" || data.scale == "s4000")
 	{
 		olMap.getView().setZoom(15);
@@ -1834,10 +2050,6 @@ function loadMap(data)
 		olMap.getView().setZoom(14);
 	}
 	if (debug) { console.log(sheetCentreLL); }
-	controlsSF = [];
-	controlsX = [];
-	controlsCP = [];
-	controls = [];
 
 	for (var i = 0; i < data.controls.length; i++)
 	{
@@ -1851,40 +2063,99 @@ function loadMap(data)
 				topNumber = control.number;
 			}
 		}
-		control.angle = parseInt(control.angle);
-		control.score = parseInt(control.score);
-		var controlLL = ol.proj.transform([parseFloat(control.wgs84lon), parseFloat(control.wgs84lat)], "EPSG:4326", "EPSG:3857");
-		control.lat = controlLL[1];
-		control.lon = controlLL[0];
+    if (control.type == 'c_startfinish') {control.id = 'S'; }
+    if (control.type == 'c_finish') {control.id = 'F'; }
+		var controlLL = olProj.transform([parseFloat(control.wgs84lon), parseFloat(control.wgs84lat)], "EPSG:4326", "EPSG:3857");
 
-		if (control.type == "c_startfinish")
-		{
-			controlsSF.push(control);
-		}
-		else if (control.type == "c_cross")
-		{
-			controlsX.push(control);
-		}
-		else if (control.type == "c_crossingpoint")
-		{
-			controlsCP.push(control);
-		}
-		else
-		{
-			controls.push(control);
-		}
+    var controlPoint = new Feature({
+			geometry: new Point([controlLL[0], controlLL[1]]),
+			number: "" + control.number,
+			angle: parseInt(control.angle),
+			type: control.type,
+			score: parseInt(control.score),
+			description: control.description,
+			id: control.id
+		});
+		controlPoint.setId(control.id);
+		layerControls.getSource().addFeatures([controlPoint]);
 	}
 	mapID = reqMapID;
+  rebuildMapSheet();  //DPD
 	rebuildMapControls();
 	handleZoom();
 	updateUrl();
-	olMap.getView().setRotation(parseFloat(data.rotation));
 	handleRotate();
 
 	$( "#getraster" ).button("enable");
 	$( "#getworldfile" ).button("enable");
 	$( "#getkmz" ).button("enable");
 }
+
+//convert a control Object to an ol Feature
+function controlToFeature(control)
+{
+	var feature = new Feature({
+		geometry: new Point([control.lon, control.lat]),
+		number: control.number,
+		angle: parseInt(control.angle),
+		type: control.type,
+		score: parseInt(control.score),
+		description: control.description
+	});
+	control.setId(control.id);
+	control.set('id', control.id)
+	return(control);
+}
+
+//Convert an ol Feature to a control Object
+function featureToControl(feature)
+{
+	const control = feature.getProperties();
+	control.id = feature.getId();
+	control.lon = feature.getGeometry().getFirstCoordinate[0];
+	control.lat = feature.getGeometry().getFirstCoordinate[1];
+	return control;
+}
+
+
+function getSortedControls(type = null)
+{
+  var list = layerControls.getSource().getFeatures();
+  list.forEach(function(feat,i)
+  {
+    list[i] = feat.getProperties();
+    [list[i].lon, list[i].lat] = list[i].geometry.flatCoordinates;
+    [list[i].wgs84lon, list[i].wgs84lat] = olProj.transform(list[i].geometry.flatCoordinates, "EPSG:3857", "EPSG:4326");
+    list[i].geometry = undefined;
+  });
+  if(type != null) { list = list.filter(feat => feat.type == type); } //filter by type if provided
+  list.sort(function(a, b)
+  {
+    if (isNaN(a.number - b.number))
+    {
+      return a.number < b.number ? -1 : 1;
+    }
+    return a.number - b.number;
+  });
+  if(debug){console.log(list);}
+  return list;
+}
+
+function getMarkers()
+{
+  var list = layerGPX.getSource().getFeatures().filter(feat=>feat.getGeometry().getType() == 'Point');
+  list.forEach(function(feat,i)
+  {
+    list[i] = feat.getProperties();
+    [list[i].lon, list[i].lat] = list[i].geometry.flatCoordinates;
+    [list[i].wgs84lon, list[i].wgs84lat] = olProj.transform(list[i].geometry.flatCoordinates, "EPSG:3857", "EPSG:4326");
+    list[i].geometry = undefined;
+  });
+
+  if(debug){console.log(list);}
+  return list;
+}
+
 
 function rebuildMapSheet()
 {
@@ -1902,7 +2173,6 @@ function rebuildMapSheet()
 	layerMapContent.getSource().clear();
 
 	var papersize = "";
-	var paper_pieces = [];
 
 	papersize = $("#papersize :radio:checked").attr("id");
 
@@ -1915,10 +2185,10 @@ function rebuildMapSheet()
 	scale = $("#mapscale :radio:checked").val();
 	scale = parseInt(scale);
 
-	var centroidllWGS84 = ol.proj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326");
+	var centroidllWGS84 = olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326");
 	var fudgeFactor = Math.cos(centroidllWGS84[1] * Math.PI/180);
-	var trueScale = scale / fudgeFactor;
-	//console.log("True scale is " + trueScale);
+	trueScale = scale / fudgeFactor;
+	if (debug) {console.log("True scale is " + trueScale);}
 
 	var paper_dlon = paper_pieces[0] * trueScale;
 	var paper_dlat = paper_pieces[1] * trueScale;
@@ -1942,30 +2212,42 @@ function rebuildMapSheet()
 	var paperNMBound = [	paperBound[0], 	mapBound[3],		paperBound[2], 	paperBound[3]];
 	var paperSMBound = [	paperBound[0], 	paperBound[1], 	paperBound[2], 	mapBound[1]];
 
-	var sheet = new ol.Feature({ geometry: ol.geom.Polygon.fromExtent(paperBound) });
+	var sheet = new Feature({ geometry: PolyFromExtent(paperBound) });
 
 	var titleSizeArr = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 9, 18, 36, 72, 144, 288];
-	fontSizeFromArr = (titleSizeArr[parseInt(olMap.getView().getZoom())]*(scale/10000)).toFixed(0);
-	mapTitleDisplay = mapTitle.toUpperCase();
-	if (country == "blueprint")
+	fontSizeFromArr = (titleSizeArr[parseInt(olMap.getView().getZoom())]*(trueScale/16000)).toFixed(0);
+
+	if (mapStyleID.split("-")[0] == "blueprint")
 	{
 		mapTitleDisplay = mapTitle;
 	}
+	else
+	{
+		mapTitleDisplay = mapTitle.toUpperCase();
+	}
 
-	var title = new ol.Feature({ geometry: new ol.geom.Point([ sheetCentreLL[0]-map_dlon/2, sheetCentreLL[1]+map_dlat/2+map_nm_dlat/2]) });
+	var title = new Feature({
+		geometry: new Point([ sheetCentreLL[0]-map_dlon/2, sheetCentreLL[1]+map_dlat/2+map_nm_dlat/2]),
+		type: 'centre',
+    description: 'Map Title'
+	 });
 	title.set('fontSizeFromArr',  fontSizeFromArr);
 	title.set('mapTitleDisplay',  mapTitleDisplay);
 	title.set('xoff',  0);
 	title.set('yoff',  0);
 
-	var content = new ol.Feature({ geometry:  ol.geom.Polygon.fromExtent(mapBound) });
-	var westMargin = new ol.Feature({ geometry:  ol.geom.Polygon.fromExtent(paperWMBound) });
-	var eastMargin = new ol.Feature({ geometry:  ol.geom.Polygon.fromExtent(paperEMBound) });
-	var northMargin = new ol.Feature({ geometry:  ol.geom.Polygon.fromExtent(paperNMBound) });
-	var southMargin = new ol.Feature({ geometry:  ol.geom.Polygon.fromExtent(paperSMBound) });
-	var centreMarker = new ol.Feature({ geometry: new ol.geom.Point(sheetCentreLL) });
+	var content = new Feature({ geometry: PolyFromExtent(mapBound) });
+	var westMargin = new Feature({ geometry: PolyFromExtent(paperWMBound) });
+	var eastMargin = new Feature({ geometry: PolyFromExtent(paperEMBound) });
+	var northMargin = new Feature({ geometry: PolyFromExtent(paperNMBound) });
+	var southMargin = new Feature({ geometry: PolyFromExtent(paperSMBound) });
+	var centreMarker = new Feature({
+		geometry: new Point(sheetCentreLL),
+		type: 'centre',
+    description: 'Map centre.  Click then drag to move.'
+	 });
 
-	var titleFeature = new ol.Feature({ geometry: new ol.geom.Point([mapBound[0], mapBound[3] + (0.002 * trueScale)])});
+	var titleFeature = new Feature({ geometry: new Point([mapBound[0], mapBound[3] + (0.002 * trueScale)])});
 
 	layerMapBorder.getSource().addFeatures([westMargin, eastMargin, northMargin, southMargin, titleFeature]);
 	layerMapSheet.getSource().addFeatures([sheet]);
@@ -1987,8 +2269,6 @@ function rebuildMapSheet()
 	wgs84Poly.rotate(angle, sheetCentreLL);
 	wgs84Poly.transform("EPSG:3857", "EPSG:4326");
 
-
-	//dragControl.activate();
 	rebuildDescriptions();
 
 	$( "#createmap" ).button("enable");
@@ -1998,55 +2278,12 @@ function rebuildMapSheet()
 	$( "#deletesheet" ).button("enable");
 	$( "#getPostboxes" ).button("enable");
 	$( "#getOpenplaques" ).button("enable");
+	$( "#preview" ).button("enable");
 }
 
 function rebuildMapControls()
 {
-	layerSF.getSource().clear();
-	layerControls.getSource().clear();
-	layerX.getSource().clear();
-	layerCP.getSource().clear();
-
-	for (var i = 0; i < controlsSF.length; i++)
-	{
-		var control = controlsSF[i];
-		var controlSF = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
-		layerSF.getSource().addFeatures([controlSF]);
-	}
-
-	for (var i = 0; i < controlsX.length; i++)
-	{
-		var control = controlsX[i];
-		var controlX = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
-		layerX.getSource().addFeatures([controlX]);
-	}
-
-	for (var i = 0; i < controlsCP.length; i++)
-	{
-		var control = controlsCP[i];
-		var controlCP = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
-		controlCP.set('angle', control.angle+rotAngle*180/Math.PI);
-		layerCP.getSource().addFeatures([controlCP]);
-	}
-
-	for (var i = 0; i < controls.length; i++)
-	{
-		var control = controls[i];
-
-		var controlPoint = new ol.Feature({geometry: new ol.geom.Point([control.lon, control.lat])});
-		controlPoint.set('number', "" + control.number);
-		controlPoint.set('xoff', 35 * Math.sin((control.angle*Math.PI)/180));
-		controlPoint.set('yoff', -35 * Math.cos((control.angle*Math.PI)/180));
-
-		layerControls.getSource().addFeatures([controlPoint]);
-	}
-
-	if (controlsX.length > 0 || controlsCP.length > 0)
-	{
-		$( "#deleteXs" ).button("enable");
-	}
-
-	if (controls.length > 0)
+	if (layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_regular').length > 0)
 	{
 		$( "#createclue" ).button("enable");
 		$( "#getkml" ).button("enable");
@@ -2057,30 +2294,37 @@ function rebuildMapControls()
 		$( "#getkml" ).button("disable");
 		$( "#getPostboxes" ).button("enable");
 		$( "#getOpenplaques" ).button("enable");
+    $( "#preview" ).button("enable");
 	}
+  var listC = getSortedControls("c_regular");
+  var listS = getSortedControls("c_startfinish");
+  var listF = getSortedControls("c_finish");
+  if (listF.length == 0) {listF = listS}  //Reuse start as finish if needed
+  var list = listS.concat(listC, listF);
+
+  layerLines.getSource().clear();
+  for (var i = 0; i < (list.length - 1); i++)
+  {
+    var line = new Feature({
+      geometry: new LineString([[list[i].lon, list[i].lat], [list[i+1].lon, list[i+1].lat]]),
+    });
+    layerLines.getSource().addFeature(line);
+  }
+  layerLines.getSource().changed();
 }
 
 function rebuildDescriptions()
 {
 	$("#controldescriptions tr.controlrow").remove();
-
-	controls.sort(function(a, b)
-	{
-		if (isNaN(a.number - b.number))
-		{
-			return a.number < b.number ? -1 : 1;
-		}
-		return a.number - b.number;
-	});
-
-	var controlnum = controls.length;
+  const list = getSortedControls("c_regular");
+	var controlnum = list.length;
 	var maxscore = 0;
 
   contourSeparation = $("#contours :radio:checked").attr("id").split("-")[1].replace("p",".");
 
-	for (var i = 0; i < controls.length; i++)
+	for (var i = 0; i < list.length; i++)
 	{
-		maxscore += controls[i].score;
+		maxscore += list[i].score;
 	}
 
 	$("#scalecaption").text('1:' + scale);
@@ -2088,24 +2332,24 @@ function rebuildDescriptions()
 	$("#pointscaption").text('' + maxscore + " points");
 	$("#contourcaption").text(contourSeparation + 'm contours');
 
-	for (var i = 0; i < controls.length; i++)
+	for (var i = 0; i < list.length; i++)
 	{
-		var control  = controls[i];
+		var control  = list[i];
 		$("#controldescriptions").find('tbody')
-			.append($('<tr>').addClass('controlrow')
+			.append($('<tr draggable="true">').addClass('controlrow')
 				.append($('<td>')
 					.append(control.number)
 				  )
-				.append($('<td>')
+				.append($('<td class="scorecol">')
 					.append(control.score)
 				  )
 				.append($('<td>').attr('colspan', '2')
 					.append(control.description.length > 28 ? control.description.substring(0,25) + "..."  : control.description)
 				  )
 				.append($('<th>')
-					.append($('<span>').addClass('edit').attr('id', 'e' + control.id).text('Edit').click(function() { handleControlEditOptions(this.id); })
+					.append($('<span>').addClass('edit').attr('id', 'e' + control.id).text('Edit').on('click', function() { handleControlEditOptions(this.id); })
 					  )
-					.append($('<span>').addClass('delete').attr('id', 'd' + control.id).text('Delete').click(function() { handleControlDelete(this.id); })
+					.append($('<span>').addClass('delete').attr('id', 'd' + control.id).text('Delete').on('click', function() { handleControlDelete(this.id); })
 					  )
 				  )
 			);
@@ -2119,7 +2363,7 @@ function rebuildDescriptions()
 function handleSearchPostcode()
 {
 	var pc = $("#postcode").val();
-	var url = 'postcode.php?pc=' + escape(pc);
+	var url = '/php/postcode.php?pc=' + escape(pc);
     $.get(url, null, handleSearchPostcodeCallback);
 	$( "#postcode_searching" ).dialog( "open" );
 }
@@ -2135,7 +2379,7 @@ function handleSearchPostcodeCallback(json)
 		{
 			zoom = 13;
 		}
-		olMap.getView().setCenter(ol.proj.transform([result.easting, result.northing], "EPSG:27700", "EPSG:3857"));
+    olMap.getView().setCenter(Proj4("EPSG:27700", "EPSG:3857", [parseInt(result.easting), parseInt(result.northing)]));
 		olMap.getView().setZoom(zoom);
 	}
 	else
@@ -2145,165 +2389,103 @@ function handleSearchPostcodeCallback(json)
 	}
 }
 
-//Deprecated in favour of pulling post boxes from OSM data
-function handleGetPostboxesOld()
+function sortByProp(property){
+   return function(a,b){
+      if(parseInt(a.tags[property]) > parseInt(b.tags[property]))
+         return 1;
+      else if(parseInt(a.tags[property]) < parseInt(b.tags[property]))
+         return -1;
+
+      return 0;
+   }
+}
+function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,boolTemp])
+//Get points of interest from OSM Overpass query.
+// query - string containing key-value pair, e.g. "amenity=post_box"
+// prefix - String prefix for feature description eg. "Postbox: "
+// srcDescription - source tag for remaining description text - eg "name" or "ref"
+// orderBy - OSM tag to (numnerically) sort output on if order is important.
+// radius - minimum spacing in meters from all other placed controls.
+// boolTemp - put controls in a temporary layer?
 {
-	var bounds = ol.proj.transformExtent([mapBound[0], mapBound[1], mapBound[2], mapBound[3]], "EPSG:3857", "EPSG:4326");
-	//var url = 'http://dracos.co.uk/made/nearest-postbox/nearest.php?bounds=' + mapBound[0] + "%2C" + mapBound[1] + "%2C" + mapBound[2] + "%2C" + mapBound[3];
-	var url = 'getpostboxes.php?bounds=' + bounds[0] + "%2C" + bounds[1] + "%2C" + bounds[2] + "%2C" + bounds[3];
-    $.get(url, null, handleGetPostboxesCallback);
+  var arr = wgs84Poly.flatCoordinates;
+  if (isNaN(radius)) { radius = 0;}
+	var url = apiServer + '?data=[out:json][timeout:25];node[' + query + '](poly:\"' + arr[1] + " " + arr[0] + " " + arr[3] + " " + arr[2] + " " + arr[5] + " " + arr[4] + " " + arr[7] + " " + arr[6]+"\");out;";
+    $.get(url)
+      .done(function( result, textStatus, jqXHR ) {
+    	var changed = false;
+    	$( "#postboxes_searching" ).dialog( "close" );
+    	if (result.elements.length > 0)
+    	{
+        if (orderBy != null) { result.elements.sort(sortByProp(orderBy)); }
+        for(var i = 0; i < result.elements.length; i++)
+    		{
+    			var dupe = false;
+          var featureList = getSortedControls('c_regular');
+          if (boolTemp) { featureList = featureList.concat(getMarkers()); }  //add in marker layer features if results are going to feat layer.
+          if(featureList.length > 0) //Check for nearby existing controls
+          {
+            featureList.forEach(function(c)
+            {
+              if (getDistance([result.elements[i].lon, result.elements[i].lat],[c.wgs84lon, c.wgs84lat]) <= (radius+1)) {		dupe = true;	};
+            });
+          }
+          if (debug) {console.log(dupe);}
+    			if (!dupe)
+    			{
+            var control = new Feature({
+              geometry: new Point(olProj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857")),
+              angle: 45,
+              type: 'c_regular',
+              description: prefix + result.elements[i].tags[srcDescription]
+            });
+
+            if(boolTemp)
+            {
+              layerGPX.getSource().addFeature(control);
+              $( "#deleteMarkers" ).button("enable");
+            }
+            else
+            {
+              control.set('id',topID++);
+              control.set('number',"" + ++topNumber);
+              control.set('score', topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50)
+              control.setId(control.get('id'));
+              layerControls.getSource().addFeature(control);
+      				changed = true;
+            }
+    			}
+    		}
+    		rebuildMapControls();
+    	  rebuildDescriptions();
+
+    		if (changed)
+        {
+          controlsChanged();
+        }
+    	}
+    	else
+    	{
+    		$( "#postboxes_error" ).dialog( "open" );
+    		$( "#postboxes_error_text" ).html(result.message);
+    	}
+
+    })
+      .fail(function( jqXHR, textStatus, errorThrown ) {
+        console.log(jqXHR);
+        console.log(textStatus);
+        console.log(errorThrown );
+        $( "#postboxes_searching" ).dialog( "close" );
+    });
+
 	$( "#postboxes_searching" ).dialog( "open" );
-
-}
-
-function handleGetPostboxes()
-{
-  var arr = wgs84Poly.flatCoordinates
-	var bounds = ol.proj.transformExtent([mapBound[0], mapBound[1], mapBound[2], mapBound[3]], "EPSG:3857", "EPSG:4326");
-	//var url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];node[amenity=post_box](' + bounds[1] + "," + bounds[0] + "," + bounds[3] + "," + bounds[2]+");out;";
-	var url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];node[amenity=post_box](poly:\"' + arr[1] + " " + arr[0] + " " + arr[3] + " " + arr[2] + " " + arr[5] + " " + arr[4] + " " + arr[7] + " " + arr[6]+"\");out;";
-    $.get(url, null, handleGetOSMboxesCallback);
-	$( "#postboxes_searching" ).dialog( "open" );
-
-}
-
-function handleGetOSMboxesCallback(result)
-{
-	var changed = false;
-	$( "#postboxes_searching" ).dialog( "close" );
-	if (result.elements.length > 0)
-	{
-		for(var i = 0; i < result.elements.length; i++)
-		{
-		  	var control = new Object();
-		  	control.id = topID++;
-		  	control.number = topNumber++;
-		  	//TODO Use a different number if one is already being used.
-		  	control.angle = 45;
-			control.score = 10;
-			if (control.number >= 20) { control.score = 20; }
-			if (control.number >= 30) { control.score = 30; }
-			if (control.number >= 40) { control.score = 40; }
-			if (control.number >= 50) {	control.score = 50;	}
-			control.type = "c_regular";
-			control.description = "Postbox " + result.elements[i].tags.ref;
-			//control.description = "Postbox";
-
-			control.lat = ol.proj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857")[1];
-			control.lon = ol.proj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857")[0];
-
-			control.wgs84lat = result.elements[i].lat;
-			control.wgs84lon = result.elements[i].lon;
-			var dupe = false;
-			for (var j = 0; j < controls.length; j++)
-			{
-				if (controls[j].wgs84lat == control.wgs84lat && controls[j].wgs84lon == control.wgs84lon)
-				{
-					dupe = true;
-				}
-			}
-			if (!dupe)
-			{
-				controls.push(control);
-				changed = true;
-			}
-		}
-		$( "#getPostboxes" ).button("disable");
-		rebuildMapControls();
-	  	rebuildDescriptions();
-
-		if (changed)
-		{
-			if (mapID != "new")
-			{
-				mapID = "new";
-				updateUrl();
-			}
-
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-		}
-	}
-	else
-	{
-		$( "#postboxes_error" ).dialog( "open" );
-		$( "#postboxes_error_text" ).html(result.message);
-	}
-
-}
-
-function handleGetPostboxesCallback(result)
-{
-	var changed = false;
-	$( "#postboxes_searching" ).dialog( "close" );
-	if (result.length > 0)
-	{
-		for(var i = 0; i < result.length; i++)
-		{
-		  	var control = new Object();
-		  	control.id = topID++;
-		  	control.number = topNumber++;
-		  	//TODO Use a different number if one is already being used.
-		  	control.angle = 45;
-			control.score = 10;
-			if (control.number >= 20) { control.score = 20; }
-			if (control.number >= 30) { control.score = 30; }
-			if (control.number >= 40) { control.score = 40; }
-			if (control.number >= 50) {	control.score = 50;	}
-			control.type = "c_regular";
-			control.description = "Postbox " + result[i].ref;
-			//control.description = "Postbox";
-
-			control.lat = ol.proj.transform([result[i].lon, result[i].lat], "EPSG:4326", "EPSG:3857")[1];
-			control.lon = ol.proj.transform([result[i].lon, result[i].lat], "EPSG:4326", "EPSG:3857")[0];
-
-			control.wgs84lat = result[i].lat;
-			control.wgs84lon = result[i].lon;
-			var dupe = false;
-			for (var j = 0; j < controls.length; j++)
-			{
-				if (controls[j].wgs84lat == control.wgs84lat && controls[j].wgs84lon == control.wgs84lon)
-				{
-					dupe = true;
-				}
-			}
-			if (!dupe)
-			{
-				controls.push(control);
-				changed = true;
-			}
-		}
-		$( "#getPostboxes" ).button("disable");
-		rebuildMapControls();
-	  	rebuildDescriptions();
-
-		if (changed)
-		{
-			if (mapID != "new")
-			{
-				mapID = "new";
-				updateUrl();
-			}
-
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-		}
-	}
-	else
-	{
-		$( "#postboxes_error" ).dialog( "open" );
-		$( "#postboxes_error_text" ).html(result.message);
-	}
-
 }
 
 function handleGetOpenplaques()
 {
-	var bounds = ol.proj.transformExtent([mapBound[0], mapBound[1], mapBound[2], mapBound[3]], "EPSG:3857", "EPSG:4326");
-	var url = '/getopenplaques.php?bounds=[' + bounds[3] + "%2C" + bounds[0] + "]%2C[" + bounds[1] + "%2C" + bounds[2] + "]";
-    $.get(url, null, handleGetOpenplaquesCallback);
+  var bounds = layerMapContent.getSource().getExtent();
+	var url = '/php/getopenplaques.php?bounds=[' + bounds[3] + "%2C" + bounds[0] + "]%2C[" + bounds[1] + "%2C" + bounds[2] + "]";
+  $.get(url, null, handleGetOpenplaquesCallback);
 	$( "#openplaques_searching" ).dialog( "open" );
 
 }
@@ -2316,61 +2498,39 @@ function handleGetOpenplaquesCallback(result)
 	{
 		for(var i = 0; i < result.features.length; i++)
 		{
-		  	var control = new Object();
-		  	control.id = topID++;
-		  	control.number = topNumber++;
-		  	//TODO Use a different number if one is already being used.
-		  	control.angle = 45;
-			control.score = 10;
-			if (control.number >= 20) { control.score = 20; }
-			if (control.number >= 30) { control.score = 30; }
-			if (control.number >= 40) { control.score = 40; }
-			if (control.number >= 50) {	control.score = 50;	}
-			control.type = "c_regular";
-			control.description = "Plaque: " + result.features[i].properties.inscription;
-			//control.description = "Postbox";
+      var control = new Feature({
+        geometry: new Point(olProj.transform(result.features[i].geometry.coordinates, "EPSG:4326", "EPSG:3857")),
+        id: topID++,
+        number: "" + ++topNumber,
+        angle: 45,
+        type: 'c_regular',
+        score: topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,
+        description: "Plaque: " + result.features[i].properties.inscription
+      });
+      control.setId(control.get('id'));
+	  	var dupe = false;
 
-			control.lat = ol.proj.transform(result.features[i].geometry.coordinates, "EPSG:4326", "EPSG:3857")[1];
-			control.lon = ol.proj.transform(result.features[i].geometry.coordinates, "EPSG:4326", "EPSG:3857")[0];
-
-			control.wgs84lat = result.features[i].geometry.coordinates[1];
-			control.wgs84lon = result.features[i].geometry.coordinates[0];
-
-			var dupe = false;
-			for (var j = 0; j < controls.length; j++)
+      for (var j = 0; j < i; j++)
 			{
-				if (controls[j].wgs84lat == control.wgs84lat && controls[j].wgs84lon == control.wgs84lon)
+				if (JSON.stringify(result.features[i].geometry.coordinates) == JSON.stringify(result.features[j].geometry.coordinates))
 				{
 					dupe = true;
 				}
 			}
 			if (!dupe)
 			{
-				controls.push(control);
+				layerControls.getSource().addFeature(control);
 				changed = true;
 			}
 		}
 		$( "#getOpenplaques" ).button("disable");
-		rebuildMapControls();
-	  	rebuildDescriptions();
-		if (changed)
-		{
-			if (mapID != "new")
-			{
-				mapID = "new";
-				updateUrl();
-			}
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-		}
+		if (changed)	{ controlsChanged();	}
 	}
 	else
 	{
 		$( "#openplaques_error" ).dialog( "open" );
 		$( "#openplaques_error_text" ).html("There are no plaques in this area recorded on the Open Plaques database, or a system error is preventing retrieval of plaques for this area. Open Plaques has a high number of plaques in the UK, USA and Germany. Check the Open Plaques website at https://openplaques.org/places/");
 	}
-
 }
 
 function updateUrl()
@@ -2386,11 +2546,9 @@ function updateUrl()
 	{
 		olMap.getView().setCenter([lon, lat]);
 	}
-
 	if (debug) { console.log('updateUrl'); }
-	var centre = ol.proj.transform(olMap.getView().getCenter(), "EPSG:3857", "EPSG:4326");
+	var centre = olProj.transform(olMap.getView().getCenter(), "EPSG:3857", "EPSG:4326");
 	window.location.hash = "/" + mapID + "/" + mapStyleID + "/" + olMap.getView().getZoom() + "/" + centre[0].toFixed(4) + "/" + centre[1].toFixed(4) + "/";
-
 }
 
 function rotateToMagDec(){
@@ -2401,19 +2559,50 @@ function rotateToMagDec(){
 }
 
 function setdecl(v, callback){
- console.log("declination found: "+v);
+ if(debug) {console.log("declination found: "+v);}
  magDec=v;
  callback();
 }
 
 function lookupMag(lat, lon) {
    var url=
-"https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?magneticComponent=d&lat1="+lat+"&lon1="+lon+"&resultFormat=xml";
-   $.get(url, function(xml, status){
-        setdecl( $(xml).find('declination').text(), rotateToMagDec);
+"https://oomap.dna-software.co.uk/wmm?lat="+lat+"&lon="+lon;
+   $.get(url, function(response, status){
+        setdecl(response, rotateToMagDec);
    });
 }
 
+function handlePreview(){
+  if (!preview){
+    var oldDPI = dpi;
+    dpi = 300;
+    var geoimg =  new GeoImage({
+        url: getURL("pre"),
+        crossOrigin: '',
+        imageCenter: [sheetCentreLL[0], sheetCentreLL[1] + 0.0005 * trueScale], //this is centred on *map*, not *sheet* - need to adjust slightly based on margins.
+        imageScale: [1.016 * trueScale * 0.025/dpi,trueScale*0.0254/dpi],  //1.016 x scaling factor empirically determined - don't know why this is needed! metres per pixel.
+        imageRotate: olMap.getView().getRotation() * -1,
+    });
+    $( "#preview" ).button().addClass('loading');
+    $( "#preview" ).html('Loading...');
+    //$(this).addClass('loading');
+    layerPreview.setSource(geoimg);
+
+    geoimg.on('change', function(event) { //imageloadend event isn't triggered, so use generic "change" event instead.
+      if(debug) {console.log('change event fired');}
+      $( "#preview" ).button().removeClass('loading');
+      $( "#preview" ).html('Preview');
+    });
+
+    dpi = oldDPI;
+    preview = true;
+  }
+
+  else {
+    layerPreview.setSource();
+    preview=false;
+  }
+}
 
 
 $(document).ready(function()

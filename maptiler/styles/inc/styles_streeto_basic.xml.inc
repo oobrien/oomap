@@ -94,13 +94,18 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>&minor_road; or &service_road;</Filter>
+        <Filter>&minor_road;</Filter>
         <LineSymbolizer stroke="&grey;" stroke-width="1.5" stroke-dasharray="3,3" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         <Filter>&track; or &path;</Filter>
         <LineSymbolizer stroke="&grey;" stroke-width="0.75" stroke-dasharray="2,2" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>&service_road;</Filter>
+        <LineSymbolizer stroke="&grey;" stroke-width="0.75" stroke-dasharray="3,3" />
     </Rule>
 </Style>
 
@@ -347,24 +352,24 @@
     <Rule>
         &maxscale_zoom12;
         &minscale_zoom12;
-        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="0.75" />
     </Rule>
     <Rule>
         &maxscale_zoom13;
         &minscale_zoom13;
-        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="1.5" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
         &minscale_zoom15;
-        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="2" />
     </Rule>
     <Rule>
         &maxscale_zoom15;
-        <Filter>[natural]='hedge' or [barrier] = 'hedge'</Filter>
+        <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="2.5" />
     </Rule>
     <Rule>
@@ -375,7 +380,7 @@
     </Rule>
     <!-- <Rule>
         &maxscale_zoom13;
-        <Filter>[barrier] = 'fence'</Filter>
+        <Filter>&fences; = 'yes' and [barrier] = 'fence'</Filter>
 	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />
         <LineSymbolizer stroke="&black;" stroke-width="0.79" stroke-linecap="square" />
     </Rule> -->
@@ -385,30 +390,30 @@
     <Rule>
         &maxscale_zoom13;
         &minscale_zoom13;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.15,0.15)" />
     </Rule>
     <Rule>
         &maxscale_zoom14;
         &minscale_zoom14;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.3,0.3)" />
     </Rule>
     <Rule>
         &maxscale_zoom15;
         &minscale_zoom15;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.4,0.4)" />
     </Rule>
     <Rule>
         &maxscale_zoom16;
         &minscale_zoom16;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.5,0.5)" />
     </Rule>
     <Rule>
         &maxscale_zoom17;
-        <Filter>[natural]='tree'</Filter>
+        <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
     <Rule>

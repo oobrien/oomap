@@ -7,15 +7,25 @@ This is a fork of [oomap](https://github.com/oobrien/oomap) with the following m
 
 **Global:** No large large mapping databases are required as data is fetched as needed.  This significantly reduces the overhead in running & updating an oomap server.
 
-**Global:**  The standard OpenStreetMap rendering is used at all scales for the web view; the custom rendering is only performed on PDF/JPG/KMZ download.
+**Global:**  The standard OpenStreetMap rendering is used at all scales for the web view; map previews can be generated.
 
 **Global:**  Contours are available (60N to 60S) based on NASA SRTM data - a long way from perfect but better than nothing!
 
 **Global:**  Contours are also available worldwide (except Armenia and Azerbaijan) based on ESA COPERNICUS GLO-30 data - should be fresher and a bit better quality than SRTM.
 
-**Global:**  Magnetic North lines are present.
+**Global:**  Magnetic North lines are present, and maps are orientated to magnetic North by default.
 
-**UK:** Higher resolution contours (2.5m, 5m or 10m spacing) are available for most of England & Wales, derived from LIDAR data.
+**Global:**  Controls can be imported from OpenStreetMap nodes - post boxes, lampposts, benches, plaques, permanent orienteering markers or any arbitrary OSM tag.
+
+**Global:**  Linear as well as score courses are possible, with separate start and finish if required.
+
+**Global:**  Easy moving/editing/deleting of individual controls and other overlay features.
+
+**Global:**  Finer-grained control of map output with filters for trees, hedges, fences, walls and drives, and user-defined output resolution.
+
+**UK:**  Higher resolution contours (5m or 10m spacing) are available for most of England, Wales and Northern Ireland, derived from LIDAR data.
+
+**Local:**  LIDAR-based 5m and 10m contours available for France, Belgium, Austria, Luxembourg, population centres in Australia and New Zealand, and a few bits of Ontario, Canada.
 
 **Other changes:**
 
@@ -53,6 +63,15 @@ Note the futurecity.xml stylesheet requires msttcorefonts  (```sudo apt-get inst
 custom_fonts_dir = '/usr/share/fonts/truetype/msttcorefonts/'
 
 mapnik.register_fonts(custom_fonts_dir)
+
+Website build
+---
+
+The website has to be built from the source files in www/oomap.co.uk/ using npm (from node.js install):
+
+1.  Open a command prompt in this directory
+2.  run "npm install" to retrieve required dependencies
+3.  run "npm run build" to package up site into the "dist" subdirectory.
 
 Examples
 ===

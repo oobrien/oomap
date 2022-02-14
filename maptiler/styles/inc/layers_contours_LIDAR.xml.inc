@@ -45,6 +45,24 @@ FROM lidar_ni
 WHERE (height*2)::integer % (10* &contourSeparation; )::integer != 0
 AND  (height*2)::integer % (2* &contourSeparation; )::integer = 0
 AND ST_Intersects(way,!bbox!)
+UNION ALL
+SELECT ST_Intersection(way, !bbox!) as way, height, ST_Length(way) as length
+FROM lidar_lu
+WHERE (height*2)::integer % (10* &contourSeparation; )::integer != 0
+AND  (height*2)::integer % (2* &contourSeparation; )::integer = 0
+AND ST_Intersects(way,!bbox!)
+UNION ALL
+SELECT ST_Intersection(way, !bbox!) as way, height, ST_Length(way) as length
+FROM lidar_be
+WHERE (height*2)::integer % (10* &contourSeparation; )::integer != 0
+AND  (height*2)::integer % (2* &contourSeparation; )::integer = 0
+AND ST_Intersects(way,!bbox!)
+UNION ALL
+SELECT ST_Intersection(way, !bbox!) as way, height, ST_Length(way) as length
+FROM lidar_fr
+WHERE (height*2)::integer % (10* &contourSeparation; )::integer != 0
+AND  (height*2)::integer % (2* &contourSeparation; )::integer = 0
+AND ST_Intersects(way,!bbox!)
 
 ) as "cntrs10"
             </Parameter>
@@ -89,6 +107,21 @@ AND ST_Intersects(way,!bbox!)
 UNION ALL
 SELECT ST_Intersection(way,!bbox!) as way, height, ST_Length(way) as length
 FROM lidar_ni
+WHERE (height*2)::integer % (10* &contourSeparation; )::integer = 0
+AND ST_Intersects(way,!bbox!)
+UNION ALL
+SELECT ST_Intersection(way,!bbox!) as way, height, ST_Length(way) as length
+FROM lidar_lu
+WHERE (height*2)::integer % (10* &contourSeparation; )::integer = 0
+AND ST_Intersects(way,!bbox!)
+UNION ALL
+SELECT ST_Intersection(way,!bbox!) as way, height, ST_Length(way) as length
+FROM lidar_be
+WHERE (height*2)::integer % (10* &contourSeparation; )::integer = 0
+AND ST_Intersects(way,!bbox!)
+UNION ALL
+SELECT ST_Intersection(way,!bbox!) as way, height, ST_Length(way) as length
+FROM lidar_fr
 WHERE (height*2)::integer % (10* &contourSeparation; )::integer = 0
 AND ST_Intersects(way,!bbox!)
 

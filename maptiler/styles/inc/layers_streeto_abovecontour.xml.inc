@@ -13,10 +13,11 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Intersection(way, !bbox!) as way,"natural",waterway,landuse,way_area
+            (select ST_Intersection(way, !bbox!) as way,"natural",waterway,landuse,"water",way_area
             from &prefix;_polygon
                     where landuse in ('reservoir','water','basin')
                 or "natural" in ('lake','water')
+                or "water" = 'yes'
             order by z_order,way_area desc
             ) as water_areas
         </Parameter>

@@ -3,8 +3,7 @@
 import os, os.path, platform, mapnik
 import math
 import time
-from oomf import *  #reused functions from oomf.py in same directory
-
+from oomf import *
 try:
     from PyPDF2 import PdfFileReader, PdfFileWriter
     from PyPDF2.generic import (ArrayObject, DecodedStreamObject, DictionaryObject, FloatObject, NameObject,
@@ -12,20 +11,19 @@ try:
     HAS_PYPDF2 = True
 except ImportError:
     HAS_PYPDF2 = False
-from geomag import WorldMagneticModel
+import requests
 
-
-def processRequest(req):
-    path = req.args
+def processRequest(environ):
+    path = environ['QUERY_STRING']
     p = parse_query(path)
+    if isStr(p):
+        return (p, 'new')
     mapid = p.get('mapid', 'new')
-    outf = createImage(path, 'pdf')
-    return req_write(outf, req, mapid, 'pdf')
+    return createImage(path, 'pdf'), mapid
 
 def createImage(path, fileformat):
     import tempfile
     import cairo
-    #import urllib
     try:    #DPD - get unquote regardless of Python version
         from urllib.parse import unquote   #Python3
     except ImportError:
@@ -91,11 +89,14 @@ def createImage(path, fileformat):
 
     mapid = p.get('mapid', 'new')
 
-    slon = 0
-    slat = 0
+    slon = slat = flon = flat = 0
     if 'start' in p:
-        slat = int(p['start'].split(",")[0])
-        slon = int(p['start'].split(",")[1])
+        slat = flat = int(p['start'].split(",")[0])
+        slon = flon = int(p['start'].split(",")[1])
+
+    if 'finish' in p:
+        flat = int(p['finish'].split(",")[0])
+        flon = int(p['finish'].split(",")[1])
 
     controlsArr = []
     if 'controls' in p:
@@ -115,8 +116,11 @@ def createImage(path, fileformat):
     scaleCorrectionFactor = math.cos(wgs84lat * math.pi/180)
     scaleCorrected = scale / scaleCorrectionFactor
 
-    wmm = WorldMagneticModel()
-    magdec = wmm.calc_mag_field(wgs84lat, wgs84lon).declination #look up magnetic declination for correct map North lines
+    #get declination from local Python web service (declination.py; mod_wsgi alias for /wmm)
+    wmmParams = {'lat':str(wgs84lat), 'lon':str(wgs84lon)}
+    wmmResponse = requests.get(web_root+"wmm", params = wmmParams)
+    magdec = float(wmmResponse.text)
+
 
     if style == "adhoc":
         MAP_EM = MAP_WM
@@ -181,9 +185,14 @@ def createImage(path, fileformat):
     # Recreate stylefile regardless - might need a new style on existing data.
 
     if not os.path.isfile(styleFile):
-        api = overpass.API()
+        # api = overpass.API()
+        api = overpass.API(endpoint="https://overpass.kumi.systems/api/interpreter")
         MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
-        response = api.get(MapQuery, responseformat="xml")
+        try:
+            response = api.get(MapQuery, responseformat="xml")
+        except Exception as e:
+            return "Overpass API error: " + str(e) + "\n" + \
+                "Use the following ID to recover your map: " + tmpid[1:]
 
         tmpname = "/tmp/" + tmpid + ".osm"
         with open(tmpname,mode="wb") as f:
@@ -229,13 +238,17 @@ def createImage(path, fileformat):
                 os.system("cp " + home_base + "/null.dbf " + home_base + "/"+tmpid + ".dbf")
             #then load contours to database
             os.system("shp2pgsql -g way -s 3857 " + home_base + "/"+tmpid + ".shp " + tmpid + "_srtm_line | psql -h localhost -p 5432 -U osm -d otf1")
+            contour_table = tmpid + "_srtm_line"
             import glob
             for i in glob.glob(home_base +'/'+tmpid+'*'):
                 os.unlink(i)  #Finished with temporary files - delete.
+    else:   # If SRTM or COPE contours, still need to point to correct contour table for reused data so:
+        if p['contour'] == "SRTM" or p['contour'] == "COPE":
+            contour_table = tmpid + "_srtm_line"
 
     # Need a custom Mapnik style file to find tables with temo id prefix.
     # Therefore inject "prefix" entity into appropriate base style definition and save using temp id as name.
-    if p.get('drives',"yes") != "no":    #Render driveways as near-transparent if not selected.  Allows recovery later if needed.
+    if p.get('drives',"no") != "no":    #Render driveways as near-transparent if not selected.  Allows recovery later if needed.
         driveway_colour = "#010101FF"
     else:
         driveway_colour = "#01010101"
@@ -247,11 +260,26 @@ def createImage(path, fileformat):
         walls = "yes"
     else:
         walls = "no"
+    if p.get('trees',"yes") != "no":    # Switch trees on/off.
+        trees = "yes"
+    else:
+        trees = "no"
+    if p.get('hedges',"yes") != "no":    # Switch hedges on/off.
+        hedges = "yes"
+    else:
+        hedges = "no"
+    if p.get('fences',"yes") != "no":    # Switch fences on/off.
+        fences = "yes"
+    else:
+        fences = "no"
     import re
     insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">" + \
         "\n<!ENTITY driveway \"" + driveway_colour + "\">" + \
         "\n<!ENTITY rail \"" + rail + "\">" + \
         "\n<!ENTITY walls \"" + walls + "\">" + \
+        "\n<!ENTITY trees \"" + trees + "\">" + \
+        "\n<!ENTITY hedges \"" + hedges + "\">" + \
+        "\n<!ENTITY fences \"" + fences + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">"
@@ -288,8 +316,14 @@ def createImage(path, fileformat):
     file = tempfile.NamedTemporaryFile()
 
     surface = None
-    if fileformat == 'jpg':
+    if fileformat == 'jpg' or fileformat == 'pre':
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(PAPER_W*S2P), int(PAPER_H*S2P))
+    elif fileformat == 'svg':
+        surface = cairo.SVGSurface(file.name, PAPER_W*S2P / SCALE_FACTOR, PAPER_H*S2P / SCALE_FACTOR)
+        surface.set_device_scale(1.0/SCALE_FACTOR,1.0/SCALE_FACTOR)
+        versions = surface.get_versions()
+        version = versions[1]
+        surface.restrict_to_version(version)
     else:
         surface = cairo.PDFSurface(file.name, PAPER_W*S2P / SCALE_FACTOR, PAPER_H*S2P / SCALE_FACTOR)
         surface.set_device_scale(1.0/SCALE_FACTOR,1.0/SCALE_FACTOR)
@@ -341,7 +375,9 @@ def createImage(path, fileformat):
     ctx.translate(MAP_W*S2P/2,MAP_H*S2P/2) # translate origin to the center
     ctx.rotate(rotation)
     ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+
     mapnik.render(map, ctx, SCALE_FACTOR, 0, 0)
+
     ctx.restore()
 
     if style == "adhoc":
@@ -352,7 +388,7 @@ def createImage(path, fileformat):
         text = path
         ctx.translate(MAP_WM*S2P, (MAP_NM+MAP_H+0.001)*S2P)
         ctx.show_text(text)
-        if fileformat == 'jpg':
+        if fileformat == 'jpg' or fileformat == 'pre':
             surface.write_to_png(file.name)
         else:
             surface.finish()
@@ -377,8 +413,8 @@ def createImage(path, fileformat):
         ctx.set_operator(cairo.Operator.MULTIPLY)
         ctx.set_source_rgb(0.651, 0.149, 1)
         ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
-        ctx.rotate(rotation)
-        ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+        ctx.rotate(rotation)    # rotate map to correct angle
+        ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)  # set origin to NW corner
         ctx.set_line_width(SC_T*S2P)
         ctx.set_line_join(cairo.LINE_JOIN_ROUND)
         #ctx.translate((MAP_WM+((slon-mapWLon)/scaleCorrected))*S2P, (MAP_NM+((mapNLat-slat)/scaleCorrected))*S2P)
@@ -388,6 +424,16 @@ def createImage(path, fileformat):
         ctx.rel_line_to(-0.5*SC_W*S2P, 0.866*SC_W*S2P)
         ctx.rel_line_to(SC_W*S2P, 0)
         ctx.close_path()
+        ctx.stroke()
+
+        #Finish control (same place as start, unless separate finish coords)
+        if flon != 0 and flat != 0:
+            ctx.rotate(rotation)
+            ctx.translate((flon-slon)*EXTENT_W*S2P/(mapELon-mapWLon), (slat-flat)*EXTENT_H*S2P/(mapNLat-mapSLat))
+        ctx.set_line_width(C_T*S2P)
+        ctx.arc(0, 0, C_R*S2P*1.2, 0, 2*math.pi)    #Outer circle
+        ctx.stroke()
+        ctx.arc(0, 0, C_R*S2P*0.8, 0, 2*math.pi)    #inner circle
         ctx.stroke()
 
     # Controls and labels
@@ -401,7 +447,6 @@ def createImage(path, fileformat):
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(CTEXT_S*S2P)
         numControls = len(controlsArr)//4
-
         #Draw white halo around control numbers for legibility on complex maps
         ctx.set_operator(cairo.Operator.SOURCE)
         ctx.set_source_rgb(1, 0.997, 1)
@@ -427,14 +472,14 @@ def createImage(path, fileformat):
 
         ctx.set_source_rgb(0.651, 0.149, 1)
         ctx.set_operator(cairo.Operator.MULTIPLY)
+        lastlonP = (slon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
+        lastlatP = (mapNLat-slat)*EXTENT_H/(mapNLat-mapSLat)
         for i in range(numControls):
             text = controlsArr[4*i]
             labelAngle = float(controlsArr[4*i+1])
             controllat = float(controlsArr[4*i+2])
             controllon = float(controlsArr[4*i+3])
-            #controllatP = MAP_NM+((mapNLat-controllat)/scaleCorrected)
-            #controllonP = MAP_WM+((controllon-mapWLon)/scaleCorrected)
-            #ctx.move_to((controllonP+C_R)*S2P, controllatP*S2P)
+
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
             ctx.move_to((controllonP+C_R)*S2P, controllatP*S2P)
@@ -444,6 +489,17 @@ def createImage(path, fileformat):
             ctx.move_to((controllonP+CDOT_R)*S2P, controllatP*S2P)
             ctx.arc(controllonP*S2P, controllatP*S2P, CDOT_R*S2P, 0, 2*math.pi)
             ctx.fill()
+            if p.get('linear',"no") != "no":
+                angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
+                start2lonP = lastlonP + math.cos(angle) * C_R
+                start2latP = lastlatP + math.sin(angle) * C_R
+                end2lonP = controllonP - math.cos(angle) * C_R
+                end2latP = controllatP - math.sin(angle) * C_R
+                ctx.move_to(start2lonP*S2P, start2latP*S2P)
+                ctx.line_to(end2lonP*S2P, end2latP*S2P)  #draw line between controls
+                lastlonP = controllonP
+                lastlatP = controllatP
+
             x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
             labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
             labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
@@ -454,6 +510,18 @@ def createImage(path, fileformat):
             ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
             ctx.show_text(text)
             ctx.restore()
+        # draw line from last control to finish
+        if p.get('linear',"no") != "no":
+            controllatP = (mapNLat-flat)*EXTENT_H/(mapNLat-mapSLat)
+            controllonP = (flon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
+            angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
+            start2lonP = lastlonP + math.cos(angle) * C_R
+            start2latP = lastlatP + math.sin(angle) * C_R
+            end2lonP = controllonP - math.cos(angle) * C_R * 1.2
+            end2latP = controllatP - math.sin(angle) * C_R * 1.2
+            ctx.move_to(start2lonP*S2P, start2latP*S2P)
+            ctx.line_to(end2lonP*S2P, end2latP*S2P)
+        ctx.stroke()
 
     # Crosses and labels
     if len(crossesArr) > 0:
@@ -463,7 +531,7 @@ def createImage(path, fileformat):
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
         ctx.set_font_size(CTEXT_S*S2P/1.5)
         #ctx.set_source_rgb(1, 0, 0)
-        numCrosses = len(crossesArr)/2
+        numCrosses = len(crossesArr)//2
         for i in range(numCrosses):
             text = "X"
             controllat = float(crossesArr[2*i])
@@ -654,7 +722,7 @@ def createImage(path, fileformat):
         ctx.set_source_rgb(0, 0.5, 0.8)
 
     ctx.set_font_size(7*SCALE_FACTOR)
-    text = "OOM created by Oliver O'Brien. Make your own: http://oomap.co.uk/"
+    text = "OOM created by Oliver O'Brien. Make your own: " + web_root
     ctx.translate((MAP_WM)*S2P, (MAP_NM+MAP_H+ADORN_ATTRIB_NM+0.004)*S2P)
     ctx.show_text(text)
 
@@ -687,11 +755,11 @@ def createImage(path, fileformat):
     ctx = cairo.Context(surface)
     ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_font_size(0.5*SCALE_FACTOR)
-    text = web_root + fileformat + '/?' + path
+    text = web_root + "render/" + fileformat + '/?' + path
     ctx.translate(MAP_WM*S2P, (MAP_NM+MAP_H+ADORN_URL_NM)*S2P)
     ctx.show_text(text)
 
-    if fileformat == 'jpg':
+    if fileformat == 'jpg' or fileformat == 'pre':
         from PIL import Image, ImageCms
         surface.write_to_png(file.name + '.png')
         im = Image.open(file.name + '.png')
@@ -704,7 +772,7 @@ def createImage(path, fileformat):
     else:
         surface.finish()
         surface.flush()
-
+    if fileformat == 'pdf':
         # Add Geospatial PDF metadata
         map_bounds = (MAP_WM/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H, MAP_WM/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H)
         file2 = tempfile.NamedTemporaryFile()
@@ -715,6 +783,7 @@ def createImage(path, fileformat):
     #os.unlink(styleFile)
     #dropTables = 'psql -U osm otf1 -t -c "select \'drop table \\"\' || tablename || \'\\" cascade;\' from pg_tables where schemaname = \'public\' and tablename like \'h%\'"  | psql -U osm otf1'
     #os.system(dropTables)
+
     return file
 
 def add_geospatial_pdf_header(m, f, f2, map_bounds, poly, epsg=None, wkt=None):
@@ -849,5 +918,5 @@ def test(path):
 
 
 if __name__ == '__main__':
-    test("style=streeto-LIDAR-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=|id=6043c1a44cc94|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2")
+    test("style=streeto-COPE-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=|id=6043c1a44cc95|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2|linear=no")
     #test("style=oterrain-COPE-5|grid=no&paper=0.297,0.210|scale=10000|centre=6801767,-86381|id=6043c1a44cc93&rotation=0.2")
