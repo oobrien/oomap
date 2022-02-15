@@ -477,6 +477,16 @@ h1, h2
 {
 	mix-blend-mode: multiply;
 }
+
+.greyscale
+{
+	mix-blend-mode: saturation;
+}
+
+.colour
+{
+	mix-blend-mode: multiply;
+}
 /* jQuery-ui edits */
 
 .ui-checkboxradio-radio-label .ui-icon-background {

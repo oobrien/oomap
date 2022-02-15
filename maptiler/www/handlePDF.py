@@ -186,12 +186,12 @@ def createImage(path, fileformat):
 
     if not os.path.isfile(styleFile):
         # api = overpass.API()
-        api = overpass.API(endpoint="https://overpass.kumi.systems/api/interpreter")
+        api = overpass.API(endpoint="https://overpass.kumi.systems/api/interpreter", timeout=120)
         MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
         try:
             response = api.get(MapQuery, responseformat="xml")
         except Exception as e:
-            return "Overpass API error: " + str(e) + "\n" + \
+            return "Overpass API error: " + type(e).__name__ + ", " + str(e) + "\n" + \
                 "Use the following ID to recover your map: " + tmpid[1:]
 
         tmpname = "/tmp/" + tmpid + ".osm"

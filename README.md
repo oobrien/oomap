@@ -70,8 +70,9 @@ Website build
 The website has to be built from the source files in www/oomap.co.uk/ using npm (from node.js install):
 
 1.  Open a command prompt in this directory
-2.  run "npm install" to retrieve required dependencies
-3.  run "npm run build" to package up site into the "dist" subdirectory.
+2.  run "npm install vite" to install key dependency
+3.  run "npm install" to retrieve other required dependencies
+4.  run "npm run build" to package up site into the "dist" subdirectory.
 
 Examples
 ===

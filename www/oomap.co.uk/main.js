@@ -289,9 +289,13 @@ var marginStyle = new Style({
 	fill: new Fill({ color: [255, 255, 255, 1]})
 });
 
-var sheetStyle  = new Style({
-	stroke: new Stroke({ color: [0, 0, 0, 1], width: 1})
+var sheetStyle = new Style({
+	fill: new Fill({ color: [255, 255, 255, 1]})
 });
+
+//var sheetStyle  = new Style({
+//	stroke: new Stroke({ color: [0, 0, 0, 1], width: 1})
+//});
 
 function titleStyle(feature, resolution)
 {
@@ -547,7 +551,7 @@ function init()
     updateWhileAnimating: true});
 	layerMapCentre = new VectorLayer({ title: "mapcentre", style: centreStyle, source: sourceMC, zIndex: 4});
 	layerMapSheet = new VectorLayer({ title: "mapsheet", style: sheetStyle, source: sourceMS, zIndex: 2,
-    updateWhileAnimating: true});
+    updateWhileAnimating: true,  className: 'colour'});
 	layerMapTitle = new VectorLayer({ title: "maptitle", style: titleStyle, source: sourceMT, zIndex: 2,
     updateWhileAnimating: true});
 	layerMapContent = new VectorLayer({ title: "mapcontent", style: contentStyle, source: sourceContent });
@@ -556,8 +560,6 @@ function init()
   layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 4 });
   layerPreview = new ImageLayer({ name: "Georef",  zIndex: 3});
   layerGPX = new VectorLayer({ title: "GPX", style: markerStyle, source: sourceGPX, zIndex: 4 });
-
-  //layerPreview = new GeoImageLayer({title: "preview", visible: true, zIndex: 3});
 
 	if (args['mapStyleID'])
 	{
@@ -614,15 +616,22 @@ function init()
           //Use view centre unless sheet has been placed.
           if (state != 'initialzoom' && state != 'placepaper') { coords = sheetCentreLL; }
           lookupMag(olProj.transform(coords, "EPSG:3857", "EPSG:4326")[1],olProj.transform(coords, "EPSG:3857", "EPSG:4326")[0]);
-          this.label_.innerHTML = 'N';
         }
         else if (Math.PI - Math.abs(Math.abs((-magDec * Math.PI/180) - olMap.getView().getRotation()) - Math.PI) > 0.016) { //If mag N available, and not current orientation, change to Mag N
           olMap.getView().setRotation(-magDec * Math.PI/180);
-          this.label_.innerHTML = 'N';
         }
         else {  //Otherwise rotate to True N
           olMap.getView().setRotation(0);
-                    this.label_.innerHTML = 'M';
+        }
+      },
+      render: function()
+      { //if rotation more-or-less zero, change label to "M", otherwise show rotated "N"
+        if (Math.PI - Math.abs(Math.abs(olMap.getView().getRotation()) - Math.PI) > 0.016) {
+          this.label_.innerHTML = 'N';
+          this.label_.style.transform = 'rotate(' + olMap.getView().getRotation() + 'rad)';
+        }
+        else {
+          this.label_.innerHTML = 'M';
         }
       }
     } }).extend(
@@ -656,13 +665,15 @@ function init()
       selected = null;
     }
 
-    olMap.forEachFeatureAtPixel(evt.pixel, function (f) {
-      selected = f;
-      return true;
+    olMap.forEachFeatureAtPixel(evt.pixel, function (f, layer) {
+      if ($.inArray(layer.get('title'), ['GPX','controls', 'mapcentre']) >= 0) {
+        selected = f;
+        return true;
+      }
     });
 
     if (selected) {
-      content.innerHTML = selected.get('description');
+      content.innerHTML = (selected.get('description') + "\n" + selected.get('tags')).replace("undefined","");
       overlay.setPosition(evt.coordinate);
     } else {
       overlay.setPosition(undefined);
@@ -745,7 +756,7 @@ function init()
 					angle: parseInt($("#c_angle").val()),
 					type: $("#c_type :radio:checked").attr("id"),
 					score: parseInt($("#c_score :radio:checked").val()),
-					description: $('<div>').text($("#c_description").val()).html()
+					description: $('<div>').text($("#c_description").val()).html().replace("undefined","")
 				});
 
 				if (control.get('type') == "c_startfinish")
@@ -778,19 +789,7 @@ function init()
 					}
 				}
 				layerControls.getSource().addFeature(control); //add new control
-
-				if (mapID != "new")
-				{
-					mapID = "new";
-					updateUrl();
-				}
-
-				$( "#getraster" ).button("disable");
-				$( "#getworldfile" ).button("disable");
-				$( "#getkmz" ).button("disable");
-
-			  	rebuildMapControls();
-			  	rebuildDescriptions();
+        controlsChanged();
 
 				$( this ).dialog( "close" );
 		  }
@@ -1079,6 +1078,19 @@ function init()
 		$.post('/php/load.php', {"shortcode":reqMapID}, handleLoadCallback);
 	}
 
+  $(window).keydown(function (e) {
+      var keyCode = e.which;
+      if (keyCode == 71) {  //press "g" to switch to greyscale map
+          var gr = $('.greyscale');
+          var col = $('.colour');
+          gr.removeClass('greyscale').addClass('colour');
+          col.removeClass('colour').addClass('greyscale');
+          e.preventDefault();
+          e.stopPropagation();
+      }
+  });
+
+
 }
 
 function updateTips( t ) {
@@ -1291,6 +1303,7 @@ function handleZoom()
 					{
 						urls: [prefix1 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix2 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix3 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png"],
 						attributions: ['Contours: various - see PDF output', ],
+            maxZoom: 18,
 						"wrapX": true
 					}
 				)
@@ -2428,16 +2441,23 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
             featureList.forEach(function(c)
             {
               if (getDistance([result.elements[i].lon, result.elements[i].lat],[c.wgs84lon, c.wgs84lat]) <= (radius+1)) {		dupe = true;	};
+              // Remove common unwanted nodes
+              if (result.elements[i].tags.hasOwnProperty('created_by') || result.elements[i].tags.hasOwnProperty('generator:source')) {		dupe = true;	};
             });
           }
           if (debug) {console.log(dupe);}
     			if (!dupe)
     			{
+            var tags="";
+            Object.entries(result.elements[i].tags).forEach(function(t){
+             tags+=t[0] + ": " + t[1] + "\n";
+           });
             var control = new Feature({
               geometry: new Point(olProj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857")),
               angle: 45,
               type: 'c_regular',
-              description: prefix + result.elements[i].tags[srcDescription]
+              description: (prefix + result.elements[i].tags[srcDescription]).replace("undefined",""),
+              tags: tags
             });
 
             if(boolTemp)
@@ -2505,7 +2525,7 @@ function handleGetOpenplaquesCallback(result)
         angle: 45,
         type: 'c_regular',
         score: topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,
-        description: "Plaque: " + result.features[i].properties.inscription
+        description: "Plaque: " + ("" + result.features[i].properties.inscription).replace("undefined","")
       });
       control.setId(control.get('id'));
 	  	var dupe = false;
@@ -2565,8 +2585,7 @@ function setdecl(v, callback){
 }
 
 function lookupMag(lat, lon) {
-   var url=
-"https://oomap.dna-software.co.uk/wmm?lat="+lat+"&lon="+lon;
+   var url = "https://oomap.dna-software.co.uk/wmm?lat="+lat+"&lon="+lon;
    $.get(url, function(response, status){
         setdecl(response, rotateToMagDec);
    });
@@ -2580,7 +2599,7 @@ function handlePreview(){
         url: getURL("pre"),
         crossOrigin: '',
         imageCenter: [sheetCentreLL[0], sheetCentreLL[1] + 0.0005 * trueScale], //this is centred on *map*, not *sheet* - need to adjust slightly based on margins.
-        imageScale: [1.016 * trueScale * 0.025/dpi,trueScale*0.0254/dpi],  //1.016 x scaling factor empirically determined - don't know why this is needed! metres per pixel.
+        imageScale: [trueScale * 0.0254/dpi,trueScale*0.0254/dpi],  //metres per pixel.
         imageRotate: olMap.getView().getRotation() * -1,
     });
     $( "#preview" ).button().addClass('loading');
