@@ -46,6 +46,7 @@ var currentID = null;
 var currentNumber = null;
 var topID = 0;  //assign features unique ids starting from 0 (start = "S")
 var topNumber = 0; //assign controls unique numbers
+var batchNumber = 0;  //control property describing which batch it was added as, to allow batch delete
 
 var rotAngle = 0;
 var magDec = null; //magnetic declination for map centre
@@ -102,7 +103,7 @@ var wgs84Poly;
 var purple = 'rgba(220, 40, 255, 1)';
 
 const container = document.getElementById('popup');
-const content = document.getElementById('popup-content');
+const overlayContent = document.getElementById('popup-content');
 const overlay = new Overlay({
   element: container,
   autoPan: {
@@ -112,13 +113,20 @@ const overlay = new Overlay({
   },
 });
 
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+
+function drag(ev) {
+  //ev.dataTransfer.setData("text", ev.target.id);
+}
+
+
+
 //State
 //initialzoom, placepaper, addcontrols
 var state = "initialzoom";
 var controloptstate = "add";
-
-//var x;
-//var list;
 
 let dragAndDropInteraction;
 
@@ -130,10 +138,6 @@ function setInteraction() {
     formatConstructors: [GPX, ],
   });
   dragAndDropInteraction.on('addfeatures', function (event) {
-    //const vectorSource = new VectorSource({
-    //  features: event.features,
-    //});
-    //layerGPX.setSource(vectorSource);
     layerGPX.getSource().addFeatures(event.features);
     olMap.getView().fit(layerGPX.getSource().getExtent());
     $( "#deleteMarkers" ).button("enable");
@@ -141,35 +145,35 @@ function setInteraction() {
   olMap.addInteraction(dragAndDropInteraction);
 }
 
-
 function controlStyle(feature, resolution)
 {
 	var size = trueScale/(resolution * 16000);
   var type = feature.getProperties().type;
   switch(type)
   {
-  case "c_regular": //control - circle & number
+  case "c_regular": //control - circle & number.    Transparent fill allows selection throughout
     return [
-  	new Style({
-  		image: new Circle({
-  			fill: new Fill({ color: purple}),
-  			radius: 10 * size
-  		})
-  	}),
-  	new Style({
-  		image: new Circle ({
-  			stroke: new Stroke({color: purple, width: 10 * size}),
-  			radius: 75 * size
-  		}),
-  		text: new Text({
-  			  textAlign: "center",
-  			  font: 120 * size + "px arial, verdana, sans-serif",
-  			  text: feature.get('number'),
-  			  fill: new Fill({color: purple}),
-  			  offsetX:  5 * size * 35 * Math.sin((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation()),
-  			  offsetY:  5 * size * -35 * Math.cos((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation())
-  		})
-  	})]
+    	new Style({
+    		image: new Circle ({
+    			stroke: new Stroke({color: purple, width: 10 * size}),
+          fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
+    			radius: 75 * size
+    		}),
+    		text: new Text({
+    			  textAlign: "center",
+    			  font: 120 * size + "px arial, verdana, sans-serif",
+    			  text: feature.get('number'),
+    			  fill: new Fill({color: purple}),
+    			  offsetX:  5 * size * 35 * Math.sin((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation()),
+    			  offsetY:  5 * size * -35 * Math.cos((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation())
+    		})
+    	}),
+      new Style({
+        image: new Circle({
+          fill: new Fill({ color: purple}),
+          radius: 10 * size
+        })
+    })]
   break;
   case "c_startfinish": //start/finish - triangle & double circle
     var boolFinish = layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_finish').length > 0 ;
@@ -180,6 +184,7 @@ function controlStyle(feature, resolution)
     			image: new RegularShape({
     				points: 3,
     				stroke: new Stroke({color: purple, width: 10 * size}),
+            fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
     				radius: 110 * size
     			})
     		})]
@@ -203,6 +208,7 @@ function controlStyle(feature, resolution)
         new Style({
           image: new Circle({
             stroke: new Stroke({color: purple, width: 10 * size}),
+            fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
             radius: 90 * size
         })
       })]
@@ -219,6 +225,7 @@ function controlStyle(feature, resolution)
     		new Style({
     			image: new Circle({
     				stroke: new Stroke({color: purple, width: 10 * size}),
+            fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
     				radius: 90 * size
         })
     	})]
@@ -469,15 +476,21 @@ function init()
   $("#s_poi_key").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
   $("#s_poi_value").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
 
+  $("#tempLayer").prop("checked", false);
+  $("#layerMessage").hide();
+  $("#undoMessage").show();
+
   $('#tempLayer').change(function() {
     if (this.checked) {
       //$('#c_poi_dist').prop('disabled', true);
       //$("label[for='c_poi_dist']").addClass( "grey" );
       $("#layerMessage").show();
+      $("#undoMessage").hide();
     } else {
       //$('#c_poi_dist').prop('disabled', false);
       //$("label[for='c_poi_dist']").removeClass( "grey" );
       $("#layerMessage").hide();
+      $("#undoMessage").show();
     }
   });
 
@@ -673,8 +686,8 @@ function init()
     });
 
     if (selected) {
-      content.innerHTML = (selected.get('description') + "\n" + selected.get('tags')).replace("undefined","");
-      overlay.setPosition(evt.coordinate);
+      overlayContent.innerHTML = (selected.get('description') + "<br>" + selected.get('tags')).replace("undefined","");
+      if (overlayContent.innerHTML != "\n") { overlay.setPosition(evt.coordinate); }
     } else {
       overlay.setPosition(undefined);
     }
@@ -756,7 +769,8 @@ function init()
 					angle: parseInt($("#c_angle").val()),
 					type: $("#c_type :radio:checked").attr("id"),
 					score: parseInt($("#c_score :radio:checked").val()),
-					description: $('<div>').text($("#c_description").val()).html().replace("undefined","")
+					description: $('<div>').text($("#c_description").val()).html().replace("undefined",""),
+          batch: batchNumber++,
 				});
 
 				if (control.get('type') == "c_startfinish")
@@ -1043,15 +1057,15 @@ function init()
 
   $( "#pois" ).dialog({
     autoOpen: false,
-    height: 440,
-    width: 530,
+    height: 470,
+    width: 580,
     modal: true,
     buttons: {
       OK: function() {
         var rVal = $("input[name='c_pois']:checked").val().split(",");
         if (rVal[0]=='custom')
-        {
-          rVal = [ $("input[name='poi_key']").val() + "=" +  $("input[name='poi_value']").val(),$("input[name='poi_value']").val() + ': ','name', ''];
+        { //wrap key and value in single-quotes to allow e.g. colons in key
+          rVal = ["'" + $("input[name='poi_key']").val() + "'='" +  $("input[name='poi_value']").val() + "'",$("input[name='poi_value']").val() + ': ','name', ''];
         }
         //rVal = [key=value, description prefix, field for description, sort field]
         rVal.push(parseInt($("input[name='poi_dist']").val()));
@@ -1080,17 +1094,35 @@ function init()
 
   $(window).keydown(function (e) {
       var keyCode = e.which;
-      if (keyCode == 71) {  //press "g" to switch to greyscale map
+      if (debug) {console.log ("key: " + keyCode);}
+      if (keyCode == 68 && e.ctrlKey == true) {  //press "Ctrl-d" - toggle debug
+        debug = !debug;
+        e.preventDefault();
+      }
+      if (keyCode == 71 && e.ctrlKey == true) {  //press "Ctrl-g" to switch to greyscale map
           var gr = $('.greyscale');
           var col = $('.colour');
           gr.removeClass('greyscale').addClass('colour');
           col.removeClass('colour').addClass('greyscale');
           e.preventDefault();
-          e.stopPropagation();
+      }
+      if (keyCode == 90 && e.ctrlKey == true) {  //press "Ctrl-z" to undo last control add operation
+        layerControls.getSource().getFeatures().filter(feat=>feat.get('batch') == batchNumber-1).forEach(function(f){
+           layerControls.getSource().removeFeature(f);
+        });
+        if (batchNumber > 1) {
+          var lastControl = getSortedControls('c_regular').pop();
+          topNumber = parseInt(lastControl.number);
+          batchNumber--;
+        }
+        else {
+          topNumber = 0;
+          batchNumber = 0;
+        }
+        controlsChanged();
+        e.preventDefault();
       }
   });
-
-
 }
 
 function updateTips( t ) {
@@ -1497,7 +1529,6 @@ function validate()
 
 function handleDrag()	//Vector element has been dragged - update arrays to match UI
 {
-	//console.log('drag ');
 	var feats = select.getFeatures();
 	feats.forEach((feat) => {
 		if (debug) { console.log('handleDrag'); }
@@ -1674,11 +1705,7 @@ function handleClick(evt)
 		if (debug) { console.log('returning'); }
 		return;
 	}
-//  if (select.getFeatures().length > 0)
-  //{
-  //  return;
-//  }
-	//console.log(state);
+
 	if (state == "addcontrols")
 	{
   	var coordinate = evt.coordinate;
@@ -1746,8 +1773,8 @@ function handleDblClick(evt)
 		}
     else if (feature && $.inArray(layer.get('title'), ['GPX']) >= 0)
 		{ //Clicked GPX/temp feature - promote to layerControls
-      if (state == 'addcontrols' && feature.getGeometry().flatCoordinates.length < 4)
-      { //only run if clicked item is a (3D) point, and a map has been placed
+      if (state == 'addcontrols' && feature.getGeometry().getType() == 'Point')
+      { //only run if clicked item is a point, and a map has been placed
         if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(olProj.transform(evt.coordinate, "EPSG:3857", "EPSG:4326"))))
         { //if event outside map area, alert
           $( "#newcontroloutsidemap" ).dialog({
@@ -1766,11 +1793,17 @@ function handleDblClick(evt)
         {
           feature.set('description',"" + feature.get('name'),true)
         }
-        feature.set('type','c_regular',true)
-        feature.set('id',topID++,true)
-        feature.set('number',"" + ++topNumber,true)
-        feature.set('angle',45,true)
-        feature.set('score',topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,true)
+        else {//If no description, use tags instead.
+          if(feature.get('description').length == 0){
+            feature.set('description',feature.get('tags').replace("undefined",""));
+          }
+        }
+        feature.set('type','c_regular',true);
+        feature.set('id',topID++,true);
+        feature.set('number',"" + ++topNumber,true);
+        feature.set('angle',45,true);
+        feature.set('score',topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,true);
+        feature.set('batch',batchNumber++);
         feature.setId(feature.get('id'));
         layerControls.getSource().addFeature(feature);
         controlsChanged();
@@ -2087,11 +2120,13 @@ function loadMap(data)
 			type: control.type,
 			score: parseInt(control.score),
 			description: control.description,
-			id: control.id
+			id: control.id,
+      batch: batchNumber
 		});
 		controlPoint.setId(control.id);
 		layerControls.getSource().addFeatures([controlPoint]);
 	}
+  batchNumber++;
 	mapID = reqMapID;
   rebuildMapSheet();  //DPD
 	rebuildMapControls();
@@ -2104,6 +2139,21 @@ function loadMap(data)
 	$( "#getkmz" ).button("enable");
 }
 
+//Move a feature from number: moveFrom to number: moveTo, and shuffle others down
+function insertFeature (moveFrom, moveTo) {
+  var isForward = parseInt(moveFrom) < parseInt(moveTo);
+  var movedFeat = layerControls.getSource().getFeatures().filter(feat=>feat.get('number') == moveFrom && feat.get('type') == 'c_regular');
+  while (true){ //keep iterating until function returns (when no feature is bumped)
+    if (movedFeat.length != 1) { return false; }
+    var bumpedFeat = layerControls.getSource().getFeatures().filter(feat=>feat.get('number') == moveTo && feat.get('type') == 'c_regular');
+    if(debug) { console.log(moveFrom + " moved to " + moveTo); }
+    movedFeat[0].set('number', "" + moveTo);
+    if (bumpedFeat.length == 0) { return true; };
+    moveFrom = moveTo;
+    isForward ? moveTo-- : moveTo++ ;
+    movedFeat = bumpedFeat;
+  }
+}
 //convert a control Object to an ol Feature
 function controlToFeature(control)
 {
@@ -2348,9 +2398,10 @@ function rebuildDescriptions()
 	for (var i = 0; i < list.length; i++)
 	{
 		var control  = list[i];
+
 		$("#controldescriptions").find('tbody')
-			.append($('<tr draggable="true">').addClass('controlrow')
-				.append($('<td>')
+			.append($('<tr>').addClass('controlrow').data( 'number', control.number )
+				.append($('<td class="numcol">')
 					.append(control.number)
 				  )
 				.append($('<td class="scorecol">')
@@ -2367,6 +2418,25 @@ function rebuildDescriptions()
 				  )
 			);
 	}
+  $('.controlrow').droppable({
+    accept: '.controlrow',
+    //hoverClass: 'hovered',
+    drop: function (ev, ui) {
+      var toNumber = $(this).data( 'number' );
+      var fromNumber = ui.draggable.data( 'number' );
+      insertFeature(fromNumber, toNumber);
+      controlsChanged();
+      ev.preventDefault();
+      if (debug) { console.log("drop: "+ fromNumber + " to: " + toNumber); }
+    }
+  });
+
+  $('.controlrow').draggable({
+    cursor: 'move',
+    containment: 'parent',
+    stack: '#controlpanel div',
+    revert: true
+  });
 
 	initDescriptions();
 }
@@ -2445,7 +2515,7 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
               if (result.elements[i].tags.hasOwnProperty('created_by') || result.elements[i].tags.hasOwnProperty('generator:source')) {		dupe = true;	};
             });
           }
-          if (debug) {console.log(dupe);}
+          if (debug) {console.log("dupe");}
     			if (!dupe)
     			{
             var tags="";
@@ -2469,8 +2539,9 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
             {
               control.set('id',topID++);
               control.set('number',"" + ++topNumber);
-              control.set('score', topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50)
+              control.set('score', topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50);
               control.setId(control.get('id'));
+              control.set('batch', batchNumber);
               layerControls.getSource().addFeature(control);
       				changed = true;
             }
@@ -2482,6 +2553,7 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
     		if (changed)
         {
           controlsChanged();
+          batchNumber++;
         }
     	}
     	else
@@ -2492,9 +2564,11 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
 
     })
       .fail(function( jqXHR, textStatus, errorThrown ) {
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown );
+        if (debug) {
+          console.log(jqXHR);
+          console.log(textStatus);
+          console.log(errorThrown );
+        }
         $( "#postboxes_searching" ).dialog( "close" );
     });
 
@@ -2525,7 +2599,8 @@ function handleGetOpenplaquesCallback(result)
         angle: 45,
         type: 'c_regular',
         score: topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,
-        description: "Plaque: " + ("" + result.features[i].properties.inscription).replace("undefined","")
+        description: "Plaque: " + ("" + result.features[i].properties.inscription).replace("undefined",""),
+        batch: batchNumber
       });
       control.setId(control.get('id'));
 	  	var dupe = false;
@@ -2544,7 +2619,10 @@ function handleGetOpenplaquesCallback(result)
 			}
 		}
 		$( "#getOpenplaques" ).button("disable");
-		if (changed)	{ controlsChanged();	}
+		if (changed)	{
+       controlsChanged();
+       batchNumber++;
+     	}
 	}
 	else
 	{
@@ -2622,7 +2700,6 @@ function handlePreview(){
     preview=false;
   }
 }
-
 
 $(document).ready(function()
 {

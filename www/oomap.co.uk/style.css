@@ -230,7 +230,23 @@ h1, h2
 }
 
 .edit, .delete { font-size: 10px; }
-.controlrow { font-size: 10px; }
+
+.controlrow {
+	font-size: 10px;
+	background-color: rgba(255, 255, 255, 0.6);
+}
+
+.controlrow.ui-draggable-dragging {
+	background-color: rgba(255, 255, 128, 0.8);
+}
+
+.controlrow.ui-droppable-active {
+	background-color: rgba(200, 255, 200, 0.6);
+}
+
+.controlrow.ui-droppable-hover {
+	background-color: rgba(255, 200, 200, 0.6);
+}
 
 #controldescriptions
 {
@@ -243,6 +259,7 @@ h1, h2
 {
 	border: 1px solid black;
 	padding: 5px;
+
 }
 
 #eventdate
@@ -381,10 +398,9 @@ h1, h2
 	border-top: 3px solid black !IMPORTANT;
 }
 
-#layerMessage
+#layerMessage #undoMessage
 {
-	font-size: 10px;
-	display: none;
+	font-size: 9px;
 }
 
 .loading
