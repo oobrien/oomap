@@ -38,9 +38,9 @@ var prefix2 = "https://tile.dna-software.co.uk/";
 var prefix3 = "https://tile.dna-software.co.uk/";
 var defaultMapTitle = "OpenOrienteeringMap";
 var defaultRaceDescription = "Race instructions";
+
 //var apiServer = "https://overpass-api.de/api/interpreter";
 var apiServer = "https://overpass.kumi.systems/api/interpreter";
-//==================================================
 
 var currentID = null;
 var currentNumber = null;
