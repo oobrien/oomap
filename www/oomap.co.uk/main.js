@@ -19,14 +19,17 @@ import {ScaleLine, defaults as defaultControls} from 'ol/control';
 import * as olProj from 'ol/proj';
 import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteractions,} from 'ol/interaction';
 import GPX from 'ol/format/GPX';
+import GeoJSON from 'ol/format/GeoJSON';
 import {Point, Polygon, LineString} from 'ol/geom';
 import {fromExtent as PolyFromExtent} from 'ol/geom/Polygon';
-import {getDistance} from 'ol/sphere';
+import {getDistance, getLength} from 'ol/sphere';
 import GeoImage from 'ol-ext/source/GeoImage';
+import SearchNominatim from 'ol-ext/control/SearchNominatim';
 import Overlay from 'ol/Overlay';
 import './lib/jquery-ui.min.css';
 import 'ol/ol.css';
 import './style.css';
+import 'ol-ext/dist/ol-ext.css';
 
 Proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
 
@@ -44,7 +47,7 @@ var apiServer = "https://overpass.kumi.systems/api/interpreter";
 
 var currentID = null;
 var currentNumber = null;
-var topID = 0;  //assign features unique ids starting from 0 (start = "S")
+var topID = 0;  //assign features unique ids starting from 0 (start = "S", finish = "F")
 var topNumber = 0; //assign controls unique numbers
 var batchNumber = 0;  //control property describing which batch it was added as, to allow batch delete
 
@@ -113,18 +116,6 @@ const overlay = new Overlay({
   },
 });
 
-function allowDrop(ev) {
-  ev.preventDefault();
-}
-
-function drag(ev) {
-  //ev.dataTransfer.setData("text", ev.target.id);
-}
-
-
-
-//State
-//initialzoom, placepaper, addcontrols
 var state = "initialzoom";
 var controloptstate = "add";
 
@@ -139,6 +130,21 @@ function setInteraction() {
   });
   dragAndDropInteraction.on('addfeatures', function (event) {
     layerGPX.getSource().addFeatures(event.features);
+    event.features.forEach(function(f) {
+       if (f.getGeometry().getType() != 'Point') {
+         f.setStyle(gpxStyle(f));
+         f.set('description', f.get('name'));
+       }
+       else {
+         f.setStyle([new Style({  image: new Circle({
+              stroke: new Stroke({
+                color: "blue",
+                width: 1.75
+              }),
+              radius: 5
+            })})]);
+       }
+     });
     olMap.getView().fit(layerGPX.getSource().getExtent());
     $( "#deleteMarkers" ).button("enable");
   });
@@ -296,7 +302,7 @@ var marginStyle = new Style({
 	fill: new Fill({ color: [255, 255, 255, 1]})
 });
 
-var sheetStyle = new Style({
+var sheetStyle = new Style({  //css will add a compositing option to this white box
 	fill: new Fill({ color: [255, 255, 255, 1]})
 });
 
@@ -313,10 +319,10 @@ function titleStyle(feature, resolution)
 			text: feature.get('mapTitleDisplay'),
 			textAlign: "left",
 			textBaseline: "middle",
-          	fill: new Fill({color: 'rgba(0,0,0,1)'}),
+      fill: new Fill({color: 'rgba(0,0,0,1)'}),
 			font: "italic " + 150 * size + "px arial, verdana, sans-serif",
-          	offsetX: feature.get('xoff'),
-          	offsetY: feature.get('yoff'),
+      offsetX: feature.get('xoff'),
+      offsetY: feature.get('yoff'),
 		})
 	})
 ]};
@@ -346,7 +352,6 @@ function markerStyle(feature)
   }
 
     var fill = new Fill({
-       //color: 'rgba(255,255,255,0.4)'
        color: markerColor + '40'
      });
      var stroke = new Stroke({
@@ -365,17 +370,57 @@ function markerStyle(feature)
        })
      ]
  }
+ //No need to do linestring styling here - GPX styling is applied on load.
  else {
-   return [
+   //return gpxStyle(feature);
+/*  return [
      new Style({
        stroke: new Stroke({
          color: 'blue',
          width: 1.25
        })
      })
-   ]
+   ] */
  }
 };
+
+function gpxStyle(feature) {
+  var type = feature.getGeometry().getType();
+  var lineStrings = [];
+  var styles = [];
+  if (type === "LineString") {
+    lineStrings = [feature.getGeometry()];
+  } else if (type === "MultiLineString") {
+    lineStrings = feature.getGeometry().getLineStrings();
+  }
+  lineStrings.forEach(function (lineString) {
+    var coordinates = lineString.getCoordinates();
+    var boolSpeed = lineString.layout == "XYZM";  //Check that GPX data is time-stamped
+    for (var i = 0; i < coordinates.length - 1; i++) {    //calc distance travelled, divide by time taken
+      if(boolSpeed) {
+        var speed = getLength(new LineString([coordinates[i],coordinates[i+1]], lineString.layout))/ (coordinates[i+1][3] - coordinates[i][3]);
+        //var speed = Math.sqrt(Math.pow(coordinates[i][0] - coordinates[i + 1][0],2) + Math.pow(coordinates[i][1] - coordinates[i + 1][1],2)) / (coordinates[i+1][3] - coordinates[i][3]);
+        var hue = 220 + speed * 60; //range of 0 - 10 mph
+        if (hue > 480) { hue = 480; }
+        if (hue > 360) { hue -= 360; }
+      }
+      else { hue = 230; } //If no time column in GPX, set hue to blue
+      var color = "hsl(" + hue + ", 100%, 50%)";
+
+      styles.push(
+        new Style({
+          geometry: new LineString(coordinates.slice(i, i + 2)),
+          stroke: new Stroke({
+            color: color,
+            width: 3
+          })
+        })
+      );
+    }
+  });
+  return styles;
+}
+
 
 var contentStyle = new Style({ fill: new Fill({ color: [200, 200, 200, 0.3]})
 
@@ -662,7 +707,16 @@ function init()
 		interactions: defaultInteractions().extend([select, translate]),
 	});
 
+  var search = new SearchNominatim (
+  		{	//target: $(".options").get(0),
+  			polygon: false,
+  			reverse: true,
+  			position: true	// Search, with priority to geo position
+  		});
+  olMap.addControl (search);
+
  	olMap.getView().on('change:resolution', handleZoom);
+  olMap.getView().on('change:rotation', handleRotate);
 	olMap.on("moveend", updateUrl);
 
 	olMap.on("singleclick", function(evt) {
@@ -687,21 +741,43 @@ function init()
 
     if (selected) {
       overlayContent.innerHTML = (selected.get('description') + "<br>" + selected.get('tags')).replace("undefined","");
-      if (overlayContent.innerHTML != "\n") { overlay.setPosition(evt.coordinate); }
+      if (overlayContent.innerHTML != "<br>") { overlay.setPosition(evt.coordinate); }
     } else {
       overlay.setPosition(undefined);
     }
   });
 
-	olMap.getView().on('propertychange', handleRotate);
+  search.on('select', function(e)	{
+		// Check if we get a geojson to describe the search
+		if (e.search.geojson) {
+			var format = new GeoJSON();
+			var f = format.readFeature(e.search.geojson, { dataProjection: "EPSG:4326", featureProjection: olMap.getView().getProjection() });
+			var view = map.getView();
+			var resolution = view.getResolutionForExtent(f.getGeometry().getExtent(), olMap.getSize());
+			var zoom = view.getZoomForResolution(resolution);
+			var center = ol.extent.getCenter(f.getGeometry().getExtent());
+			// redraw before zoom
+			setTimeout(function(){
+					view.animate({
+					center: center,
+					zoom: Math.min (zoom, 14)
+				});
+			}, 100);
+		}
+		else {
+			olMap.getView().animate({
+				center:e.coordinate,
+				zoom: Math.max (olMap.getView().getZoom(),14)
+			});
+		}
+	});
 
 	setInteraction();  //Activate listener for GPX loading
 
 	handleZoom();
 	updateUrl();
 	initDescriptions();
-	//if(!document.createElement('canvas').getContext)
-	//{
+
 	$( ".knob" ).knob({
 		'width':65,
 		'fgColor':"#222222",
@@ -712,7 +788,7 @@ function init()
 		'height':65,
 		'release' : function (v) { }
 	});
-	//}
+
 	var c_number = $( "#c_number" ),
   allFields = $( [] ).add( c_number );
 
@@ -773,6 +849,9 @@ function init()
           batch: batchNumber++,
 				});
 
+        if (controloptstate == "edit")	{	//delete old point if being edited
+          layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById(currentID))
+        }
 				if (control.get('type') == "c_startfinish")
 				{
 					control.set('score', 0);
@@ -797,10 +876,6 @@ function init()
 				{
 					control.set('id', topID);
 					control.setId(topID++);
-
-					if (controloptstate == "edit")	{	//delete old point if being edited
-						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById(currentID))
-					}
 				}
 				layerControls.getSource().addFeature(control); //add new control
         controlsChanged();
@@ -1169,14 +1244,12 @@ function resetControlAddDialog(pid)
 		if(control)
 		{
 			$("#c_angle").val(control.get('angle')).trigger('change');
-			$('[for=c_score' + control.get('score') + ']').trigger( "click" ); //Overlying label
 			$("#c_score" + control.get('score')).trigger( "click" ); //Underlying button
 			$("#c_number").val(control.get('number'));
 			$("#c_description").val(control.get('description'));
-      //$("[for=" + control.get('type') + "]").trigger( "click" ); //Overlying label
-      //$("#" + control.get('type')).trigger( "click" ); //Underlying button
       $("#" + control.get('type')).prop("checked", true);
       $('#c_type').controlgroup('refresh');
+      handleControlTypeChange();  //refreshes angle label text
 			newControlLL = control.getGeometry().getFirstCoordinate();
 		}
 	}
@@ -1272,7 +1345,7 @@ function handleZoom()
 	{
 		return;
 	}
-
+/*
 	$( "#createmap" ).button("disable");
 	$( "#getraster" ).button("disable");
 	$( "#getworldfile" ).button("disable");
@@ -1281,12 +1354,22 @@ function handleZoom()
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
   	$( "#preview" ).button("disable");
+*/
 
 /*	if (olMap.getView().getZoom() != parseInt(olMap.getView().getZoom()))
 	{
 		olMap.getView().setZoom(Math.round(olMap.getView().getZoom()));
 	}
 */
+
+
+/*
+initialzoom - zoomed out, no sheet
+zoom - zoomed out, sheet placed
+placepaper - zoomed in, no sheet
+addcontrols - zoomed in, sheet placed
+*/
+
 	if (olMap.getView().getZoom() < 12)	//if zoomed out, hide contours, and don't allow drawing
 	{
 		if (state == "placepaper")
@@ -1300,7 +1383,7 @@ function handleZoom()
 			state = "zoom";
 			$("#messageAdd").hide();
 			$("#messageZoom").show("pulsate", {}, 500);
-			rebuildMapSheet();
+			//rebuildMapSheet();
 		}
 		layerOrienteering.setVisible(false); //hide contours
 	}
@@ -1319,12 +1402,12 @@ function handleZoom()
 			$("#messageZoom").hide();
 			$("#messageCentre").hide();
 			$("#messageAdd").show("pulsate", {}, 500);
-			rebuildMapSheet();
+			//rebuildMapSheet();
 		}
 		else if (state == "addcontrols")
 		{
 			$("#messageCentre").hide();
-			rebuildMapSheet();
+			//rebuildMapSheet();
 		}
 		mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
 
@@ -1341,7 +1424,6 @@ function handleZoom()
 				)
 			);
 			mapStyleIDOnSource = mapStyleID;
-
 		}
 
 		if(mapStyleID.split("-")[1] == "SRTM" || mapStyleID.split("-")[1] == "NONE" || mapStyleID.split("-")[1] == "COPE")
@@ -1352,7 +1434,7 @@ function handleZoom()
 		{
 			layerOrienteering.setVisible(true);
 		}
-}
+  }
 }
 
 function handleControlEditOptions(pid)
@@ -1438,7 +1520,8 @@ function handleDeleteSheet()
   state = "initialzoom";
 	handleZoom();
 
-	$( "#deletesheet" ).button("disable");
+	$( "#createmap" ).button("disable");
+  $( "#deletesheet" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
   $( "#preview" ).button("disable");
@@ -1805,6 +1888,7 @@ function handleDblClick(evt)
         feature.set('score',topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,true);
         feature.set('batch',batchNumber++);
         feature.setId(feature.get('id'));
+        feature.setStyle();
         layerControls.getSource().addFeature(feature);
         controlsChanged();
       }
@@ -2132,11 +2216,13 @@ function loadMap(data)
 	rebuildMapControls();
 	handleZoom();
 	updateUrl();
-	handleRotate();
+	//handleRotate();
 
 	$( "#getraster" ).button("enable");
 	$( "#getworldfile" ).button("enable");
 	$( "#getkmz" ).button("enable");
+
+	$("#messageCentre").hide();
 }
 
 //Move a feature from number: moveFrom to number: moveTo, and shuffle others down
@@ -2315,7 +2401,7 @@ function rebuildMapSheet()
 	layerMapBorder.getSource().addFeatures([westMargin, eastMargin, northMargin, southMargin, titleFeature]);
 	layerMapSheet.getSource().addFeatures([sheet]);
 	layerMapTitle.getSource().addFeatures([title]);
-	layerMapContent.getSource().addFeatures([content]);
+  layerMapContent.getSource().addFeatures([content]);
 	layerMapCentre.getSource().addFeatures([centreMarker]);
 
 	var angle = olMap.getView().getRotation();
@@ -2652,7 +2738,7 @@ function updateUrl()
 function rotateToMagDec(){
   if (magDec){
 		olMap.getView().setRotation(-magDec * Math.PI/180);
-		handleRotate();
+		//handleRotate();
 	}
 }
 

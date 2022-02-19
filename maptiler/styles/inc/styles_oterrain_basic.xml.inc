@@ -444,7 +444,7 @@
 <Style name="sports_grounds">
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'sports_centre' or [leisure] = 'stadium'</Filter>
+        <Filter>[leisure] = 'stadium'</Filter>
         <PolygonSymbolizer fill="&black;" gamma="0.6" />
     </Rule>
 </Style>
