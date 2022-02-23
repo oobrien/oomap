@@ -488,6 +488,7 @@ function init()
 	$( "#getworldfile" ).button().on('click', function() {generateMap("jgw"); });
 	$( "#getkmz" ).button().on('click', function() {generateMap("kmz"); });
 	$( "#getkml" ).button().on('click', function() {generateKML(); });
+	$( "#getxml" ).button().on('click', function() {generateXML(); });
 	$( "#opts" ).button().on('click', function() {handleAdvancedOptions(); });
 	$( "#preview" ).button().on('click', function() {
     if (previewWarning == false || preview == true) {
@@ -505,15 +506,13 @@ function init()
 	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() { handleGetOpenplaques(); });
 
 	$( "#createmap" ).button("disable");
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
-	$( "#getkml" ).button("disable");
+	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
+	$( "#getkml,#getxml" ).button("disable");
 	$( "#createclue" ).button("disable");
 	$( "#deletesheet" ).button("disable");
   $( "#deleteMarkers" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
-	$( "#getPlaques" ).button("disable");
+	$( "#getOpenplaques" ).button("disable");
 	$( "#preview" ).button("disable");
 
 	$( "#edittitle" ).on('click', function() { handleTitleEdit(); })
@@ -819,6 +818,10 @@ function init()
 	  height: 370,
 	  width: 610,
 	  modal: true,
+    open: function() {
+      allFields.removeClass( "ui-state-error" );
+      updateTips("Tip: There can only be one start or finish control. Adding another moves it.");
+    },
 	  buttons: {
       Delete: function() {
         handleControlDelete('d'+currentID);
@@ -954,11 +957,7 @@ function init()
 					mapID = "new";
 					updateUrl();
 				}
-
-				$( "#getraster" ).button("disable");
-				$( "#getworldfile" ).button("disable");
-				$( "#getkmz" ).button("disable");
-
+		    $( "#getraster,#getworldfile,#getkmz" ).button("disable");
 				rebuildMapSheet();
 			}
 
@@ -976,25 +975,21 @@ function init()
 	  width: 845,
 	  modal: true,
 	  buttons: {
-		OK: function()
-		{
-			if (mapID != "new")
-			{
-				mapID = "new";
-				updateUrl();
-			}
-
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-
-		    raceDescription = $("#s_racedescription").val();
-		  	initDescriptions();
-			$( this ).dialog( "close" );
-		},
-		Cancel: function() {
-		  $( this ).dialog( "close" );
-		}
+  		OK: function()
+  		{
+  			if (mapID != "new")
+  			{
+  				mapID = "new";
+  				updateUrl();
+  			}
+  		  $( "#getraster,#getworldfile,#getkmz" ).button("disable");
+  	    raceDescription = $("#s_racedescription").val();
+  	  	initDescriptions();
+  			$( this ).dialog( "close" );
+  		},
+  		Cancel: function() {
+  		  $( this ).dialog( "close" );
+  		}
 	  }
 	});
 
@@ -1009,19 +1004,15 @@ function init()
 	  width: 500,
 	  modal: true,
 	  buttons: {
-		"Create anyway": function() {
-		  	mapID = "new";
-
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-
-			generateMap("pdf");
-			$( this ).dialog( "close" );
-		},
-		Cancel: function() {
-		  $( this ).dialog( "close" );
-		}
+  		"Create anyway": function() {
+  		 	mapID = "new";
+  		  $( "#getraster,#getworldfile,#getkmz" ).button("disable");
+  			generateMap("pdf");
+  			$( this ).dialog( "close" );
+  		},
+  		Cancel: function() {
+  		  $( this ).dialog( "close" );
+  		}
 	  }
 	});
 	$( "#validationerror" ).dialog({
@@ -1345,23 +1336,6 @@ function handleZoom()
 	{
 		return;
 	}
-/*
-	$( "#createmap" ).button("disable");
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
-	$( "#deletesheet" ).button("disable");
-	$( "#getPostboxes" ).button("disable");
-	$( "#getOpenplaques" ).button("disable");
-  	$( "#preview" ).button("disable");
-*/
-
-/*	if (olMap.getView().getZoom() != parseInt(olMap.getView().getZoom()))
-	{
-		olMap.getView().setZoom(Math.round(olMap.getView().getZoom()));
-	}
-*/
-
 
 /*
 initialzoom - zoomed out, no sheet
@@ -1486,11 +1460,7 @@ function controlsChanged()
     mapID = "new";
     updateUrl();
   }
-
-  $( "#getraster" ).button("disable");
-  $( "#getworldfile" ).button("disable");
-  $( "#getkmz" ).button("disable");
-
+	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
   rebuildMapControls();
   rebuildDescriptions();
 }
@@ -1644,9 +1614,7 @@ function handleSaveCallback(json)
 		$( "#saveerror" ).dialog( "open" );
 		$( "#saveerror_text" ).html(result.message);
 	}
-	$( "#getraster" ).button("enable");
-	$( "#getworldfile" ).button("enable");
-	$( "#getkmz" ).button("enable");
+	$( "#getraster,#getworldfile,#getkmz" ).button("enable");
 }
 
 function handleLoadCallback(json)
@@ -1827,11 +1795,7 @@ function handleClick(evt)
 			mapID = "new";
 			updateUrl();
 		}
-
-		$( "#getraster" ).button("disable");
-		$( "#getworldfile" ).button("disable");
-		$( "#getkmz" ).button("disable");
-
+		$( "#getraster,#getworldfile,#getkmz" ).button("disable");
 		sheetCentreLL = evt.coordinate;
 		lookupMag(olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0]);
 		rebuildMapSheet();
@@ -2060,7 +2024,6 @@ function getFinishKML(control, i)
 
 function getControlKML(control)
 {
-	//var geom = olProj.transform(feature.getGeometry().getCoordinates(), "EPSG:3857", "EPSG:4326")
 	return '<Placemark><name>'
 		+ control.number
 		+ '</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
@@ -2135,6 +2098,97 @@ function generateKML()
 	}
 
 }
+
+function XMLposition(control) {
+  var type;
+  var num;
+  if (control.type == 'c_startfinish') {
+    num = control.id;
+  }
+  else if (control.type == 'c_finish') {
+    num = control.id;
+  }
+  else {
+    num = control.number;
+  }
+  return '<Control>\n<Id>' + num + '</Id>\n' +
+    '<Position lat="' + control.wgs84lat + '" lng="' + control.wgs84lon + '"/>\n</Control>\n';
+}
+function XMLorder(control) {
+  var type;
+  var num;
+  var score = '';
+  if (control.type == 'c_startfinish') {
+    num = control.id;
+    type = "Start";
+  }
+  else if (control.type == 'c_finish') {
+    num = control.id;
+    type = "Finish";
+  }
+  else {
+    num = control.number;
+    type = "Control";
+    score += control.score;
+  }
+  var output =  '<CourseControl type="' + type + '" randomOrder="' + (!linear && control.type == 'c_regular') + '">';
+  output += '\n<Control>' + num + '</Control>\n';
+  if(!linear) { output += '<Score>' + score + '</Score>\n'; }
+  output += '</CourseControl>\n';
+  return output;
+}
+
+function generateXML()
+{
+	var xml = '';
+  var now = new Date;
+
+	var xmlintro = '<?xml version="1.0" encoding="UTF-8"?>\n<CourseData xmlns="http://www.orienteering.org/datastandard/3.0"\n' +
+    'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\niofVersion="3.0"\n';
+	xmlintro += 'createTime="' + now.toISOString() + '"\n creator="OpenOrienteeringMap v4">\n';
+	xmlintro += '<Event><Name>' + mapTitle + '</Name>\n</Event>\n';
+
+	var xmlheader = '<RaceCourseData>\n';
+	var xmlfooter = '</Course>\n</RaceCourseData>\n</CourseData>';
+
+	xml += xmlintro;
+	xml += xmlheader;
+
+  var list = getSortedControls('c_startfinish').concat(getSortedControls('c_regular'));
+  getSortedControls('c_finish').length == 0 ? list=list.concat(getSortedControls('c_startfinish')) : list=list.concat(getSortedControls('c_finish'));
+  //If last control is start, recast as a finish.
+  var fcontrol = list.pop();
+  if (fcontrol.type == 'c_startfinish') {fcontrol.type = 'c_finish';}
+  list.push(fcontrol);
+
+  list.forEach(function(c) { xml += XMLposition(c);});
+  xml += '<Course>\n<Name>' + (linear ? 'Line' : 'Score') + '</Name>\n';
+  list.forEach(function(c) { xml += XMLorder(c);});
+
+	xml += xmlfooter;
+	// Data URI
+	var xmlData = 'data:Application/xml,' + encodeURIComponent(xml);
+
+	var filename = 'oom_' + mapID + '.xml'
+
+	// For IE
+	if (window.navigator.msSaveOrOpenBlob) {
+		var blob = new Blob([decodeURIComponent(encodeURI(xml))], {
+			type: "Application/xml;"
+		});
+		navigator.msSaveBlob(blob, filename);
+	}
+	else
+	{
+		$('#getxml')
+			.attr({
+				'download': filename,
+				'href': xmlData
+		});
+	}
+}
+
+
 
 function loadMap(data)
 {
@@ -2216,12 +2270,8 @@ function loadMap(data)
 	rebuildMapControls();
 	handleZoom();
 	updateUrl();
-	//handleRotate();
 
-	$( "#getraster" ).button("enable");
-	$( "#getworldfile" ).button("enable");
-	$( "#getkmz" ).button("enable");
-
+	$( "#getraster,#getworldfile,#getkmz" ).button("enable");
 	$("#messageCentre").hide();
 }
 
@@ -2420,10 +2470,8 @@ function rebuildMapSheet()
 
 	rebuildDescriptions();
 
+	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
 	$( "#createmap" ).button("enable");
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
 	$( "#deletesheet" ).button("enable");
 	$( "#getPostboxes" ).button("enable");
 	$( "#getOpenplaques" ).button("enable");
@@ -2436,11 +2484,13 @@ function rebuildMapControls()
 	{
 		$( "#createclue" ).button("enable");
 		$( "#getkml" ).button("enable");
+  	$( "#getxml" ).button("enable");
 	}
 	else
 	{
 		$( "#createclue" ).button("disable");
 		$( "#getkml" ).button("disable");
+		$( "#getxml" ).button("disable");
 		$( "#getPostboxes" ).button("enable");
 		$( "#getOpenplaques" ).button("enable");
     $( "#preview" ).button("enable");
