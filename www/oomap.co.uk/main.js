@@ -155,6 +155,13 @@ function controlStyle(feature, resolution)
 {
 	var size = trueScale/(resolution * 16000);
   var type = feature.getProperties().type;
+  var startAngle = 0;
+  var listC = getSortedControls("c_regular");
+  var listS = getSortedControls("c_startfinish");
+  if (linear && listS.length > 0 && listC.length > 0) {
+    startAngle = Math.atan2(listS[0].lat - listC[0].lat, listC[0].lon - listS[0].lon) - Math.PI/6 + rotAngle;
+  }
+
   switch(type)
   {
   case "c_regular": //control - circle & number.    Transparent fill allows selection throughout
@@ -191,6 +198,7 @@ function controlStyle(feature, resolution)
     				points: 3,
     				stroke: new Stroke({color: purple, width: 10 * size}),
             fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
+            angle: startAngle,
     				radius: 110 * size
     			})
     		})]
@@ -202,6 +210,7 @@ function controlStyle(feature, resolution)
           image: new RegularShape({
             points: 3,
             stroke: new Stroke({color: purple, width: 10 * size}),
+            angle: startAngle,
             radius: 110 * size
           })
         }),
@@ -275,16 +284,8 @@ function lineStyle(feature, resolution) //Lines between controls
   var size = trueScale/(resolution * 16000);
   const styles = [];
   geometry.forEachSegment(function (start, end) {
-     const scale = trueScale/200;
-     const dx = end[0] - start[0];
-     const dy = end[1] - start[1];
-     const rotation = Math.atan2(dy, dx);
-     const start2 = [start[0] + Math.cos(rotation) * scale, start[1] + Math.sin(rotation) * scale]
-     const end2 = [end[0]-Math.cos(rotation) * scale, end[1]-Math.sin(rotation) * scale]
-     // arrows
      styles.push(
        new Style({
-         geometry: new LineString([start2,end2]), //shorten lines at ends
            stroke: new Stroke({
              color: purple,
              width: 10 * size,
@@ -295,8 +296,8 @@ function lineStyle(feature, resolution) //Lines between controls
    return styles;
 };
 
-var dotStyle = new Style({
-});
+//var dotStyle = new Style({
+//});
 
 var marginStyle = new Style({
 	fill: new Fill({ color: [255, 255, 255, 1]})
@@ -305,10 +306,6 @@ var marginStyle = new Style({
 var sheetStyle = new Style({  //css will add a compositing option to this white box
 	fill: new Fill({ color: [255, 255, 255, 1]})
 });
-
-//var sheetStyle  = new Style({
-//	stroke: new Stroke({ color: [0, 0, 0, 1], width: 1})
-//});
 
 function titleStyle(feature, resolution)
 {
@@ -372,15 +369,6 @@ function markerStyle(feature)
  }
  //No need to do linestring styling here - GPX styling is applied on load.
  else {
-   //return gpxStyle(feature);
-/*  return [
-     new Style({
-       stroke: new Stroke({
-         color: 'blue',
-         width: 1.25
-       })
-     })
-   ] */
  }
 };
 
@@ -399,7 +387,6 @@ function gpxStyle(feature) {
     for (var i = 0; i < coordinates.length - 1; i++) {    //calc distance travelled, divide by time taken
       if(boolSpeed) {
         var speed = getLength(new LineString([coordinates[i],coordinates[i+1]], lineString.layout))/ (coordinates[i+1][3] - coordinates[i][3]);
-        //var speed = Math.sqrt(Math.pow(coordinates[i][0] - coordinates[i + 1][0],2) + Math.pow(coordinates[i][1] - coordinates[i + 1][1],2)) / (coordinates[i+1][3] - coordinates[i][3]);
         var hue = 220 + speed * 60; //range of 0 - 10 mph
         if (hue > 480) { hue = 480; }
         if (hue > 360) { hue -= 360; }
@@ -421,10 +408,10 @@ function gpxStyle(feature) {
   return styles;
 }
 
-
-var contentStyle = new Style({ fill: new Fill({ color: [200, 200, 200, 0.3]})
-
+var contentStyle = new Style({
+   fill: new Fill({ color: [200, 200, 200, 0.3]})
 });
+
 var centreStyle = new Style({
 	image: new Circle({
 		stroke: new Stroke({color: 'rgba(0,0,255,1)', width: 1}),
@@ -633,7 +620,7 @@ function init()
 	}
 
 	select = new Select({
-		layers: [layerMapCentre, layerControls, layerGPX],
+		layers: [],
     hitTolerance: hitTol,
 	});
 
@@ -642,7 +629,13 @@ function init()
   	//features: select.getFeatures()
 	});
 
-	translate.on('translateend', handleDrag)
+	translate.on('translateend',  function(evt) {
+		handleDrag(evt);
+	})
+
+  translate.on('translating',  function(evt) {
+		handleDrag(evt);
+	})
 
 	olMap = new Map(
 	{
@@ -674,16 +667,17 @@ function init()
           if (state != 'initialzoom' && state != 'placepaper') { coords = sheetCentreLL; }
           lookupMag(olProj.transform(coords, "EPSG:3857", "EPSG:4326")[1],olProj.transform(coords, "EPSG:3857", "EPSG:4326")[0]);
         }
-        else if (Math.PI - Math.abs(Math.abs((-magDec * Math.PI/180) - olMap.getView().getRotation()) - Math.PI) > 0.016) { //If mag N available, and not current orientation, change to Mag N
+        else if (Math.PI - Math.abs(Math.abs((-magDec * Math.PI/180) - olMap.getView().getRotation()) - Math.PI) > 0.001) { //If mag N available, and not current orientation, change to Mag N
           olMap.getView().setRotation(-magDec * Math.PI/180);
         }
         else {  //Otherwise rotate to True N
           olMap.getView().setRotation(0);
         }
+        this.label_.style.transform = 'rotate(' + olMap.getView().getRotation() + 'rad)';
       },
       render: function()
       { //if rotation more-or-less zero, change label to "M", otherwise show rotated "N"
-        if (Math.PI - Math.abs(Math.abs(olMap.getView().getRotation()) - Math.PI) > 0.016) {
+        if (Math.PI - Math.abs(Math.abs(olMap.getView().getRotation()) - Math.PI) > 0.001) {
           this.label_.innerHTML = 'N';
           this.label_.style.transform = 'rotate(' + olMap.getView().getRotation() + 'rad)';
         }
@@ -727,9 +721,9 @@ function init()
 
   let selected = null;
   olMap.on('pointermove', function (evt) {
-    if (selected !== null) {
+    //if (selected !== null) {
       selected = null;
-    }
+    //}
 
     olMap.forEachFeatureAtPixel(evt.pixel, function (f, layer) {
       if ($.inArray(layer.get('title'), ['GPX','controls', 'mapcentre']) >= 0) {
@@ -804,7 +798,7 @@ function init()
 			return false;
 		}
 		if (o.val() != currentNumber &&
-			layerControls.getSource().getFeatures().filter(feat=>feat.get('number')==o.val()).length > 0)
+			layerControls.getSource().getFeatures().filter(feat => feat.get('number')==o.val() && feat.get('type') == 'c_regular').length > 0)
 		{
 			o.addClass( "ui-state-error" );
 			updateTips( "This number has already been used." );
@@ -855,27 +849,18 @@ function init()
         if (controloptstate == "edit")	{	//delete old point if being edited
           layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById(currentID))
         }
-				if (control.get('type') == "c_startfinish")
+				if (control.get('type') == "c_startfinish" || control.get('type') == "c_finish")
 				{
-					control.set('score', 0);
-					control.setId('S');
-					control.set('id', 'S');
-					if (layerControls.getSource().getFeatureById('S')) 	//Delete any old starts
+          var SF = control.get('type') == "c_finish" ? 'F' : 'S';
+          control.set('score', 0);
+					control.setId(SF);
+					control.set('id', SF);
+					if (layerControls.getSource().getFeatureById(SF)) 	//Delete any old starts
 					{
-						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById('S'))
+						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById(SF))
 					}
 	  		}
-        else 	if (control.get('type') == "c_finish")
-				{
-					control.set('score', 0);
-					control.setId('F');
-					control.set('id', 'F');
-					if (layerControls.getSource().getFeatureById('F')) 	//Delete any old starts
-					{
-						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById('F'))
-					}
-	  		}
-				else
+        else
 				{
 					control.set('id', topID);
 					control.setId(topID++);
@@ -912,6 +897,7 @@ function init()
           $(".scorecol").addClass('hidden');
           rebuildDescriptions();
         }
+        layerControls.changed(); //force re-draw
 				dpi = parseInt($('#dpi').val());
 				if (isNaN(dpi)) { dpi = 150; }
 
@@ -1292,13 +1278,13 @@ function handleControlTypeChange()
 function handleStyleChange()
 {
 	mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
-	handleZoom();
   if (mapID != "new")
 	{
 		mapID = "new";
-		updateUrl();
 	}
-
+  $( "#getraster,#getworldfile,#getkmz" ).button("disable");
+  handleZoom();
+  updateUrl();
 }
 
 function handleRotate()
@@ -1453,7 +1439,7 @@ function handleControlDelete(pid)  //pid = "d<n>"
   controlsChanged();
 }
 
-function controlsChanged()
+function controlsChanged(rebuild = true)
 {
   if (mapID != "new")
   {
@@ -1462,7 +1448,7 @@ function controlsChanged()
   }
 	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
   rebuildMapControls();
-  rebuildDescriptions();
+  if (rebuild) rebuildDescriptions();
 }
 
 function handleDeleteMarkers()
@@ -1580,19 +1566,26 @@ function validate()
 	}
 }
 
-function handleDrag()	//Vector element has been dragged - update arrays to match UI
+function handleDrag(evt)	//Vector element has been dragged - update arrays to match UI
 {
-	var feats = select.getFeatures();
+	var feats = evt.features;
+  var moveCentre = false;
+  var moveControl = false;
 	feats.forEach((feat) => {
 		if (debug) { console.log('handleDrag'); }
 		if (feat.get('type') == 'centre')
 		{
 			sheetCentreLL = (layerMapCentre.getSource().getFeatures()[0]).getGeometry().getFirstCoordinate();
+      moveCentre = true;
 		}
+    else
+		{
+      moveControl = true;
+    }
 	});
-	select.getFeatures().clear();
-  rebuildMapSheet();
-  controlsChanged();
+	//select.getFeatures().clear();
+  if (moveCentre) rebuildMapSheet();  //Needed if centre has moved
+  if (moveControl) controlsChanged(false);  //Needed if any control has moved
 }
 
 function handleSaveCallback(json)
@@ -1798,6 +1791,7 @@ function handleClick(evt)
 		$( "#getraster,#getworldfile,#getkmz" ).button("disable");
 		sheetCentreLL = evt.coordinate;
 		lookupMag(olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0]);
+    olMap.getView().setCenter(sheetCentreLL);
 		rebuildMapSheet();
 		state = "addcontrols";
 		$("#messageCentre").hide();
@@ -2000,43 +1994,37 @@ function getURL(type)
   return url;
 }
 
-function getStartKML(control, i)
+function KMLposition(control)
 {
-	return '<Placemark><name>S'
-		+ (i+1)
-		+ '</name><styleUrl>#startfinish</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
-		+ control.wgs84lon
-		+ ","
-		+ control.wgs84lat
-		+ ',0</coordinates></Point></Placemark>';
-}
-
-function getFinishKML(control, i)
-{
-	return '<Placemark><name>F'
-		+ (i+1)
-		+ '</name><styleUrl>#startfinish</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
-		+ control.wgs84lon
-		+ ","
-		+ control.wgs84lat
-		+ ',0</coordinates></Point></Placemark>';
-}
-
-function getControlKML(control)
-{
+  var num;
+  var style;
+  if (control.type == 'c_startfinish') {
+    num = 'S1';
+    style = '#startfinish';
+  }
+  else if (control.type == 'c_finish') {
+    num = 'F1';
+    style = '#startfinish';
+  }
+  else {
+    num = control.number;
+    style = '#control';
+  }
 	return '<Placemark><name>'
-		+ control.number
-		+ '</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
+		+ num
+		+ '</name><description>'
+    + control.description
+    + '</description><styleUrl>' + style + '</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
 		+ control.wgs84lon
 		+ ","
 		+ control.wgs84lat
-		+ ',0</coordinates></Point></Placemark>';
+		+ ',0</coordinates></Point></Placemark>\n';
 }
-
 
 function generateKML()
 {
-	var kml = '';
+  // KML export for MapRun
+  var kml = '';
 
 	var kmlintro = '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">\n';
 	kmlintro += '<Document>\n<name>oom_' + mapID + '_controls</name>\n<open>1</open>\n';
@@ -2049,32 +2037,9 @@ function generateKML()
 	kml += kmlintro;
 	kml += kmlheader;
 
-  var list = getSortedControls('c_startfinish');
-	for (var i = 0; i < list.length; i++)
-	{
-		kml += getStartKML(list[i], i);
-		kml += '\n';
-	}
-
-  list = getSortedControls('c_regular');
-  for (var i = 0; i < list.length; i++)
-	{
-		kml += getControlKML(list[i]);
-		kml += '\n';
-	}
-
-  list = getSortedControls('c_finish');
-  if (list.length == 0) //If no finish, reuse start
-  {
-    list = getSortedControls('c_startfinish');
-  }
-	for (var i = 0; i < list.length; i++)
-	{
-		kml += getFinishKML(list[i], i);
-		kml += '\n';
-	}
-
-	kml += kmlfooter;
+  var list = getControlList();
+  list.forEach(function(c) { kml += KMLposition(c);});
+  kml += kmlfooter;
 
 	// Data URI
 	var kmlData = 'data:application/vnd.google-earth.kml+xml,' + encodeURIComponent(kml);
@@ -2100,7 +2065,6 @@ function generateKML()
 }
 
 function XMLposition(control) {
-  var type;
   var num;
   if (control.type == 'c_startfinish') {
     num = control.id;
@@ -2138,8 +2102,21 @@ function XMLorder(control) {
   return output;
 }
 
+function getControlList()
+{
+  //  Get controls for KML/XML export - add start as finish if necessary.
+  var list = getSortedControls('c_startfinish').concat(getSortedControls('c_regular'));
+  getSortedControls('c_finish').length == 0 ? list=list.concat(getSortedControls('c_startfinish')) : list=list.concat(getSortedControls('c_finish'));
+  //If last control is start, recast as a finish.
+  var fcontrol = list.pop();
+  if (fcontrol.type == 'c_startfinish') {fcontrol.type = 'c_finish';}
+  list.push(fcontrol);
+  return list;
+}
+
 function generateXML()
 {
+  // IOF 3.0 XML export
 	var xml = '';
   var now = new Date;
 
@@ -2154,13 +2131,7 @@ function generateXML()
 	xml += xmlintro;
 	xml += xmlheader;
 
-  var list = getSortedControls('c_startfinish').concat(getSortedControls('c_regular'));
-  getSortedControls('c_finish').length == 0 ? list=list.concat(getSortedControls('c_startfinish')) : list=list.concat(getSortedControls('c_finish'));
-  //If last control is start, recast as a finish.
-  var fcontrol = list.pop();
-  if (fcontrol.type == 'c_startfinish') {fcontrol.type = 'c_finish';}
-  list.push(fcontrol);
-
+  var list = getControlList();
   list.forEach(function(c) { xml += XMLposition(c);});
   xml += '<Course>\n<Name>' + (linear ? 'Line' : 'Score') + '</Name>\n';
   list.forEach(function(c) { xml += XMLorder(c);});
@@ -2268,6 +2239,7 @@ function loadMap(data)
 	mapID = reqMapID;
   rebuildMapSheet();  //DPD
 	rebuildMapControls();
+  rebuildDescriptions();
 	handleZoom();
 	updateUrl();
 
@@ -2366,7 +2338,7 @@ function rebuildMapSheet()
 	}
 
 	layerMapBorder.getSource().clear();
-	layerMapCentre.getSource().clear();
+	//layerMapCentre.getSource().clear();
 	layerMapSheet.getSource().clear();
 	layerMapTitle.getSource().clear();
 	layerMapContent.getSource().clear();
@@ -2440,19 +2412,25 @@ function rebuildMapSheet()
 	var eastMargin = new Feature({ geometry: PolyFromExtent(paperEMBound) });
 	var northMargin = new Feature({ geometry: PolyFromExtent(paperNMBound) });
 	var southMargin = new Feature({ geometry: PolyFromExtent(paperSMBound) });
-	var centreMarker = new Feature({
-		geometry: new Point(sheetCentreLL),
-		type: 'centre',
-    description: 'Map centre.  Click then drag to move.'
-	 });
 
+   if (layerMapCentre.getSource().getFeatures().length == 0) {
+     var centreMarker = new Feature({
+   		geometry: new Point(sheetCentreLL),
+   		type: 'centre',
+       description: 'Map centre.  Drag to move.'
+   	 });
+     layerMapCentre.getSource().addFeatures([centreMarker]);
+  }
+  else {
+    layerMapCentre.getSource().getFeatures()[0].setGeometry(new Point(sheetCentreLL));
+  }
 	var titleFeature = new Feature({ geometry: new Point([mapBound[0], mapBound[3] + (0.002 * trueScale)])});
 
 	layerMapBorder.getSource().addFeatures([westMargin, eastMargin, northMargin, southMargin, titleFeature]);
 	layerMapSheet.getSource().addFeatures([sheet]);
 	layerMapTitle.getSource().addFeatures([title]);
   layerMapContent.getSource().addFeatures([content]);
-	layerMapCentre.getSource().addFeatures([centreMarker]);
+
 
 	var angle = olMap.getView().getRotation();
   //if (angle != rotAngle) {
@@ -2468,7 +2446,7 @@ function rebuildMapSheet()
 	wgs84Poly.rotate(angle, sheetCentreLL);
 	wgs84Poly.transform("EPSG:3857", "EPSG:4326");
 
-	rebuildDescriptions();
+	//rebuildDescriptions();
 
 	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
 	$( "#createmap" ).button("enable");
@@ -2504,8 +2482,17 @@ function rebuildMapControls()
   layerLines.getSource().clear();
   for (var i = 0; i < (list.length - 1); i++)
   {
+    const scale = trueScale/200;
+    const dx = list[i+1].lon - list[i].lon;
+    const dy = list[i+1].lat - list[i].lat;
+    const rotation = Math.atan2(dy, dx);
+    var start2 = [list[i].lon + Math.cos(rotation) * scale, list[i].lat + Math.sin(rotation) * scale];
+    if (list[i].type == 'c_startfinish') start2 = [list[i].lon + Math.cos(rotation) * scale * 1.3, list[i].lat + Math.sin(rotation) * scale * 1.3];
+    var end2 = [list[i+1].lon - Math.cos(rotation) * scale, list[i+1].lat - Math.sin(rotation) * scale];
+    if (list[i+1].type != 'c_regular') end2 = [list[i+1].lon - Math.cos(rotation) * scale * 1.2, list[i+1].lat - Math.sin(rotation) * scale* 1.2];
+
     var line = new Feature({
-      geometry: new LineString([[list[i].lon, list[i].lat], [list[i+1].lon, list[i+1].lat]]),
+      geometry: new LineString([start2, end2]),
     });
     layerLines.getSource().addFeature(line);
   }
@@ -2818,7 +2805,6 @@ function handlePreview(){
     });
     $( "#preview" ).button().addClass('loading');
     $( "#preview" ).html('Loading...');
-    //$(this).addClass('loading');
     layerPreview.setSource(geoimg);
 
     geoimg.on('change', function(event) { //imageloadend event isn't triggered, so use generic "change" event instead.
