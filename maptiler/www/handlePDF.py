@@ -70,7 +70,7 @@ def createImage(path, fileformat):
     ADORN_LOGO_W = 0.018
 
     style = p['style']
-    if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "streeto_norail" and style != "adhoc":
+    if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "adhoc":
         return "Unknown style."
 
     PAPER_W = float(p['paper'].split(",")[0])
@@ -120,7 +120,6 @@ def createImage(path, fileformat):
     wmmParams = {'lat':str(wgs84lat), 'lon':str(wgs84lon)}
     wmmResponse = requests.get(web_root+"wmm", params = wmmParams)
     magdec = float(wmmResponse.text)
-
 
     if style == "adhoc":
         MAP_EM = MAP_WM
@@ -252,34 +251,15 @@ def createImage(path, fileformat):
         driveway_colour = "#010101FF"
     else:
         driveway_colour = "#01010101"
-    if p.get('rail',"yes") != "no":    #Switch railways/tramways on/off
-        rail = "yes"
-    else:
-        rail = "no"
-    if p.get('walls',"yes") != "no":    # Switch walls (and unspecified "barriers") on/off.
-        walls = "yes"
-    else:
-        walls = "no"
-    if p.get('trees',"yes") != "no":    # Switch trees on/off.
-        trees = "yes"
-    else:
-        trees = "no"
-    if p.get('hedges',"yes") != "no":    # Switch hedges on/off.
-        hedges = "yes"
-    else:
-        hedges = "no"
-    if p.get('fences',"yes") != "no":    # Switch fences on/off.
-        fences = "yes"
-    else:
-        fences = "no"
+
     import re
     insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">" + \
         "\n<!ENTITY driveway \"" + driveway_colour + "\">" + \
-        "\n<!ENTITY rail \"" + rail + "\">" + \
-        "\n<!ENTITY walls \"" + walls + "\">" + \
-        "\n<!ENTITY trees \"" + trees + "\">" + \
-        "\n<!ENTITY hedges \"" + hedges + "\">" + \
-        "\n<!ENTITY fences \"" + fences + "\">" + \
+        "\n<!ENTITY rail \"" + ("yes" if p.get('rail',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY walls \"" + ("yes" if p.get('walls',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY trees \"" + ("yes" if p.get('trees',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY hedges \"" + ("yes" if p.get('hedges',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY fences \"" + ("yes" if p.get('fences',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">"
@@ -327,9 +307,6 @@ def createImage(path, fileformat):
     else:
         surface = cairo.PDFSurface(file.name, PAPER_W*S2P / SCALE_FACTOR, PAPER_H*S2P / SCALE_FACTOR)
         surface.set_device_scale(1.0/SCALE_FACTOR,1.0/SCALE_FACTOR)
-        # versions = surface.get_versions()
-        # version = versions[1]
-        # surface.restrict_to_version(version)
 
     # Adornments - Title swoosh back
     ctx = cairo.Context(surface)
@@ -341,10 +318,6 @@ def createImage(path, fileformat):
     ctx.rel_line_to(0.4*PAPER_W*S2P, -0.25*PAPER_H*S2P)
     ctx.close_path()
     ctx.set_source_rgb(0.91, 0.15, 0.28)
-    if style == "oterrain_ioa" or style == "streeto_ioa" or style == "streeto_norail_ioa":
-        ctx.set_source_rgb(0.12, 0.53, 0.27)
-    if style == "oterrain_dk" or style == "streeto_dk" or style == "streeto_norail_dk":
-        ctx.set_source_rgb(0.78, 0.05, 0.18)
     if style != 'blueprint':
         ctx.fill()
 
@@ -358,10 +331,6 @@ def createImage(path, fileformat):
     ctx.rel_line_to(-0.4*PAPER_W*S2P, 0.25*PAPER_H*S2P)
     ctx.close_path()
     ctx.set_source_rgb(0.12, 0.5, 0.65)
-    if style == "oterrain_ioa" or style == "streeto_ioa" or style == "streeto_norail_ioa":
-        ctx.set_source_rgb(0.89, 0.44, 0.24)
-    if style == "oterrain_dk" or style == "streeto_dk" or style == "streeto_norail_dk":
-        ctx.set_source_rgb(0.78, 0.05, 0.18)
     if style != "blueprint":
         ctx.fill()
 
@@ -417,15 +386,17 @@ def createImage(path, fileformat):
         ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)  # set origin to NW corner
         ctx.set_line_width(SC_T*S2P)
         ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-        #ctx.translate((MAP_WM+((slon-mapWLon)/scaleCorrected))*S2P, (MAP_NM+((mapNLat-slat)/scaleCorrected))*S2P)
         ctx.translate((slon-mapWLon)*EXTENT_W*S2P/(mapELon-mapWLon), (mapNLat-slat)*EXTENT_H*S2P/(mapNLat-mapSLat))
-        ctx.rotate(-rotation)
+        startRot = 0   #rotation of start triangle - if linear course and at least 1 control
+        if len(controlsArr) > 0 and p.get('linear',"no") != "no":
+            startRot = math.atan2(slat - float(controlsArr[2]), float(controlsArr[3]) - slon) - math.pi/6 + rotation
+        ctx.rotate(startRot-rotation)
         ctx.move_to(0, -0.577*SC_W*S2P)
         ctx.rel_line_to(-0.5*SC_W*S2P, 0.866*SC_W*S2P)
         ctx.rel_line_to(SC_W*S2P, 0)
         ctx.close_path()
         ctx.stroke()
-
+        ctx.rotate(-startRot)
         #Finish control (same place as start, unless separate finish coords)
         if flon != 0 and flat != 0:
             ctx.rotate(rotation)
@@ -442,8 +413,6 @@ def createImage(path, fileformat):
         ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
         ctx.rotate(rotation)
         ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
-
-
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(CTEXT_S*S2P)
         numControls = len(controlsArr)//4
@@ -479,7 +448,6 @@ def createImage(path, fileformat):
             labelAngle = float(controlsArr[4*i+1])
             controllat = float(controlsArr[4*i+2])
             controllon = float(controlsArr[4*i+3])
-
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
             ctx.move_to((controllonP+C_R)*S2P, controllatP*S2P)
@@ -491,8 +459,8 @@ def createImage(path, fileformat):
             ctx.fill()
             if p.get('linear',"no") != "no":
                 angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
-                start2lonP = lastlonP + math.cos(angle) * C_R
-                start2latP = lastlatP + math.sin(angle) * C_R
+                start2lonP = lastlonP + math.cos(angle) * C_R * (1.3 if i == 0 else 1.0)
+                start2latP = lastlatP + math.sin(angle) * C_R * (1.3 if i == 0 else 1.0)
                 end2lonP = controllonP - math.cos(angle) * C_R
                 end2latP = controllatP - math.sin(angle) * C_R
                 ctx.move_to(start2lonP*S2P, start2latP*S2P)
@@ -506,7 +474,6 @@ def createImage(path, fileformat):
             ctx.save()
             ctx.translate(controllonP*S2P, controllatP*S2P)
             ctx.rotate(-rotation)
-            #ctx.move_to((controllonP+labelX)*S2P-width/2, (controllatP-labelY)*S2P+height/2)
             ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
             ctx.show_text(text)
             ctx.restore()
@@ -538,10 +505,7 @@ def createImage(path, fileformat):
             controllon = float(crossesArr[2*i+1])
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
-            #ctx.move_to((controllonP)*S2P, controllatP*S2P)
             x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
-            #labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
-            #labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
             ctx.move_to((controllonP)*S2P-width/2, (controllatP)*S2P+height/2)
             ctx.show_text(text)
 
@@ -563,7 +527,6 @@ def createImage(path, fileformat):
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
             x_bearing, y_bearing, width, height, x_advance, y_advance = ctx.text_extents(text)[:6]
-            #0.34375 -12.890625 9.38465881348 16.46875 10.019317627 0.0
             ctx.move_to((controllonP)*S2P, (controllatP)*S2P)
             ctx.rotate(controlAngleRads)
             ctx.rel_move_to(-width/2, height/3.5)
@@ -597,7 +560,7 @@ def createImage(path, fileformat):
     ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     text = "scale 1:" + str(scale)
 
-    if style == "oterrain" or style == "streeto" or style == "streeto_norail":
+    if style == "oterrain" or style == "streeto":
         text = "scale 1:" + str(scale) + ", contours " + p['interval'] + "m"
     ctx.set_source_rgb(0, 0, 0)
     if style == 'blueprint':
@@ -657,31 +620,7 @@ def createImage(path, fileformat):
     ctx.stroke()
 
     # Adornments - Logo
-    if style == "oterrain_ioa" or style == "streeto_ioa" or style == "streeto_norail_ioa":
-        logoSurface = cairo.ImageSurface.create_from_png(home + "/images/ioalogo.png")
-        ctx = cairo.Context(surface)
-        width = logoSurface.get_width()*ADORN_LOGO_SCALE_IOA
-        ctx.translate((MAP_WM+MAP_W)*S2P-width, CONTENT_NM*S2P)
-        ctx.scale(ADORN_LOGO_SCALE_IOA, ADORN_LOGO_SCALE_IOA)
-        ctx.set_source_surface(logoSurface, 0, 0)
-        ctx.paint()
-    elif style == "oterrain" or style == "streeto" or style == "streeto_norail":
-        logoSurface = cairo.ImageSurface.create_from_png(home + "/images/oflogo.png")
-        ctx = cairo.Context(surface)
-        width = logoSurface.get_width()*ADORN_LOGO_SCALE
-        ctx.translate((MAP_WM+MAP_W)*S2P-width, CONTENT_NM*S2P)
-        ctx.scale(ADORN_LOGO_SCALE, ADORN_LOGO_SCALE)
-        ctx.set_source_surface(logoSurface, 0, 0)
-        ctx.paint()
-    elif style == "blueprint":
-        logoSurface = cairo.ImageSurface.create_from_png(home + "/images/oflogo.png")
-        ctx = cairo.Context(surface)
-        width = logoSurface.get_width()*ADORN_LOGO_SCALE
-        ctx.translate((MAP_WM+MAP_W)*S2P-width, CONTENT_NM*S2P)
-        ctx.scale(ADORN_LOGO_SCALE, ADORN_LOGO_SCALE)
-        ctx.set_source_surface(logoSurface, 0, 0)
-        ctx.paint()
-    else:
+    if style != "blueprint":
         logoSurface = cairo.ImageSurface.create_from_png(home + "/images/oflogo.png")
         ctx = cairo.Context(surface)
         width = logoSurface.get_width()*ADORN_LOGO_SCALE
@@ -708,7 +647,6 @@ def createImage(path, fileformat):
     ctx.set_source_rgb(0.12, 0.5, 0.65)
     ctx.set_font_size(7*SCALE_FACTOR)
 
-
     ctx.translate((MAP_WM)*S2P, (MAP_NM+MAP_H+ADORN_ATTRIB_NM+0.002)*S2P)
     ctx.show_text(contour_text)
     cur.close()
@@ -727,7 +665,7 @@ def createImage(path, fileformat):
     ctx.show_text(text)
 
     #Adornments - Attribution right line 1
-    if style == "oterrain" or style == "streeto" or style == "streeto_norail" or style == "blueprint":
+    if style == "oterrain" or style == "streeto" or style == "blueprint":
         ctx = cairo.Context(surface)
         ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_BOLD)
         ctx.set_source_rgb(1, 1, 1)
@@ -847,7 +785,6 @@ def add_geospatial_pdf_header(m, f, f2, map_bounds, poly, epsg=None, wkt=None):
         file_writer.write(f2)
         return (f2)
 
-
 def get_pdf_measure(m, gcs, poly, bounds_default):
     """
     Returns the PDF Measure dictionary.
@@ -857,7 +794,6 @@ def get_pdf_measure(m, gcs, poly, bounds_default):
     measure = DictionaryObject()
     measure[NameObject('/Type')] = NameObject('/Measure')
     measure[NameObject('/Subtype')] = NameObject('/GEO')
-
     bounds = ArrayObject()
 
     """

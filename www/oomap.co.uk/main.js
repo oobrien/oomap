@@ -679,11 +679,11 @@ function init()
       { //if rotation more-or-less zero, change label to "M", otherwise show rotated "N"
         if (Math.PI - Math.abs(Math.abs(olMap.getView().getRotation()) - Math.PI) > 0.001) {
           this.label_.innerHTML = 'N';
-          this.label_.style.transform = 'rotate(' + olMap.getView().getRotation() + 'rad)';
         }
         else {
           this.label_.innerHTML = 'M';
         }
+        this.label_.style.transform = 'rotate(' + olMap.getView().getRotation() + 'rad)';
       }
     } }).extend(
 		[
@@ -2242,6 +2242,7 @@ function loadMap(data)
   rebuildDescriptions();
 	handleZoom();
 	updateUrl();
+  handleRotate();
 
 	$( "#getraster,#getworldfile,#getkmz" ).button("enable");
 	$("#messageCentre").hide();
