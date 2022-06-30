@@ -96,7 +96,7 @@
     </Datasource>
 </Layer>
 
-<Layer name="buildings" status="on" srs="&srs900913;">
+<Layer name="oldbuildings" status="off" srs="&srs900913;">
     <StyleName>buildings-core</StyleName>
     <Datasource>
         &datasource-settings;
@@ -107,6 +107,32 @@
                 or railway='station'
                 or amenity='place_of_worship'
             order by z_order,way_area desc) as buildings
+        </Parameter>
+    </Datasource>
+</Layer>
+<Layer name="buildings" status="on" srs="&srs900913;">
+    <StyleName>buildings-core</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+          (WITH areas as (
+          select ST_Force2D(ST_MakeValid(ST_Union(ST_Intersection(way, !bbox!)))) as way2
+                      from &prefix;_polygon
+                      where (landuse is not null and landuse &lt;&gt; 'residential')
+                          or leisure is not null
+                          or amenity in ('parking','university','college','school','hospital','grave_yard')
+                          or highway in ('pedestrian', 'services')
+                          or "natural" in ('field','beach','heath','mud','wood','scrub','meadow','crop','grass','grassland','land','marsh','scrub','wetland','glacier')
+                          or power in ('station','sub_station')
+                          or tourism in ('attraction','camp_site','caravan_site','picnic_site','zoo')
+          		or waterway in ('dock','mill_pond','riverbank','canal','river')
+                         )
+                     select ST_Intersection(ST_Force2D(ST_MakeValid(b.way)), a.way2) as way,b.building,b.leisure,b.railway,b.amenity,b.landuse from &prefix;_polygon b, areas a
+                      where (b.building is not null
+                          or b.landuse='building'
+                          or b.railway='station'
+                          or b.amenity='place_of_worship')
+          ) as buildings
         </Parameter>
     </Datasource>
 </Layer>
