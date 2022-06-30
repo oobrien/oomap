@@ -133,7 +133,6 @@ function setInteraction() {
     event.features.forEach(function(f) {
        if (f.getGeometry().getType() != 'Point') {
          f.setStyle(gpxStyle(f));
-         f.set('description', f.get('name'));
        }
        else {
          f.setStyle([new Style({  image: new Circle({
@@ -142,7 +141,14 @@ function setInteraction() {
                 width: 1.75
               }),
               radius: 5
-            })})]);
+            })
+          })]);
+       }
+       if (f.get('name') != undefined) {
+         f.set('description', f.get('name').replace('undefined',''));
+       }
+       else {
+         f.set ('description','');
        }
      });
     olMap.getView().fit(layerGPX.getSource().getExtent());
@@ -384,25 +390,50 @@ function gpxStyle(feature) {
   lineStrings.forEach(function (lineString) {
     var coordinates = lineString.getCoordinates();
     var boolSpeed = lineString.layout == "XYZM";  //Check that GPX data is time-stamped
-    for (var i = 0; i < coordinates.length - 1; i++) {    //calc distance travelled, divide by time taken
-      if(boolSpeed) {
-        var speed = getLength(new LineString([coordinates[i],coordinates[i+1]], lineString.layout))/ (coordinates[i+1][3] - coordinates[i][3]);
-        var hue = 220 + speed * 60; //range of 0 - 10 mph
+    var speed = [];
+    var time;
+    var rate;
+    if(boolSpeed) {
+      for (var i = 0; i < coordinates.length - 1; i++) {    //calc distance travelled, divide by time taken
+        time = coordinates[i+1][3] - coordinates[i][3];
+        if (time < 0.01) time = 1;
+        rate = getLength(new LineString([coordinates[i],coordinates[i+1]], lineString.layout))/ time;
+        if (rate > 30) rate = 30;
+        speed.push(rate);
+      }
+      var maxSpeed = Math.max(...speed);
+      if (debug) console.log(maxSpeed);
+      while(speed.filter(function(x){return x > maxSpeed}).length < 0.05 * coordinates.length) {
+        maxSpeed = maxSpeed * 0.95;
+        if (debug) console.log(maxSpeed);
+        if (maxSpeed < 0.1) break;
+      };
+      for (var i = 0; i < coordinates.length - 1; i++) {
+        var hue = 220 + speed[i] * 240/maxSpeed; //range of 0 to speed exceeded by 5% of points
         if (hue > 480) { hue = 480; }
         if (hue > 360) { hue -= 360; }
+      //  else { hue = 230; } //If no time column in GPX, set hue to blue
+        var color = "hsl(" + hue + ", 100%, 50%)";
+        styles.push(
+          new Style({
+            geometry: new LineString(coordinates.slice(i, i + 2)),
+            stroke: new Stroke({
+              color: color,
+              width: 3
+            })
+          })
+        );
       }
-      else { hue = 230; } //If no time column in GPX, set hue to blue
-      var color = "hsl(" + hue + ", 100%, 50%)";
-
+    }
+    else {
       styles.push(
         new Style({
-          geometry: new LineString(coordinates.slice(i, i + 2)),
           stroke: new Stroke({
-            color: color,
+            color: "hsl(230, 100%, 50%)",
             width: 3
           })
         })
-      );
+      )
     }
   });
   return styles;
@@ -721,19 +752,15 @@ function init()
 
   let selected = null;
   olMap.on('pointermove', function (evt) {
-    //if (selected !== null) {
-      selected = null;
-    //}
-
+    selected = null;
     olMap.forEachFeatureAtPixel(evt.pixel, function (f, layer) {
       if ($.inArray(layer.get('title'), ['GPX','controls', 'mapcentre']) >= 0) {
-        selected = f;
-        return true;
+        if (f.getGeometry().getType() == 'Point') selected = f;
       }
     });
 
     if (selected) {
-      overlayContent.innerHTML = (selected.get('description') + "<br>" + selected.get('tags')).replace("undefined","");
+      overlayContent.innerHTML = (selected.get('description').replace("undefined","") + "<br>" + selected.get('tags')).replace("undefined","");
       if (overlayContent.innerHTML != "<br>") { overlay.setPosition(evt.coordinate); }
     } else {
       overlay.setPosition(undefined);
