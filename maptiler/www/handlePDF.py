@@ -3,9 +3,10 @@
 import os, os.path, platform, mapnik
 import math
 import time
-import gi
-gi.require_version('Rsvg', '2.0')
-from gi.repository import Rsvg
+import datetime
+#import gi
+#gi.require_version('Rsvg', '2.0')
+#from gi.repository import Rsvg
 from oomf import *
 try:
     from PyPDF2 import PdfFileReader, PdfFileWriter
@@ -93,7 +94,7 @@ def createImage(path, fileformat):
 
     mapid = p.get('mapid', 'new')
     club = p.get('club', '')
-    clubs = ['hh','havoc']
+    clubs = ['hh','havoc','waoc']
 
     slon = slat = flon = flat = 0
     if 'start' in p:
@@ -190,14 +191,19 @@ def createImage(path, fileformat):
     # Recreate stylefile regardless - might need a new style on existing data.
 
     if not os.path.isfile(styleFile):
-        # api = overpass.API()
-        api = overpass.API(endpoint="https://overpass.kumi.systems/api/interpreter", timeout=120)
+        headers = {"Accept-Charset": "utf-8;q=0.7,*;q=0.7",
+          "User-Agent" : "OpenOrienteeringMap;oomap@dna-software.co.uk"}
+        api2 = overpass.API(endpoint = "https://overpass.kumi.systems/api/interpreter", timeout=120, headers = headers)
+        api = overpass.API(endpoint = "https://overpass-api.de/api/interpreter", timeout=120, headers = headers)
         MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
         try:
             response = api.get(MapQuery, responseformat="xml")
-        except Exception as e:
-            return "Overpass API error: " + type(e).__name__ + ", " + str(e) + "\n" + \
-                "Use the following ID to recover your map: " + tmpid[1:]
+        except: #if first api fails try the second
+            try:
+                response = api2.get(MapQuery, responseformat="xml")
+            except Exception as e:
+                return "Overpass API error: " + type(e).__name__ + ", " + str(e) + "\n" + \
+                    "Use the following ID to recover your map: " + tmpid[1:]
 
         tmpname = "/tmp/" + tmpid + ".osm"
         with open(tmpname,mode="wb") as f:
@@ -413,12 +419,14 @@ def createImage(path, fileformat):
         ctx.arc(0, 0, C_R*S2P*0.8, 0, 2*math.pi)    #inner circle
         ctx.stroke()
 
+    ctx = cairo.Context(surface)
+    ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
+    ctx.rotate(rotation)
+    ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+
     # Controls and labels
     if len(controlsArr) > 0:
-        ctx = cairo.Context(surface)
-        ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
-        ctx.rotate(rotation)
-        ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+
         ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_font_size(CTEXT_S*S2P)
         numControls = len(controlsArr)//4
@@ -624,26 +632,24 @@ def createImage(path, fileformat):
     ctx.rel_line_to(0.002*S2P, 0.002*S2P)
     ctx.rel_line_to(0, -0.002*S2P)
     ctx.stroke()
-
-    # Adornments - Logo
     if style != "blueprint":
-        handle = Rsvg.Handle()
-        svg = handle.new_from_file(home + "/images/oflogo.svg")
+        logoSurface = cairo.ImageSurface.create_from_png(home + "/images/oflogo.png")
         ctx = cairo.Context(surface)
-        width = svg.get_dimensions().width * ADORN_LOGO_SCALE
-        ctx.translate((MAP_WM+MAP_W)*S2P - width, CONTENT_NM*S2P)
+        width = logoSurface.get_width()*ADORN_LOGO_SCALE
+        ctx.translate((MAP_WM+MAP_W)*S2P-width, CONTENT_NM*S2P)
         ctx.scale(ADORN_LOGO_SCALE, ADORN_LOGO_SCALE)
-        svg.render_cairo(ctx)
+        ctx.set_source_surface(logoSurface, 0, 0)
+        ctx.paint()
 
     # Adornments - Club logo
     if style != "blueprint" and club in clubs:
-        handle = Rsvg.Handle()
-        svg = handle.new_from_file(home + "/images/" + club + ".svg")
+        logoSurface = cairo.ImageSurface.create_from_png(home + "/images/" + club + ".png")
         ctx = cairo.Context(surface)
-        scale = ADORN_CLOGO_SCALE / svg.get_dimensions().width
+        scale = ADORN_CLOGO_SCALE / logoSurface.get_width()
         ctx.translate((MAP_WM)*S2P, CONTENT_NM*S2P)
         ctx.scale(scale, scale)
-        svg.render_cairo(ctx)
+        ctx.set_source_surface(logoSurface, 0, 0)
+        ctx.paint()
 
     # Adornments - Attribution left line 1
     ctx = cairo.Context(surface)
@@ -731,7 +737,7 @@ def createImage(path, fileformat):
         # Add Geospatial PDF metadata
         map_bounds = (MAP_WM/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H, MAP_WM/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, MAP_NM/PAPER_H, (PAPER_W-MAP_EM)/PAPER_W, (PAPER_H-MAP_SM)/PAPER_H)
         file2 = tempfile.NamedTemporaryFile()
-        file = add_geospatial_pdf_header(map, file, file2, map_bounds, pagePoly, epsg = 3857)
+        file = add_geospatial_pdf_header(map, file, file2, map_bounds, pagePoly, p, path, epsg = 3857)
 
     #Delete temporary style file and postgres tables (everything beginning with "h"):
     #BUT - don't delete here as may be needed for related query.  Periodically clean out with cron job instead
@@ -741,7 +747,7 @@ def createImage(path, fileformat):
 
     return file
 
-def add_geospatial_pdf_header(m, f, f2, map_bounds, poly, epsg=None, wkt=None):
+def add_geospatial_pdf_header(m, f, f2, map_bounds, poly, p, path, epsg=None, wkt=None):
         """
         Adds geospatial PDF information to the PDF file as per:
             Adobe® Supplement to the ISO 32000 PDF specification
@@ -798,6 +804,17 @@ def add_geospatial_pdf_header(m, f, f2, map_bounds, poly, epsg=None, wkt=None):
             vp_array.append(viewport)
             page[NameObject('/VP')] = vp_array
             file_writer.addPage(page)
+
+        file_writer.addMetadata(
+           {
+                "/Author": "OpenOrienteeringMap",
+                "/Title": p.get('title', 'OpenOrienteeringMap'),
+                "/MapID": p.get('mapid', 'new'),
+                "/Producer": "OpenOrienteeringMap, " + web_root,
+                "/CreationDate": datetime.datetime.now().strftime("D:%Y%m%d%H%M%S+00'00'"),
+                "/URL": web_root + "render/pdf/?" + path
+            }
+        )
 
         file_writer.write(f2)
         return (f2)

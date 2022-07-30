@@ -262,7 +262,7 @@
 <Style name="leisure">
     <Rule>
         &maxscale_zoom12;
-        <Filter>[landuse] = 'landfill' or [landuse] = 'construction'</Filter>
+        <Filter>[landuse] = 'landfill' or [landuse] = 'construction' or [amenity] = 'school'</Filter>
         <PolygonSymbolizer fill="&magenta50;" gamma="0.6" />
     </Rule>
     <Rule>
