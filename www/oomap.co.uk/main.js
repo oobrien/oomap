@@ -557,9 +557,8 @@ function init()
   });
 
 	$( "#eventdate").datepicker({
-		dateFormat: "D d M yy",
-      	altField: "#eventdate_alternate",
-      	altFormat: "yy-mm-dd",
+		dateFormat: "yy-mm-dd"
+
     });
 
     tips = $( ".validateTips" );
@@ -1312,6 +1311,7 @@ function handleStyleChange()
   $( "#getraster,#getworldfile,#getkmz" ).button("disable");
   handleZoom();
   updateUrl();
+  rebuildDescriptions();
 }
 
 function handleRotate()
@@ -1900,7 +1900,7 @@ function saveMap()
 		"action": "savemap",
 		"title": mapTitle,
 		"race_instructions": raceDescription,
-		"eventdate": $('#eventdate_alternate').val(),
+		"eventdate": $.datepicker.formatDate("yy-mm-dd",$('#eventdate').datepicker("getDate")),
 		"club": $('#club').val(),
 		"style": mapStyleID,
 		"scale": $("#mapscale :radio:checked").attr("id"),
@@ -1974,6 +1974,7 @@ function getURL(type)
     + "|scale=" + scale
     + "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
     + "|title=" + escapeTitleText
+    + "|eventdate=" + $.datepicker.formatDate("yy-mm-dd",$('#eventdate').datepicker("getDate"))
     + "|club=" + $('#club').val()
     + "|id=";
   if (mapID != "new")
@@ -2206,10 +2207,9 @@ function loadMap(data)
 	var $contours = $("#" + data.style.split("-")[1] + "-" + data.style.split("-")[2]);
 	var $contoursL = $("[for=" + data.style.split("-")[1] + "-" + data.style.split("-")[2] + "]");
 
-	$('#eventdate_alternate').val(data.eventdate);
-	$('#eventdate').val(data.eventdate);
-	//$('#eventdate').datepicker("refresh");
-	//TODO Implement loading of saved club.
+	$('#eventdate').datepicker("setDate", data.eventdate);
+	$('#eventdate').datepicker("refresh");
+  $('#club').val(data.club);
 
 	$style.trigger( "click" );
   $scale.trigger( "click" );
