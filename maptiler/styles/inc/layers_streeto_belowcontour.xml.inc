@@ -127,11 +127,12 @@
                           or tourism in ('attraction','camp_site','caravan_site','picnic_site','zoo')
           		or waterway in ('dock','mill_pond','riverbank','canal','river')
                          )
-                     select ST_Intersection(ST_Force2D(ST_MakeValid(b.way)), a.way2) as way,b.building,b.leisure,b.railway,b.amenity,b.landuse from &prefix;_polygon b, areas a
+                     select ST_Force2D(ST_MakeValid(b.way)) as way,b.building,b.leisure,b.railway,b.amenity,b.landuse from &prefix;_polygon b, areas a
                       where (b.building is not null
                           or b.landuse='building'
                           or b.railway='station'
                           or b.amenity='place_of_worship')
+                          and ST_Intersects(b.way, a.way2)
           ) as buildings
         </Parameter>
     </Datasource>
