@@ -75,7 +75,7 @@ def createImage(path, fileformat):
     ADORN_LOGO_W = 0.018
 
     style = p['style']
-    if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "adhoc":
+    if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "futurecity" and style != "adhoc":
         return "Unknown style."
 
     PAPER_W = float(p['paper'].split(",")[0])
@@ -155,6 +155,21 @@ def createImage(path, fileformat):
                 rotate((clon, clat),pagePolyUnrotated[1],rotation),
                 rotate((clon, clat),pagePolyUnrotated[2],rotation),
                 rotate((clon, clat),pagePolyUnrotated[3],rotation))
+    mapPolyUnrotated = ((clon - MAP_W/2 * scaleCorrected,
+                            clat - MAP_H/2 * scaleCorrected),
+                            (clon - MAP_W/2 * scaleCorrected,
+                            clat + MAP_H/2 * scaleCorrected),
+                            (clon + MAP_W/2 * scaleCorrected,
+                            clat + MAP_H/2 * scaleCorrected),
+                            (clon + MAP_W/2 * scaleCorrected,
+                            clat - MAP_H/2 * scaleCorrected))
+    mapPoly = (rotate((clon, clat),mapPolyUnrotated[0],rotation),
+                rotate((clon, clat),mapPolyUnrotated[1],rotation),
+                rotate((clon, clat),mapPolyUnrotated[2],rotation),
+                rotate((clon, clat),mapPolyUnrotated[3],rotation))
+
+    polyString = 'ST_PolygonFromText(\'POLYGON(({0[0][0]} {0[0][1]},{0[1][0]} {0[1][1]},{0[2][0]} {0[2][1]},{0[3][0]} {0[3][1]},{0[0][0]} {0[0][1]}))\',900913)'.format(mapPoly)
+    polyString2 = 'ST_PolygonFromText(\'POLYGON(({0[0][0]} {0[0][1]},{0[1][0]} {0[1][1]},{0[2][0]} {0[2][1]},{0[3][0]} {0[3][1]},{0[0][0]} {0[0][1]}))\',3857)'.format(mapPoly)
 
     styleFile = home + "/styles/" + style + ".xml"
     with open(styleFile, mode="r") as f:
@@ -274,12 +289,18 @@ def createImage(path, fileformat):
         "\n<!ENTITY fences \"" + ("yes" if p.get('fences',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
-        "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">"
+        "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">" + \
+        "\n<!ENTITY box \"" + polyString + "\">" + \
+        "\n<!ENTITY box3857 \"" + polyString2 + "\">" + \
+        "\n<!ENTITY rotation \"" + str(rotation * 180/math.pi) + "\">"
     searchstring="\%settings;"
     styleString = re.sub(searchstring,insertstring,styleString)
 
     with open(styleFile, mode="w") as f:
             f.write(styleString)
+
+    custom_fonts_dir = '/usr/share/fonts/truetype/msttcorefonts/'
+    mapnik.register_fonts(custom_fonts_dir)
 
     cbbox = mapnik.Box2d(mapWLon,mapSLat,mapELon,mapNLat)
     # Limit the size of map we are prepared to produce to roughly A2 size.
@@ -550,7 +571,7 @@ def createImage(path, fileformat):
 
     # Adornments - Title
     ctx = cairo.Context(surface)
-    ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
+    ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     if style == 'blueprint':
         ctx.select_font_face("Impact", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     text = unquote(title)
@@ -561,7 +582,7 @@ def createImage(path, fileformat):
         ctx.set_font_size(18*SCALE_FACTOR)
     else:
         ctx.set_font_size(21*SCALE_FACTOR)
-    ctx.translate((MAP_WM+0.01)*S2P, (MAP_NM-ADORN_TITLE_SM)*S2P) #add space to left for logo
+    ctx.translate(MAP_WM*S2P, (MAP_NM-ADORN_TITLE_SM)*S2P)
 
     if style == 'blueprint':
         ctx.set_source_rgb(0, 0.5, 0.8)
@@ -574,7 +595,7 @@ def createImage(path, fileformat):
     ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     text = "scale 1:" + str(scale)
 
-    if style == "oterrain" or style == "streeto":
+    if style == "oterrain" or style == "streeto" or style == "futurecity":
         text = "scale 1:" + str(scale) + ", contours " + p['interval'] + "m"
     ctx.set_source_rgb(0, 0, 0)
     if style == 'blueprint':
@@ -632,28 +653,21 @@ def createImage(path, fileformat):
     ctx.rel_line_to(0.002*S2P, 0.002*S2P)
     ctx.rel_line_to(0, -0.002*S2P)
     ctx.stroke()
-    if style != "blueprint":
-        logoSurface = cairo.ImageSurface.create_from_png(home + "/images/oflogo.png")
-        ctx = cairo.Context(surface)
-        width = logoSurface.get_width()*ADORN_LOGO_SCALE
-        ctx.translate((MAP_WM+MAP_W)*S2P-width, CONTENT_NM*S2P)
-        ctx.scale(ADORN_LOGO_SCALE, ADORN_LOGO_SCALE)
-        ctx.set_source_surface(logoSurface, 0, 0)
-        ctx.paint()
 
     # Adornments - Club logo
     if style != "blueprint" and club in clubs:
         logoSurface = cairo.ImageSurface.create_from_png(home + "/images/" + club + ".png")
         ctx = cairo.Context(surface)
-        scale = ADORN_CLOGO_SCALE / logoSurface.get_width()
-        ctx.translate((MAP_WM)*S2P, CONTENT_NM*S2P)
+        scale = ADORN_CLOGO_SCALE / logoSurface.get_height()
+        width = logoSurface.get_width() *scale
+        ctx.translate((MAP_WM + MAP_W)*S2P - width, CONTENT_NM*S2P)
         ctx.scale(scale, scale)
         ctx.set_source_surface(logoSurface, 0, 0)
         ctx.paint()
 
     # Adornments - Attribution left line 1
     ctx = cairo.Context(surface)
-    ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
+    ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_source_rgb(0.12, 0.5, 0.65)
     if style == 'blueprint':
         ctx.set_source_rgb(0, 0.5, 0.8)
@@ -665,7 +679,7 @@ def createImage(path, fileformat):
 
     # Adornments - Attribution left line 2 - contours
     ctx = cairo.Context(surface)
-    ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
+    ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_source_rgb(0.12, 0.5, 0.65)
     ctx.set_operator(cairo.Operator.MULTIPLY)
     ctx.set_font_size(7*SCALE_FACTOR)
@@ -677,7 +691,7 @@ def createImage(path, fileformat):
 
     #Adornments - Attribution left line 3
     ctx = cairo.Context(surface)
-    ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
+    ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_source_rgb(0.12, 0.5, 0.65)
     if style == "blueprint":
         ctx.set_source_rgb(0, 0.5, 0.8)
@@ -688,21 +702,21 @@ def createImage(path, fileformat):
     ctx.show_text(text)
 
     #Adornments - Attribution right line 1
-    if style == "oterrain" or style == "streeto" or style == "blueprint":
+    if style == "oterrain" or style == "streeto" or style == "blueprint" or style == "futurecity":
         ctx = cairo.Context(surface)
-        ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_BOLD)
+        ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         ctx.set_source_rgb(1, 1, 1)
         if style == "blueprint":
             ctx.set_source_rgb(0, 0.5, 0.8)
         ctx.set_font_size(9*SCALE_FACTOR)
-        text = "OOM v3 developed with a grant from the Orienteering Foundation"
+        text = "OOM v4 developed by David Dixon"
         width = ctx.text_extents(text)[4]
         ctx.translate((MAP_WM+MAP_W)*S2P-width, (MAP_NM+MAP_H+ADORN_ATTRIB_NM)*S2P)
         ctx.show_text(text)
 
     #Attribution right line 2
     ctx = cairo.Context(surface)
-    ctx.select_font_face("Arial", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
+    ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_source_rgb(1, 1, 1)
     if style == "blueprint":
         ctx.set_source_rgb(0, 0.5, 0.8)
@@ -888,5 +902,5 @@ def test(path):
 
 
 if __name__ == '__main__':
-    test("style=streeto-COPE-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=hh|id=6043c1a44cc95|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2|linear=no")
+    test("style=streeto-LIDAR-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=hh|id=6043c1a44cc97|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2|linear=no")
     #test("style=oterrain-COPE-5|grid=no&paper=0.297,0.210|scale=10000|centre=6801767,-86381|id=6043c1a44cc93&rotation=0.2")

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE Map [
 <!ENTITY % settings SYSTEM "inc/settings.xml.inc">
-<!ENTITY % colours SYSTEM "inc/colours_futurecity.xml.inc">
+<!ENTITY % colours SYSTEM "inc/colours_oom.xml.inc">
 <!ENTITY % types SYSTEM "inc/types_withrail.xml.inc">
+<!ENTITY styles-contours SYSTEM "inc/styles_contours.xml.inc">
 <!ENTITY styles-basic SYSTEM "inc/styles_futurecity.xml.inc">
 <!ENTITY layers-basic SYSTEM "inc/layers_futurecity.xml.inc">
 %settings;
@@ -14,6 +15,8 @@
 &fontset-settings;
 
 &styles-basic;
+&styles-contours;
 
 &layers-basic;
+&layers-contours;
 </Map>

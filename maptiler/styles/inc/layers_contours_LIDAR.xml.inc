@@ -10,11 +10,11 @@
     SELECT (ST_Dump(ST_LineMerge(ST_collect(g.way)))).geom as way
     FROM
     (
-      SELECT (ST_Dump(ST_Intersection(way, !bbox!))).geom as way
+      SELECT (ST_Dump(ST_Intersection(way, &box;))).geom as way
       FROM all_lidar
       WHERE (height*2)::integer % (10* &contourSeparation; )::integer != 0
       AND  (height*2)::integer % (2* &contourSeparation; )::integer = 0
-      AND ST_Intersects(way,!bbox!)
+      AND ST_Intersects(way,&box;)
     ) as g
   ) as h
 ) as "cntrs10"
@@ -34,10 +34,10 @@
     SELECT (ST_Dump(ST_LineMerge(ST_collect(g.way)))).geom as way
     FROM
     (
-      SELECT (ST_Dump(ST_Intersection(way, !bbox!))).geom as way
+      SELECT (ST_Dump(ST_Intersection(way, &box;))).geom as way
       FROM all_lidar
       WHERE (height*2)::integer % (10* &contourSeparation; )::integer = 0
-      AND ST_Intersects(way,!bbox!)
+      AND ST_Intersects(way,&box;)
     ) as g
   ) as h
 ) as "cntrs50"

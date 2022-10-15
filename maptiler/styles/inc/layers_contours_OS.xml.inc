@@ -3,7 +3,7 @@
         <Datasource>
             &datasource-settings-contours;
             <Parameter name="table">
-                (select ST_Intersection(way, !bbox!) as way, prop_value from terr50_lns2 WHERE prop_value::integer % 50 != 0 AND ST_Intersects(way,!bbox!)) as cntrs10
+                (select ST_Intersection(way, &box;) as way, prop_value from terr50_lns2 WHERE prop_value::integer % 50 != 0 AND ST_Intersects(way,&box;)) as cntrs10
             </Parameter>
         </Datasource>
     </Layer>
@@ -13,7 +13,7 @@
         <Datasource>
             &datasource-settings-contours;
             <Parameter name="table">
-                (select ST_Intersection(way, !bbox!) as way, prop_value from terr50_lns2 WHERE prop_value::integer % 50 = 0 AND ST_Intersects(way,!bbox!)) as cntrs50
+                (select ST_Intersection(way, &box;) as way, prop_value from terr50_lns2 WHERE prop_value::integer % 50 = 0 AND ST_Intersects(way,&box;)) as cntrs50
             </Parameter>
         </Datasource>
     </Layer>
