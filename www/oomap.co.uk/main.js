@@ -480,7 +480,10 @@ function setDefaults()
 
 function init()
 {
-	$( "#mapstyle" ).controlgroup();
+  if (window.location.hostname == "oomap.dna-software.co.uk" || window.location.hostname == "localhost") {
+    $("a[href='https://blog.oomap.co.uk/oom/']").attr('href', 'https://oomap.dna-software.co.uk/help/blog/');
+  }
+  $( "#mapstyle" ).controlgroup();
 
 	$( "#mapscale" ).controlgroup();
 	$( "#papersize" ).controlgroup();

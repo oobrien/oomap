@@ -211,6 +211,7 @@ def createImage(path, fileformat):
         api2 = overpass.API(endpoint = "https://overpass.kumi.systems/api/interpreter", timeout=120, headers = headers)
         api = overpass.API(endpoint = "https://overpass-api.de/api/interpreter", timeout=120, headers = headers)
         MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
+        #MapQuery = 'is_in({},{});(area._[natural ~ "."];area._[landuse ~ "."];);>->.a;((node({},{},{},{});.a;);<;>;);'.format(wgs84lat,wgs84lon,bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
         try:
             response = api.get(MapQuery, responseformat="xml")
         except: #if first api fails try the second
