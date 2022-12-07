@@ -41,7 +41,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Intersection(way, !bbox!) as way,barrier,"natural",man_made from &prefix;_line where "natural" in ('hedge','cliff') or man_made='embankment') as roads
+            (select ST_Intersection(way, !bbox!) as way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
         </Parameter>
     </Datasource>
 </Layer>
