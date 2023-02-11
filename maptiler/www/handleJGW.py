@@ -1,6 +1,7 @@
 import os, os.path, platform, mapnik
 import math
 import time
+from pyproj import Transformer
 from oomf import *
 
 def processRequest(environ):
@@ -16,7 +17,6 @@ def createJGW(path):
     p = parse_query(path)
     mapid = p.get('mapid', 'new')
     SCALE_FACTOR = p['dpi']/72.0
-    EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
     S2P = 360.0 * SCALE_FACTOR/0.127
 
     MAP_NM = 0.014
@@ -35,8 +35,8 @@ def createJGW(path):
     clon = int(centre.split(",")[1])
     rotation=float(p.get('rotation','0'))
 
-    projection = mapnik.Projection(EPSG900913)
-    wgs84lat = mapnik.Coord(clon, clat).inverse(projection).y
+    transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
+    wgs84lat = transformer.transform(clon, clat, direction = 'INVERSE')[0]
     scaleCorrectionFactor = math.cos(wgs84lat * math.pi/180)
     scaleCorrected = scale / scaleCorrectionFactor
 

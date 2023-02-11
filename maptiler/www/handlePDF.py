@@ -4,6 +4,8 @@ import os, os.path, platform, mapnik
 import math
 import time
 import datetime
+from pyproj import Transformer
+
 #import gi
 #gi.require_version('Rsvg', '2.0')
 #from gi.repository import Rsvg
@@ -39,7 +41,7 @@ def createImage(path, fileformat):
 
     p = parse_query(path)
 
-    EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
+    transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
     C_SCALE_FACTOR = 1.4
     SCALE_FACTOR = p['dpi']/72.0
     S2P = SCALE_FACTOR*360/0.127
@@ -117,9 +119,7 @@ def createImage(path, fileformat):
     if 'cps' in p:
         cpsArr = p['cps'].split(",")
 
-    projection = mapnik.Projection(EPSG900913)
-    wgs84lat = mapnik.Coord(clon, clat).inverse(projection).y
-    wgs84lon = mapnik.Coord(clon, clat).inverse(projection).x
+    wgs84lat, wgs84lon = transformer.transform(clon, clat, direction = 'INVERSE')
     scaleCorrectionFactor = math.cos(wgs84lat * math.pi/180)
     scaleCorrected = scale / scaleCorrectionFactor
 
@@ -175,8 +175,8 @@ def createImage(path, fileformat):
     with open(styleFile, mode="r") as f:
                styleString = f.read()
 
-    bbox2=mapnik.Box2d(mapWLon, mapSLat, mapELon, mapNLat).inverse(projection)
-
+    bx=transformer.transform_bounds(mapWLon, mapSLat, mapELon, mapNLat, direction = 'INVERSE')
+    bbox2 = mapnik.Box2d(bx[3],bx[2],bx[1],bx[0])
     if len(mapid) == 13:    #If existing id, use that, otherwise generate new one.
         tmpid = "h" + mapid #Add "h" prefix - postgres tables can't start with a number
     else:
@@ -252,7 +252,7 @@ def createImage(path, fileformat):
                 str(bbox2.maxx+0.0001)+" "+str(bbox2.maxy+0.0001)+ \
                 " -of SAGA -ot Float32 " + home_base + "/"+tmpid + "_a.vrt " + home_base + "/"+tmpid + ".sdat")
             #Apply Guassian blur to further smooth contours
-            os.system("saga_cmd grid_filter \"Gaussian Filter\" -SIGMA 2.0 -RADIUS 12 -INPUT " + home_base + "/"+tmpid + ".sdat -RESULT " + home_base + "/"+tmpid + "_s")
+            os.system("saga_cmd grid_filter \"Gaussian Filter\" -SIGMA 2.0 -KERNEL_RADIUS 12 -INPUT " + home_base + "/"+tmpid + ".sdat -RESULT " + home_base + "/"+tmpid + "_s")
             #Generate contours
             os.system("gdal_contour -b 1 -a height -i " + p['interval'] + " " +  home_base + "/"+tmpid + "_s.sdat "  +  home_base + "/"+tmpid + ".shp")
             # If contour generation failed, use a dummy dataset so that the DB table
@@ -870,12 +870,12 @@ def get_pdf_gpts(m, poly):
     """
     gpts = ArrayObject()
 
-    proj = mapnik.Projection(m.srs)
+    transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
     for x,y in poly:
-        latlon_corner = proj.inverse(mapnik.Coord(x,y))
+        latlon_corner = transformer.transform(x,y, direction='INVERSE')
         # these are in lat,lon order according to the specification
-        gpts.append(FloatObject(str(latlon_corner.y)))
-        gpts.append(FloatObject(str(latlon_corner.x)))
+        gpts.append(FloatObject(str(latlon_corner[0])))
+        gpts.append(FloatObject(str(latlon_corner[1])))
 
     return gpts
 

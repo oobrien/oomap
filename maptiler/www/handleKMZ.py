@@ -1,9 +1,8 @@
 import os, os.path, platform, mapnik
 import math
 import time
+from pyproj import Transformer
 from oomf import *
-
-EPSG900913 = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
 
 MAP_NM = 0.014
 MAP_EM = 0.008
@@ -58,8 +57,8 @@ def createKMZ(path):
     except:
         rotation = 0
 
-    projection = mapnik.Projection(EPSG900913)
-    wgs84lat = mapnik.Coord(clon, clat).inverse(projection).y
+    transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
+    wgs84lat = transformer.transform(clon, clat, direction = 'INVERSE')[0]
     scaleCorrectionFactor = math.cos(wgs84lat * math.pi/180)
     scaleCorrected = scale / scaleCorrectionFactor
 
@@ -79,10 +78,8 @@ def createKMZ(path):
     TopLeftLat = clat + (MAP_H/2+MAP_NM)*scaleCorrected*math.cos(rotation) - (MAP_W/2+MAP_WM)*scaleCorrected*math.sin(rotation)
     TopLeftLon = clon - (MAP_W/2+MAP_WM)*scaleCorrected*math.cos(rotation) - (MAP_H/2+MAP_NM)*scaleCorrected*math.sin(rotation)
 
-    north = mapnik.Coord(XMin, YMax).inverse(projection).y
-    west = mapnik.Coord(XMin, YMax).inverse(projection).x
-    south =  mapnik.Coord(XMax, YMin).inverse(projection).y
-    east = mapnik.Coord(XMax, YMin).inverse(projection).x
+    north, west = transformer.transform(XMin, YMax, direction = 'INVERSE')
+    south, east = transformer.transform(XMax, YMin, direction = 'INVERSE')
 
     kml = PermKml()
     kml.document = Folder(name="")
