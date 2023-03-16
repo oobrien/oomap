@@ -19,14 +19,17 @@ import {ScaleLine, defaults as defaultControls} from 'ol/control';
 import * as olProj from 'ol/proj';
 import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteractions,} from 'ol/interaction';
 import GPX from 'ol/format/GPX';
+import GeoJSON from 'ol/format/GeoJSON';
 import {Point, Polygon, LineString} from 'ol/geom';
 import {fromExtent as PolyFromExtent} from 'ol/geom/Polygon';
-import {getDistance} from 'ol/sphere';
+import {getDistance, getLength} from 'ol/sphere';
 import GeoImage from 'ol-ext/source/GeoImage';
+import SearchNominatim from 'ol-ext/control/SearchNominatim';
 import Overlay from 'ol/Overlay';
 import './lib/jquery-ui.min.css';
 import 'ol/ol.css';
 import './style.css';
+import 'ol-ext/dist/ol-ext.css';
 
 Proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
 
@@ -44,8 +47,9 @@ var apiServer = "https://overpass.kumi.systems/api/interpreter";
 
 var currentID = null;
 var currentNumber = null;
-var topID = 0;  //assign features unique ids starting from 0 (start = "S")
+var topID = 0;  //assign features unique ids starting from 0 (start = "S", finish = "F")
 var topNumber = 0; //assign controls unique numbers
+var batchNumber = 0;  //control property describing which batch it was added as, to allow batch delete
 
 var rotAngle = 0;
 var magDec = null; //magnetic declination for map centre
@@ -102,7 +106,7 @@ var wgs84Poly;
 var purple = 'rgba(220, 40, 255, 1)';
 
 const container = document.getElementById('popup');
-const content = document.getElementById('popup-content');
+const overlayContent = document.getElementById('popup-content');
 const overlay = new Overlay({
   element: container,
   autoPan: {
@@ -112,13 +116,8 @@ const overlay = new Overlay({
   },
 });
 
-//State
-//initialzoom, placepaper, addcontrols
 var state = "initialzoom";
 var controloptstate = "add";
-
-//var x;
-//var list;
 
 let dragAndDropInteraction;
 
@@ -130,46 +129,70 @@ function setInteraction() {
     formatConstructors: [GPX, ],
   });
   dragAndDropInteraction.on('addfeatures', function (event) {
-    //const vectorSource = new VectorSource({
-    //  features: event.features,
-    //});
-    //layerGPX.setSource(vectorSource);
     layerGPX.getSource().addFeatures(event.features);
+    event.features.forEach(function(f) {
+       if (f.getGeometry().getType() != 'Point') {
+         f.setStyle(gpxStyle(f));
+       }
+       else {
+         f.setStyle([new Style({  image: new Circle({
+              stroke: new Stroke({
+                color: "blue",
+                width: 1.75
+              }),
+              radius: 5
+            })
+          })]);
+       }
+       if (f.get('name') != undefined) {
+         f.set('description', f.get('name').replace('undefined',''));
+       }
+       else {
+         f.set ('description','');
+       }
+     });
     olMap.getView().fit(layerGPX.getSource().getExtent());
     $( "#deleteMarkers" ).button("enable");
   });
   olMap.addInteraction(dragAndDropInteraction);
 }
 
-
 function controlStyle(feature, resolution)
 {
 	var size = trueScale/(resolution * 16000);
   var type = feature.getProperties().type;
+  var startAngle = 0;
+  var listC = getSortedControls("c_regular");
+  var listS = getSortedControls("c_startfinish");
+  if (linear && listS.length > 0 && listC.length > 0) {
+    startAngle = Math.atan2(listS[0].lat - listC[0].lat, listC[0].lon - listS[0].lon) - Math.PI/6 + rotAngle;
+  }
+
   switch(type)
   {
-  case "c_regular": //control - circle & number
+  case "c_regular": //control - circle & number.    Transparent fill allows selection throughout
     return [
-  	new Style({
-  		image: new Circle({
-  			fill: new Fill({ color: purple}),
-  			radius: 10 * size
-  		})
-  	}),
-  	new Style({
-  		image: new Circle ({
-  			stroke: new Stroke({color: purple, width: 10 * size}),
-  			radius: 75 * size
-  		}),
-  		text: new Text({
-  			  textAlign: "center",
-  			  font: 120 * size + "px arial, verdana, sans-serif",
-  			  text: feature.get('number'),
-  			  fill: new Fill({color: purple}),
-  			  offsetX:  5 * size * 35 * Math.sin((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation()),
-  			  offsetY:  5 * size * -35 * Math.cos((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation())
-  		})
-  	})]
+    	new Style({
+    		image: new Circle ({
+    			stroke: new Stroke({color: purple, width: 10 * size}),
+          fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
+    			radius: 75 * size
+    		}),
+    		text: new Text({
+    			  textAlign: "center",
+    			  font: 120 * size + "px arial, verdana, sans-serif",
+    			  text: feature.get('number'),
+    			  fill: new Fill({color: purple}),
+    			  offsetX:  5 * size * 35 * Math.sin((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation()),
+    			  offsetY:  5 * size * -35 * Math.cos((feature.get('angle')*Math.PI)/180 + olMap.getView().getRotation())
+    		})
+    	}),
+      new Style({
+        image: new Circle({
+          fill: new Fill({ color: purple}),
+          radius: 10 * size
+        })
+    })]
   break;
   case "c_startfinish": //start/finish - triangle & double circle
     var boolFinish = layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_finish').length > 0 ;
@@ -180,6 +203,8 @@ function controlStyle(feature, resolution)
     			image: new RegularShape({
     				points: 3,
     				stroke: new Stroke({color: purple, width: 10 * size}),
+            fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
+            angle: startAngle,
     				radius: 110 * size
     			})
     		})]
@@ -191,6 +216,7 @@ function controlStyle(feature, resolution)
           image: new RegularShape({
             points: 3,
             stroke: new Stroke({color: purple, width: 10 * size}),
+            angle: startAngle,
             radius: 110 * size
           })
         }),
@@ -203,6 +229,7 @@ function controlStyle(feature, resolution)
         new Style({
           image: new Circle({
             stroke: new Stroke({color: purple, width: 10 * size}),
+            fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
             radius: 90 * size
         })
       })]
@@ -219,6 +246,7 @@ function controlStyle(feature, resolution)
     		new Style({
     			image: new Circle({
     				stroke: new Stroke({color: purple, width: 10 * size}),
+            fill: new Fill({color: 'rgba(255, 255, 255, 0)'}),
     				radius: 90 * size
         })
     	})]
@@ -262,16 +290,8 @@ function lineStyle(feature, resolution) //Lines between controls
   var size = trueScale/(resolution * 16000);
   const styles = [];
   geometry.forEachSegment(function (start, end) {
-     const scale = trueScale/200;
-     const dx = end[0] - start[0];
-     const dy = end[1] - start[1];
-     const rotation = Math.atan2(dy, dx);
-     const start2 = [start[0] + Math.cos(rotation) * scale, start[1] + Math.sin(rotation) * scale]
-     const end2 = [end[0]-Math.cos(rotation) * scale, end[1]-Math.sin(rotation) * scale]
-     // arrows
      styles.push(
        new Style({
-         geometry: new LineString([start2,end2]), //shorten lines at ends
            stroke: new Stroke({
              color: purple,
              width: 10 * size,
@@ -282,15 +302,15 @@ function lineStyle(feature, resolution) //Lines between controls
    return styles;
 };
 
-var dotStyle = new Style({
-});
+//var dotStyle = new Style({
+//});
 
 var marginStyle = new Style({
 	fill: new Fill({ color: [255, 255, 255, 1]})
 });
 
-var sheetStyle  = new Style({
-	stroke: new Stroke({ color: [0, 0, 0, 1], width: 1})
+var sheetStyle = new Style({  //css will add a compositing option to this white box
+	fill: new Fill({ color: [255, 255, 255, 1]})
 });
 
 function titleStyle(feature, resolution)
@@ -302,10 +322,10 @@ function titleStyle(feature, resolution)
 			text: feature.get('mapTitleDisplay'),
 			textAlign: "left",
 			textBaseline: "middle",
-          	fill: new Fill({color: 'rgba(0,0,0,1)'}),
+      fill: new Fill({color: 'rgba(0,0,0,1)'}),
 			font: "italic " + 150 * size + "px arial, verdana, sans-serif",
-          	offsetX: feature.get('xoff'),
-          	offsetY: feature.get('yoff'),
+      offsetX: feature.get('xoff'),
+      offsetY: feature.get('yoff'),
 		})
 	})
 ]};
@@ -335,7 +355,6 @@ function markerStyle(feature)
   }
 
     var fill = new Fill({
-       //color: 'rgba(255,255,255,0.4)'
        color: markerColor + '40'
      });
      var stroke = new Stroke({
@@ -354,21 +373,76 @@ function markerStyle(feature)
        })
      ]
  }
+ //No need to do linestring styling here - GPX styling is applied on load.
  else {
-   return [
-     new Style({
-       stroke: new Stroke({
-         color: 'blue',
-         width: 1.25
-       })
-     })
-   ]
  }
 };
 
-var contentStyle = new Style({ fill: new Fill({ color: [200, 200, 200, 0.3]})
+function gpxStyle(feature) {
+  var type = feature.getGeometry().getType();
+  var lineStrings = [];
+  var styles = [];
+  if (type === "LineString") {
+    lineStrings = [feature.getGeometry()];
+  } else if (type === "MultiLineString") {
+    lineStrings = feature.getGeometry().getLineStrings();
+  }
+  lineStrings.forEach(function (lineString) {
+    var coordinates = lineString.getCoordinates();
+    var boolSpeed = lineString.layout == "XYZM";  //Check that GPX data is time-stamped
+    var speed = [];
+    var time;
+    var rate;
+    if(boolSpeed) {
+      for (var i = 0; i < coordinates.length - 1; i++) {    //calc distance travelled, divide by time taken
+        time = coordinates[i+1][3] - coordinates[i][3];
+        if (time < 0.01) time = 1;
+        rate = getLength(new LineString([coordinates[i],coordinates[i+1]], lineString.layout))/ time;
+        if (rate > 30) rate = 30;
+        speed.push(rate);
+      }
+      var maxSpeed = Math.max(...speed);
+      if (debug) console.log(maxSpeed);
+      while(speed.filter(function(x){return x > maxSpeed}).length < 0.05 * coordinates.length) {
+        maxSpeed = maxSpeed * 0.95;
+        if (debug) console.log(maxSpeed);
+        if (maxSpeed < 0.1) break;
+      };
+      for (var i = 0; i < coordinates.length - 1; i++) {
+        var hue = 220 + speed[i] * 240/maxSpeed; //range of 0 to speed exceeded by 5% of points
+        if (hue > 480) { hue = 480; }
+        if (hue > 360) { hue -= 360; }
+      //  else { hue = 230; } //If no time column in GPX, set hue to blue
+        var color = "hsl(" + hue + ", 100%, 50%)";
+        styles.push(
+          new Style({
+            geometry: new LineString(coordinates.slice(i, i + 2)),
+            stroke: new Stroke({
+              color: color,
+              width: 3
+            })
+          })
+        );
+      }
+    }
+    else {
+      styles.push(
+        new Style({
+          stroke: new Stroke({
+            color: "hsl(230, 100%, 50%)",
+            width: 3
+          })
+        })
+      )
+    }
+  });
+  return styles;
+}
 
+var contentStyle = new Style({
+   fill: new Fill({ color: [200, 200, 200, 0.3]})
 });
+
 var centreStyle = new Style({
 	image: new Circle({
 		stroke: new Stroke({color: 'rgba(0,0,255,1)', width: 1}),
@@ -406,7 +480,10 @@ function setDefaults()
 
 function init()
 {
-	$( "#mapstyle" ).controlgroup();
+  if (window.location.hostname == "oomap.dna-software.co.uk" || window.location.hostname == "localhost") {
+    $("a[href='https://blog.oomap.co.uk/oom/']").attr('href', 'https://oomap.dna-software.co.uk/help/blog/');
+  }
+  $( "#mapstyle" ).controlgroup();
 
 	$( "#mapscale" ).controlgroup();
 	$( "#papersize" ).controlgroup();
@@ -432,6 +509,7 @@ function init()
 	$( "#getworldfile" ).button().on('click', function() {generateMap("jgw"); });
 	$( "#getkmz" ).button().on('click', function() {generateMap("kmz"); });
 	$( "#getkml" ).button().on('click', function() {generateKML(); });
+	$( "#getxml" ).button().on('click', function() {generateXML(); });
 	$( "#opts" ).button().on('click', function() {handleAdvancedOptions(); });
 	$( "#preview" ).button().on('click', function() {
     if (previewWarning == false || preview == true) {
@@ -449,15 +527,13 @@ function init()
 	$( "#getOpenplaques" ).button({ icons: { primary: "ui-icon-pin-s" } }).on('click', function() { handleGetOpenplaques(); });
 
 	$( "#createmap" ).button("disable");
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
-	$( "#getkml" ).button("disable");
+	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
+	$( "#getkml,#getxml" ).button("disable");
 	$( "#createclue" ).button("disable");
 	$( "#deletesheet" ).button("disable");
   $( "#deleteMarkers" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
-	$( "#getPlaques" ).button("disable");
+	$( "#getOpenplaques" ).button("disable");
 	$( "#preview" ).button("disable");
 
 	$( "#edittitle" ).on('click', function() { handleTitleEdit(); })
@@ -465,22 +541,27 @@ function init()
   $("#s_poi_key").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
   $("#s_poi_value").on("input", function() {   $("#c_poi_custom").prop("checked", true);   })
 
+  $("#tempLayer").prop("checked", false);
+  $("#layerMessage").hide();
+  $("#undoMessage").show();
+
   $('#tempLayer').change(function() {
     if (this.checked) {
       //$('#c_poi_dist').prop('disabled', true);
       //$("label[for='c_poi_dist']").addClass( "grey" );
       $("#layerMessage").show();
+      $("#undoMessage").hide();
     } else {
       //$('#c_poi_dist').prop('disabled', false);
       //$("label[for='c_poi_dist']").removeClass( "grey" );
       $("#layerMessage").hide();
+      $("#undoMessage").show();
     }
   });
 
 	$( "#eventdate").datepicker({
-		dateFormat: "D d M yy",
-      	altField: "#eventdate_alternate",
-      	altFormat: "yy-mm-dd",
+		dateFormat: "yy-mm-dd"
+
     });
 
     tips = $( ".validateTips" );
@@ -547,7 +628,7 @@ function init()
     updateWhileAnimating: true});
 	layerMapCentre = new VectorLayer({ title: "mapcentre", style: centreStyle, source: sourceMC, zIndex: 4});
 	layerMapSheet = new VectorLayer({ title: "mapsheet", style: sheetStyle, source: sourceMS, zIndex: 2,
-    updateWhileAnimating: true});
+    updateWhileAnimating: true,  className: 'colour'});
 	layerMapTitle = new VectorLayer({ title: "maptitle", style: titleStyle, source: sourceMT, zIndex: 2,
     updateWhileAnimating: true});
 	layerMapContent = new VectorLayer({ title: "mapcontent", style: contentStyle, source: sourceContent });
@@ -556,8 +637,6 @@ function init()
   layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 4 });
   layerPreview = new ImageLayer({ name: "Georef",  zIndex: 3});
   layerGPX = new VectorLayer({ title: "GPX", style: markerStyle, source: sourceGPX, zIndex: 4 });
-
-  //layerPreview = new GeoImageLayer({title: "preview", visible: true, zIndex: 3});
 
 	if (args['mapStyleID'])
 	{
@@ -574,7 +653,7 @@ function init()
 	}
 
 	select = new Select({
-		layers: [layerMapCentre, layerControls, layerGPX],
+		layers: [],
     hitTolerance: hitTol,
 	});
 
@@ -583,7 +662,13 @@ function init()
   	//features: select.getFeatures()
 	});
 
-	translate.on('translateend', handleDrag)
+	translate.on('translateend',  function(evt) {
+		handleDrag(evt);
+	})
+
+  translate.on('translating',  function(evt) {
+		handleDrag(evt);
+	})
 
 	olMap = new Map(
 	{
@@ -614,16 +699,24 @@ function init()
           //Use view centre unless sheet has been placed.
           if (state != 'initialzoom' && state != 'placepaper') { coords = sheetCentreLL; }
           lookupMag(olProj.transform(coords, "EPSG:3857", "EPSG:4326")[1],olProj.transform(coords, "EPSG:3857", "EPSG:4326")[0]);
-          this.label_.innerHTML = 'N';
         }
-        else if (Math.PI - Math.abs(Math.abs((-magDec * Math.PI/180) - olMap.getView().getRotation()) - Math.PI) > 0.016) { //If mag N available, and not current orientation, change to Mag N
+        else if (Math.PI - Math.abs(Math.abs((-magDec * Math.PI/180) - olMap.getView().getRotation()) - Math.PI) > 0.001) { //If mag N available, and not current orientation, change to Mag N
           olMap.getView().setRotation(-magDec * Math.PI/180);
-          this.label_.innerHTML = 'N';
         }
         else {  //Otherwise rotate to True N
           olMap.getView().setRotation(0);
-                    this.label_.innerHTML = 'M';
         }
+        this.label_.style.transform = 'rotate(' + olMap.getView().getRotation() + 'rad)';
+      },
+      render: function()
+      { //if rotation more-or-less zero, change label to "M", otherwise show rotated "N"
+        if (Math.PI - Math.abs(Math.abs(olMap.getView().getRotation()) - Math.PI) > 0.001) {
+          this.label_.innerHTML = 'N';
+        }
+        else {
+          this.label_.innerHTML = 'M';
+        }
+        this.label_.style.transform = 'rotate(' + olMap.getView().getRotation() + 'rad)';
       }
     } }).extend(
 		[
@@ -640,7 +733,16 @@ function init()
 		interactions: defaultInteractions().extend([select, translate]),
 	});
 
+  var search = new SearchNominatim (
+  		{	//target: $(".options").get(0),
+  			polygon: false,
+  			reverse: true,
+  			position: true	// Search, with priority to geo position
+  		});
+  olMap.addControl (search);
+
  	olMap.getView().on('change:resolution', handleZoom);
+  olMap.getView().on('change:rotation', handleRotate);
 	olMap.on("moveend", updateUrl);
 
 	olMap.on("singleclick", function(evt) {
@@ -652,32 +754,52 @@ function init()
 
   let selected = null;
   olMap.on('pointermove', function (evt) {
-    if (selected !== null) {
-      selected = null;
-    }
-
-    olMap.forEachFeatureAtPixel(evt.pixel, function (f) {
-      selected = f;
-      return true;
+    selected = null;
+    olMap.forEachFeatureAtPixel(evt.pixel, function (f, layer) {
+      if ($.inArray(layer.get('title'), ['GPX','controls', 'mapcentre']) >= 0) {
+        if (f.getGeometry().getType() == 'Point') selected = f;
+      }
     });
 
     if (selected) {
-      content.innerHTML = selected.get('description');
-      overlay.setPosition(evt.coordinate);
+      overlayContent.innerHTML = (selected.get('description').replace("undefined","") + "<br>" + selected.get('tags')).replace("undefined","");
+      if (overlayContent.innerHTML != "<br>") { overlay.setPosition(evt.coordinate); }
     } else {
       overlay.setPosition(undefined);
     }
   });
 
-	olMap.getView().on('propertychange', handleRotate);
+  search.on('select', function(e)	{
+		// Check if we get a geojson to describe the search
+		if (e.search.geojson) {
+			var format = new GeoJSON();
+			var f = format.readFeature(e.search.geojson, { dataProjection: "EPSG:4326", featureProjection: olMap.getView().getProjection() });
+			var view = map.getView();
+			var resolution = view.getResolutionForExtent(f.getGeometry().getExtent(), olMap.getSize());
+			var zoom = view.getZoomForResolution(resolution);
+			var center = ol.extent.getCenter(f.getGeometry().getExtent());
+			// redraw before zoom
+			setTimeout(function(){
+					view.animate({
+					center: center,
+					zoom: Math.min (zoom, 14)
+				});
+			}, 100);
+		}
+		else {
+			olMap.getView().animate({
+				center:e.coordinate,
+				zoom: Math.max (olMap.getView().getZoom(),14)
+			});
+		}
+	});
 
 	setInteraction();  //Activate listener for GPX loading
 
 	handleZoom();
 	updateUrl();
 	initDescriptions();
-	//if(!document.createElement('canvas').getContext)
-	//{
+
 	$( ".knob" ).knob({
 		'width':65,
 		'fgColor':"#222222",
@@ -688,7 +810,7 @@ function init()
 		'height':65,
 		'release' : function (v) { }
 	});
-	//}
+
 	var c_number = $( "#c_number" ),
   allFields = $( [] ).add( c_number );
 
@@ -705,7 +827,7 @@ function init()
 			return false;
 		}
 		if (o.val() != currentNumber &&
-			layerControls.getSource().getFeatures().filter(feat=>feat.get('number')==o.val()).length > 0)
+			layerControls.getSource().getFeatures().filter(feat => feat.get('number')==o.val() && feat.get('type') == 'c_regular').length > 0)
 		{
 			o.addClass( "ui-state-error" );
 			updateTips( "This number has already been used." );
@@ -719,6 +841,10 @@ function init()
 	  height: 370,
 	  width: 610,
 	  modal: true,
+    open: function() {
+      allFields.removeClass( "ui-state-error" );
+      updateTips("Tip: There can only be one start or finish control. Adding another moves it.");
+    },
 	  buttons: {
       Delete: function() {
         handleControlDelete('d'+currentID);
@@ -745,52 +871,31 @@ function init()
 					angle: parseInt($("#c_angle").val()),
 					type: $("#c_type :radio:checked").attr("id"),
 					score: parseInt($("#c_score :radio:checked").val()),
-					description: $('<div>').text($("#c_description").val()).html()
+					description: $('<div>').text($("#c_description").val()).html().replace("undefined",""),
+          batch: batchNumber++,
 				});
 
-				if (control.get('type') == "c_startfinish")
+        if (controloptstate == "edit")	{	//delete old point if being edited
+          layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById(currentID))
+        }
+				if (control.get('type') == "c_startfinish" || control.get('type') == "c_finish")
 				{
-					control.set('score', 0);
-					control.setId('S');
-					control.set('id', 'S');
-					if (layerControls.getSource().getFeatureById('S')) 	//Delete any old starts
+          var SF = control.get('type') == "c_finish" ? 'F' : 'S';
+          control.set('score', 0);
+					control.setId(SF);
+					control.set('id', SF);
+					if (layerControls.getSource().getFeatureById(SF)) 	//Delete any old starts
 					{
-						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById('S'))
+						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById(SF))
 					}
 	  		}
-        else 	if (control.get('type') == "c_finish")
-				{
-					control.set('score', 0);
-					control.setId('F');
-					control.set('id', 'F');
-					if (layerControls.getSource().getFeatureById('F')) 	//Delete any old starts
-					{
-						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById('F'))
-					}
-	  		}
-				else
+        else
 				{
 					control.set('id', topID);
 					control.setId(topID++);
-
-					if (controloptstate == "edit")	{	//delete old point if being edited
-						layerControls.getSource().removeFeature(layerControls.getSource().getFeatureById(currentID))
-					}
 				}
 				layerControls.getSource().addFeature(control); //add new control
-
-				if (mapID != "new")
-				{
-					mapID = "new";
-					updateUrl();
-				}
-
-				$( "#getraster" ).button("disable");
-				$( "#getworldfile" ).button("disable");
-				$( "#getkmz" ).button("disable");
-
-			  	rebuildMapControls();
-			  	rebuildDescriptions();
+        controlsChanged();
 
 				$( this ).dialog( "close" );
 		  }
@@ -821,6 +926,7 @@ function init()
           $(".scorecol").addClass('hidden');
           rebuildDescriptions();
         }
+        layerControls.changed(); //force re-draw
 				dpi = parseInt($('#dpi').val());
 				if (isNaN(dpi)) { dpi = 150; }
 
@@ -866,11 +972,7 @@ function init()
 					mapID = "new";
 					updateUrl();
 				}
-
-				$( "#getraster" ).button("disable");
-				$( "#getworldfile" ).button("disable");
-				$( "#getkmz" ).button("disable");
-
+		    $( "#getraster,#getworldfile,#getkmz" ).button("disable");
 				rebuildMapSheet();
 			}
 
@@ -888,25 +990,21 @@ function init()
 	  width: 845,
 	  modal: true,
 	  buttons: {
-		OK: function()
-		{
-			if (mapID != "new")
-			{
-				mapID = "new";
-				updateUrl();
-			}
-
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-
-		    raceDescription = $("#s_racedescription").val();
-		  	initDescriptions();
-			$( this ).dialog( "close" );
-		},
-		Cancel: function() {
-		  $( this ).dialog( "close" );
-		}
+  		OK: function()
+  		{
+  			if (mapID != "new")
+  			{
+  				mapID = "new";
+  				updateUrl();
+  			}
+  		  $( "#getraster,#getworldfile,#getkmz" ).button("disable");
+  	    raceDescription = $("#s_racedescription").val();
+  	  	initDescriptions();
+  			$( this ).dialog( "close" );
+  		},
+  		Cancel: function() {
+  		  $( this ).dialog( "close" );
+  		}
 	  }
 	});
 
@@ -921,19 +1019,15 @@ function init()
 	  width: 500,
 	  modal: true,
 	  buttons: {
-		"Create anyway": function() {
-		  	mapID = "new";
-
-			$( "#getraster" ).button("disable");
-			$( "#getworldfile" ).button("disable");
-			$( "#getkmz" ).button("disable");
-
-			generateMap("pdf");
-			$( this ).dialog( "close" );
-		},
-		Cancel: function() {
-		  $( this ).dialog( "close" );
-		}
+  		"Create anyway": function() {
+  		 	mapID = "new";
+  		  $( "#getraster,#getworldfile,#getkmz" ).button("disable");
+  			generateMap("pdf");
+  			$( this ).dialog( "close" );
+  		},
+  		Cancel: function() {
+  		  $( this ).dialog( "close" );
+  		}
 	  }
 	});
 	$( "#validationerror" ).dialog({
@@ -1044,15 +1138,15 @@ function init()
 
   $( "#pois" ).dialog({
     autoOpen: false,
-    height: 440,
-    width: 530,
+    height: 470,
+    width: 580,
     modal: true,
     buttons: {
       OK: function() {
         var rVal = $("input[name='c_pois']:checked").val().split(",");
         if (rVal[0]=='custom')
-        {
-          rVal = [ $("input[name='poi_key']").val() + "=" +  $("input[name='poi_value']").val(),$("input[name='poi_value']").val() + ': ','name', ''];
+        { //wrap key and value in single-quotes to allow e.g. colons in key
+          rVal = ["'" + $("input[name='poi_key']").val() + "'='" +  $("input[name='poi_value']").val() + "'",$("input[name='poi_value']").val() + ': ','name', ''];
         }
         //rVal = [key=value, description prefix, field for description, sort field]
         rVal.push(parseInt($("input[name='poi_dist']").val()));
@@ -1079,6 +1173,37 @@ function init()
 		$.post('/php/load.php', {"shortcode":reqMapID}, handleLoadCallback);
 	}
 
+  $(window).keydown(function (e) {
+      var keyCode = e.which;
+      if (debug) {console.log ("key: " + keyCode);}
+      if (keyCode == 68 && e.ctrlKey == true) {  //press "Ctrl-d" - toggle debug
+        debug = !debug;
+        e.preventDefault();
+      }
+      if (keyCode == 71 && e.ctrlKey == true) {  //press "Ctrl-g" to switch to greyscale map
+          var gr = $('.greyscale');
+          var col = $('.colour');
+          gr.removeClass('greyscale').addClass('colour');
+          col.removeClass('colour').addClass('greyscale');
+          e.preventDefault();
+      }
+      if (keyCode == 90 && e.ctrlKey == true) {  //press "Ctrl-z" to undo last control add operation
+        layerControls.getSource().getFeatures().filter(feat=>feat.get('batch') == batchNumber-1).forEach(function(f){
+           layerControls.getSource().removeFeature(f);
+        });
+        if (batchNumber > 1) {
+          var lastControl = getSortedControls('c_regular').pop();
+          topNumber = parseInt(lastControl.number);
+          batchNumber--;
+        }
+        else {
+          topNumber = 0;
+          batchNumber = 0;
+        }
+        controlsChanged();
+        e.preventDefault();
+      }
+  });
 }
 
 function updateTips( t ) {
@@ -1125,14 +1250,12 @@ function resetControlAddDialog(pid)
 		if(control)
 		{
 			$("#c_angle").val(control.get('angle')).trigger('change');
-			$('[for=c_score' + control.get('score') + ']').trigger( "click" ); //Overlying label
 			$("#c_score" + control.get('score')).trigger( "click" ); //Underlying button
 			$("#c_number").val(control.get('number'));
 			$("#c_description").val(control.get('description'));
-      //$("[for=" + control.get('type') + "]").trigger( "click" ); //Overlying label
-      //$("#" + control.get('type')).trigger( "click" ); //Underlying button
       $("#" + control.get('type')).prop("checked", true);
       $('#c_type').controlgroup('refresh');
+      handleControlTypeChange();  //refreshes angle label text
 			newControlLL = control.getGeometry().getFirstCoordinate();
 		}
 	}
@@ -1184,13 +1307,14 @@ function handleControlTypeChange()
 function handleStyleChange()
 {
 	mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
-	handleZoom();
   if (mapID != "new")
 	{
 		mapID = "new";
-		updateUrl();
 	}
-
+  $( "#getraster,#getworldfile,#getkmz" ).button("disable");
+  handleZoom();
+  updateUrl();
+  rebuildDescriptions();
 }
 
 function handleRotate()
@@ -1229,20 +1353,13 @@ function handleZoom()
 		return;
 	}
 
-	$( "#createmap" ).button("disable");
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
-	$( "#deletesheet" ).button("disable");
-	$( "#getPostboxes" ).button("disable");
-	$( "#getOpenplaques" ).button("disable");
-  	$( "#preview" ).button("disable");
-
-/*	if (olMap.getView().getZoom() != parseInt(olMap.getView().getZoom()))
-	{
-		olMap.getView().setZoom(Math.round(olMap.getView().getZoom()));
-	}
+/*
+initialzoom - zoomed out, no sheet
+zoom - zoomed out, sheet placed
+placepaper - zoomed in, no sheet
+addcontrols - zoomed in, sheet placed
 */
+
 	if (olMap.getView().getZoom() < 12)	//if zoomed out, hide contours, and don't allow drawing
 	{
 		if (state == "placepaper")
@@ -1256,7 +1373,7 @@ function handleZoom()
 			state = "zoom";
 			$("#messageAdd").hide();
 			$("#messageZoom").show("pulsate", {}, 500);
-			rebuildMapSheet();
+			//rebuildMapSheet();
 		}
 		layerOrienteering.setVisible(false); //hide contours
 	}
@@ -1275,12 +1392,12 @@ function handleZoom()
 			$("#messageZoom").hide();
 			$("#messageCentre").hide();
 			$("#messageAdd").show("pulsate", {}, 500);
-			rebuildMapSheet();
+			//rebuildMapSheet();
 		}
 		else if (state == "addcontrols")
 		{
 			$("#messageCentre").hide();
-			rebuildMapSheet();
+			//rebuildMapSheet();
 		}
 		mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
 
@@ -1291,12 +1408,12 @@ function handleZoom()
 					{
 						urls: [prefix1 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix2 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix3 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png"],
 						attributions: ['Contours: various - see PDF output', ],
+            maxZoom: 18,
 						"wrapX": true
 					}
 				)
 			);
 			mapStyleIDOnSource = mapStyleID;
-
 		}
 
 		if(mapStyleID.split("-")[1] == "SRTM" || mapStyleID.split("-")[1] == "NONE" || mapStyleID.split("-")[1] == "COPE")
@@ -1307,7 +1424,7 @@ function handleZoom()
 		{
 			layerOrienteering.setVisible(true);
 		}
-}
+  }
 }
 
 function handleControlEditOptions(pid)
@@ -1352,20 +1469,16 @@ function handleControlDelete(pid)  //pid = "d<n>"
   controlsChanged();
 }
 
-function controlsChanged()
+function controlsChanged(rebuild = true)
 {
   if (mapID != "new")
   {
     mapID = "new";
     updateUrl();
   }
-
-  $( "#getraster" ).button("disable");
-  $( "#getworldfile" ).button("disable");
-  $( "#getkmz" ).button("disable");
-
+	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
   rebuildMapControls();
-  rebuildDescriptions();
+  if (rebuild) rebuildDescriptions();
 }
 
 function handleDeleteMarkers()
@@ -1393,7 +1506,8 @@ function handleDeleteSheet()
   state = "initialzoom";
 	handleZoom();
 
-	$( "#deletesheet" ).button("disable");
+	$( "#createmap" ).button("disable");
+  $( "#deletesheet" ).button("disable");
 	$( "#getPostboxes" ).button("disable");
 	$( "#getOpenplaques" ).button("disable");
   $( "#preview" ).button("disable");
@@ -1482,20 +1596,26 @@ function validate()
 	}
 }
 
-function handleDrag()	//Vector element has been dragged - update arrays to match UI
+function handleDrag(evt)	//Vector element has been dragged - update arrays to match UI
 {
-	//console.log('drag ');
-	var feats = select.getFeatures();
+	var feats = evt.features;
+  var moveCentre = false;
+  var moveControl = false;
 	feats.forEach((feat) => {
 		if (debug) { console.log('handleDrag'); }
 		if (feat.get('type') == 'centre')
 		{
 			sheetCentreLL = (layerMapCentre.getSource().getFeatures()[0]).getGeometry().getFirstCoordinate();
+      moveCentre = true;
 		}
+    else
+		{
+      moveControl = true;
+    }
 	});
-	select.getFeatures().clear();
-  rebuildMapSheet();
-  controlsChanged();
+	//select.getFeatures().clear();
+  if (moveCentre) rebuildMapSheet();  //Needed if centre has moved
+  if (moveControl) controlsChanged(false);  //Needed if any control has moved
 }
 
 function handleSaveCallback(json)
@@ -1517,9 +1637,7 @@ function handleSaveCallback(json)
 		$( "#saveerror" ).dialog( "open" );
 		$( "#saveerror_text" ).html(result.message);
 	}
-	$( "#getraster" ).button("enable");
-	$( "#getworldfile" ).button("enable");
-	$( "#getkmz" ).button("enable");
+	$( "#getraster,#getworldfile,#getkmz" ).button("enable");
 }
 
 function handleLoadCallback(json)
@@ -1661,11 +1779,7 @@ function handleClick(evt)
 		if (debug) { console.log('returning'); }
 		return;
 	}
-//  if (select.getFeatures().length > 0)
-  //{
-  //  return;
-//  }
-	//console.log(state);
+
 	if (state == "addcontrols")
 	{
   	var coordinate = evt.coordinate;
@@ -1704,13 +1818,10 @@ function handleClick(evt)
 			mapID = "new";
 			updateUrl();
 		}
-
-		$( "#getraster" ).button("disable");
-		$( "#getworldfile" ).button("disable");
-		$( "#getkmz" ).button("disable");
-
+		$( "#getraster,#getworldfile,#getkmz" ).button("disable");
 		sheetCentreLL = evt.coordinate;
 		lookupMag(olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0]);
+    olMap.getView().setCenter(sheetCentreLL);
 		rebuildMapSheet();
 		state = "addcontrols";
 		$("#messageCentre").hide();
@@ -1733,8 +1844,8 @@ function handleDblClick(evt)
 		}
     else if (feature && $.inArray(layer.get('title'), ['GPX']) >= 0)
 		{ //Clicked GPX/temp feature - promote to layerControls
-      if (state == 'addcontrols' && feature.getGeometry().flatCoordinates.length < 4)
-      { //only run if clicked item is a (3D) point, and a map has been placed
+      if (state == 'addcontrols' && feature.getGeometry().getType() == 'Point')
+      { //only run if clicked item is a point, and a map has been placed
         if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(olProj.transform(evt.coordinate, "EPSG:3857", "EPSG:4326"))))
         { //if event outside map area, alert
           $( "#newcontroloutsidemap" ).dialog({
@@ -1753,12 +1864,19 @@ function handleDblClick(evt)
         {
           feature.set('description',"" + feature.get('name'),true)
         }
-        feature.set('type','c_regular',true)
-        feature.set('id',topID++,true)
-        feature.set('number',"" + ++topNumber,true)
-        feature.set('angle',45,true)
-        feature.set('score',topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,true)
+        else {//If no description, use tags instead.
+          if(feature.get('description').length == 0){
+            feature.set('description',feature.get('tags').replace("undefined",""));
+          }
+        }
+        feature.set('type','c_regular',true);
+        feature.set('id',topID++,true);
+        feature.set('number',"" + ++topNumber,true);
+        feature.set('angle',45,true);
+        feature.set('score',topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,true);
+        feature.set('batch',batchNumber++);
         feature.setId(feature.get('id'));
+        feature.setStyle();
         layerControls.getSource().addFeature(feature);
         controlsChanged();
       }
@@ -1785,7 +1903,7 @@ function saveMap()
 		"action": "savemap",
 		"title": mapTitle,
 		"race_instructions": raceDescription,
-		"eventdate": $('#eventdate_alternate').val(),
+		"eventdate": $.datepicker.formatDate("yy-mm-dd",$('#eventdate').datepicker("getDate")),
 		"club": $('#club').val(),
 		"style": mapStyleID,
 		"scale": $("#mapscale :radio:checked").attr("id"),
@@ -1859,6 +1977,7 @@ function getURL(type)
     + "|scale=" + scale
     + "|centre=" +  sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
     + "|title=" + escapeTitleText
+    + "|eventdate=" + $.datepicker.formatDate("yy-mm-dd",$('#eventdate').datepicker("getDate"))
     + "|club=" + $('#club').val()
     + "|id=";
   if (mapID != "new")
@@ -1906,44 +2025,37 @@ function getURL(type)
   return url;
 }
 
-function getStartKML(control, i)
+function KMLposition(control)
 {
-	return '<Placemark><name>S'
-		+ (i+1)
-		+ '</name><styleUrl>#startfinish</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
-		+ control.wgs84lon
-		+ ","
-		+ control.wgs84lat
-		+ ',0</coordinates></Point></Placemark>';
-}
-
-function getFinishKML(control, i)
-{
-	return '<Placemark><name>F'
-		+ (i+1)
-		+ '</name><styleUrl>#startfinish</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
-		+ control.wgs84lon
-		+ ","
-		+ control.wgs84lat
-		+ ',0</coordinates></Point></Placemark>';
-}
-
-function getControlKML(control)
-{
-	//var geom = olProj.transform(feature.getGeometry().getCoordinates(), "EPSG:3857", "EPSG:4326")
+  var num;
+  var style;
+  if (control.type == 'c_startfinish') {
+    num = 'S1';
+    style = '#startfinish';
+  }
+  else if (control.type == 'c_finish') {
+    num = 'F1';
+    style = '#startfinish';
+  }
+  else {
+    num = control.number;
+    style = '#control';
+  }
 	return '<Placemark><name>'
-		+ control.number
-		+ '</name><styleUrl>#control</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
+		+ num
+		+ '</name><description>'
+    + control.description
+    + '</description><styleUrl>' + style + '</styleUrl><Point><gx:drawOrder>1</gx:drawOrder><coordinates>'
 		+ control.wgs84lon
 		+ ","
 		+ control.wgs84lat
-		+ ',0</coordinates></Point></Placemark>';
+		+ ',0</coordinates></Point></Placemark>\n';
 }
-
 
 function generateKML()
 {
-	var kml = '';
+  // KML export for MapRun
+  var kml = '';
 
 	var kmlintro = '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">\n';
 	kmlintro += '<Document>\n<name>oom_' + mapID + '_controls</name>\n<open>1</open>\n';
@@ -1956,32 +2068,9 @@ function generateKML()
 	kml += kmlintro;
 	kml += kmlheader;
 
-  var list = getSortedControls('c_startfinish');
-	for (var i = 0; i < list.length; i++)
-	{
-		kml += getStartKML(list[i], i);
-		kml += '\n';
-	}
-
-  list = getSortedControls('c_regular');
-  for (var i = 0; i < list.length; i++)
-	{
-		kml += getControlKML(list[i]);
-		kml += '\n';
-	}
-
-  list = getSortedControls('c_finish');
-  if (list.length == 0) //If no finish, reuse start
-  {
-    list = getSortedControls('c_startfinish');
-  }
-	for (var i = 0; i < list.length; i++)
-	{
-		kml += getFinishKML(list[i], i);
-		kml += '\n';
-	}
-
-	kml += kmlfooter;
+  var list = getControlList();
+  list.forEach(function(c) { kml += KMLposition(c);});
+  kml += kmlfooter;
 
 	// Data URI
 	var kmlData = 'data:application/vnd.google-earth.kml+xml,' + encodeURIComponent(kml);
@@ -2006,6 +2095,103 @@ function generateKML()
 
 }
 
+function XMLposition(control) {
+  var num;
+  if (control.type == 'c_startfinish') {
+    num = control.id;
+  }
+  else if (control.type == 'c_finish') {
+    num = control.id;
+  }
+  else {
+    num = control.number;
+  }
+  return '<Control>\n<Id>' + num + '</Id>\n' +
+    '<Position lat="' + control.wgs84lat + '" lng="' + control.wgs84lon + '"/>\n</Control>\n';
+}
+function XMLorder(control) {
+  var type;
+  var num;
+  var score = '';
+  if (control.type == 'c_startfinish') {
+    num = control.id;
+    type = "Start";
+  }
+  else if (control.type == 'c_finish') {
+    num = control.id;
+    type = "Finish";
+  }
+  else {
+    num = control.number;
+    type = "Control";
+    score += control.score;
+  }
+  var output =  '<CourseControl type="' + type + '" randomOrder="' + (!linear && control.type == 'c_regular') + '">';
+  output += '\n<Control>' + num + '</Control>\n';
+  if(!linear) { output += '<Score>' + score + '</Score>\n'; }
+  output += '</CourseControl>\n';
+  return output;
+}
+
+function getControlList()
+{
+  //  Get controls for KML/XML export - add start as finish if necessary.
+  var list = getSortedControls('c_startfinish').concat(getSortedControls('c_regular'));
+  getSortedControls('c_finish').length == 0 ? list=list.concat(getSortedControls('c_startfinish')) : list=list.concat(getSortedControls('c_finish'));
+  //If last control is start, recast as a finish.
+  var fcontrol = list.pop();
+  if (fcontrol.type == 'c_startfinish') {fcontrol.type = 'c_finish';}
+  list.push(fcontrol);
+  return list;
+}
+
+function generateXML()
+{
+  // IOF 3.0 XML export
+	var xml = '';
+  var now = new Date;
+
+	var xmlintro = '<?xml version="1.0" encoding="UTF-8"?>\n<CourseData xmlns="http://www.orienteering.org/datastandard/3.0"\n' +
+    'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\niofVersion="3.0"\n';
+	xmlintro += 'createTime="' + now.toISOString() + '"\n creator="OpenOrienteeringMap v4">\n';
+	xmlintro += '<Event><Name>' + mapTitle + '</Name>\n</Event>\n';
+
+	var xmlheader = '<RaceCourseData>\n';
+	var xmlfooter = '</Course>\n</RaceCourseData>\n</CourseData>';
+
+	xml += xmlintro;
+	xml += xmlheader;
+
+  var list = getControlList();
+  list.forEach(function(c) { xml += XMLposition(c);});
+  xml += '<Course>\n<Name>' + (linear ? 'Line' : 'Score') + '</Name>\n';
+  list.forEach(function(c) { xml += XMLorder(c);});
+
+	xml += xmlfooter;
+	// Data URI
+	var xmlData = 'data:Application/xml,' + encodeURIComponent(xml);
+
+	var filename = 'oom_' + mapID + '.xml'
+
+	// For IE
+	if (window.navigator.msSaveOrOpenBlob) {
+		var blob = new Blob([decodeURIComponent(encodeURI(xml))], {
+			type: "Application/xml;"
+		});
+		navigator.msSaveBlob(blob, filename);
+	}
+	else
+	{
+		$('#getxml')
+			.attr({
+				'download': filename,
+				'href': xmlData
+		});
+	}
+}
+
+
+
 function loadMap(data)
 {
 	if (debug) { console.log('loadMap'); }
@@ -2024,10 +2210,9 @@ function loadMap(data)
 	var $contours = $("#" + data.style.split("-")[1] + "-" + data.style.split("-")[2]);
 	var $contoursL = $("[for=" + data.style.split("-")[1] + "-" + data.style.split("-")[2] + "]");
 
-	$('#eventdate_alternate').val(data.eventdate);
-	$('#eventdate').val(data.eventdate);
-	//$('#eventdate').datepicker("refresh");
-	//TODO Implement loading of saved club.
+	$('#eventdate').datepicker("setDate", data.eventdate);
+	$('#eventdate').datepicker("refresh");
+  $('#club').val(data.club);
 
 	$style.trigger( "click" );
   $scale.trigger( "click" );
@@ -2074,23 +2259,40 @@ function loadMap(data)
 			type: control.type,
 			score: parseInt(control.score),
 			description: control.description,
-			id: control.id
+			id: control.id,
+      batch: batchNumber
 		});
 		controlPoint.setId(control.id);
 		layerControls.getSource().addFeatures([controlPoint]);
 	}
+  batchNumber++;
 	mapID = reqMapID;
   rebuildMapSheet();  //DPD
 	rebuildMapControls();
+  rebuildDescriptions();
 	handleZoom();
 	updateUrl();
-	handleRotate();
+  handleRotate();
 
-	$( "#getraster" ).button("enable");
-	$( "#getworldfile" ).button("enable");
-	$( "#getkmz" ).button("enable");
+	$( "#getraster,#getworldfile,#getkmz" ).button("enable");
+	$("#messageCentre").hide();
 }
 
+//Move a feature from number: moveFrom to number: moveTo, and shuffle others down
+function insertFeature (moveFrom, moveTo) {
+  var isForward = parseInt(moveFrom) < parseInt(moveTo);
+  var movedFeat = layerControls.getSource().getFeatures().filter(feat=>feat.get('number') == moveFrom && feat.get('type') == 'c_regular');
+  while (true){ //keep iterating until function returns (when no feature is bumped)
+    if (movedFeat.length != 1) { return false; }
+    var bumpedFeat = layerControls.getSource().getFeatures().filter(feat=>feat.get('number') == moveTo && feat.get('type') == 'c_regular');
+    if(debug) { console.log(moveFrom + " moved to " + moveTo); }
+    movedFeat[0].set('number', "" + moveTo);
+    if (bumpedFeat.length == 0) { return true; };
+    moveFrom = moveTo;
+    isForward ? moveTo-- : moveTo++ ;
+    movedFeat = bumpedFeat;
+  }
+}
 //convert a control Object to an ol Feature
 function controlToFeature(control)
 {
@@ -2167,7 +2369,7 @@ function rebuildMapSheet()
 	}
 
 	layerMapBorder.getSource().clear();
-	layerMapCentre.getSource().clear();
+	//layerMapCentre.getSource().clear();
 	layerMapSheet.getSource().clear();
 	layerMapTitle.getSource().clear();
 	layerMapContent.getSource().clear();
@@ -2241,19 +2443,25 @@ function rebuildMapSheet()
 	var eastMargin = new Feature({ geometry: PolyFromExtent(paperEMBound) });
 	var northMargin = new Feature({ geometry: PolyFromExtent(paperNMBound) });
 	var southMargin = new Feature({ geometry: PolyFromExtent(paperSMBound) });
-	var centreMarker = new Feature({
-		geometry: new Point(sheetCentreLL),
-		type: 'centre',
-    description: 'Map centre.  Click then drag to move.'
-	 });
 
+   if (layerMapCentre.getSource().getFeatures().length == 0) {
+     var centreMarker = new Feature({
+   		geometry: new Point(sheetCentreLL),
+   		type: 'centre',
+       description: 'Map centre.  Drag to move.'
+   	 });
+     layerMapCentre.getSource().addFeatures([centreMarker]);
+  }
+  else {
+    layerMapCentre.getSource().getFeatures()[0].setGeometry(new Point(sheetCentreLL));
+  }
 	var titleFeature = new Feature({ geometry: new Point([mapBound[0], mapBound[3] + (0.002 * trueScale)])});
 
 	layerMapBorder.getSource().addFeatures([westMargin, eastMargin, northMargin, southMargin, titleFeature]);
 	layerMapSheet.getSource().addFeatures([sheet]);
 	layerMapTitle.getSource().addFeatures([title]);
-	layerMapContent.getSource().addFeatures([content]);
-	layerMapCentre.getSource().addFeatures([centreMarker]);
+  layerMapContent.getSource().addFeatures([content]);
+
 
 	var angle = olMap.getView().getRotation();
   //if (angle != rotAngle) {
@@ -2269,12 +2477,10 @@ function rebuildMapSheet()
 	wgs84Poly.rotate(angle, sheetCentreLL);
 	wgs84Poly.transform("EPSG:3857", "EPSG:4326");
 
-	rebuildDescriptions();
+	//rebuildDescriptions();
 
+	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
 	$( "#createmap" ).button("enable");
-	$( "#getraster" ).button("disable");
-	$( "#getworldfile" ).button("disable");
-	$( "#getkmz" ).button("disable");
 	$( "#deletesheet" ).button("enable");
 	$( "#getPostboxes" ).button("enable");
 	$( "#getOpenplaques" ).button("enable");
@@ -2287,11 +2493,13 @@ function rebuildMapControls()
 	{
 		$( "#createclue" ).button("enable");
 		$( "#getkml" ).button("enable");
+  	$( "#getxml" ).button("enable");
 	}
 	else
 	{
 		$( "#createclue" ).button("disable");
 		$( "#getkml" ).button("disable");
+		$( "#getxml" ).button("disable");
 		$( "#getPostboxes" ).button("enable");
 		$( "#getOpenplaques" ).button("enable");
     $( "#preview" ).button("enable");
@@ -2305,8 +2513,17 @@ function rebuildMapControls()
   layerLines.getSource().clear();
   for (var i = 0; i < (list.length - 1); i++)
   {
+    const scale = trueScale/200;
+    const dx = list[i+1].lon - list[i].lon;
+    const dy = list[i+1].lat - list[i].lat;
+    const rotation = Math.atan2(dy, dx);
+    var start2 = [list[i].lon + Math.cos(rotation) * scale, list[i].lat + Math.sin(rotation) * scale];
+    if (list[i].type == 'c_startfinish') start2 = [list[i].lon + Math.cos(rotation) * scale * 1.3, list[i].lat + Math.sin(rotation) * scale * 1.3];
+    var end2 = [list[i+1].lon - Math.cos(rotation) * scale, list[i+1].lat - Math.sin(rotation) * scale];
+    if (list[i+1].type != 'c_regular') end2 = [list[i+1].lon - Math.cos(rotation) * scale * 1.2, list[i+1].lat - Math.sin(rotation) * scale* 1.2];
+
     var line = new Feature({
-      geometry: new LineString([[list[i].lon, list[i].lat], [list[i+1].lon, list[i+1].lat]]),
+      geometry: new LineString([start2, end2]),
     });
     layerLines.getSource().addFeature(line);
   }
@@ -2335,9 +2552,10 @@ function rebuildDescriptions()
 	for (var i = 0; i < list.length; i++)
 	{
 		var control  = list[i];
+
 		$("#controldescriptions").find('tbody')
-			.append($('<tr draggable="true">').addClass('controlrow')
-				.append($('<td>')
+			.append($('<tr>').addClass('controlrow').data( 'number', control.number )
+				.append($('<td class="numcol">')
 					.append(control.number)
 				  )
 				.append($('<td class="scorecol">')
@@ -2354,6 +2572,25 @@ function rebuildDescriptions()
 				  )
 			);
 	}
+  $('.controlrow').droppable({
+    accept: '.controlrow',
+    //hoverClass: 'hovered',
+    drop: function (ev, ui) {
+      var toNumber = $(this).data( 'number' );
+      var fromNumber = ui.draggable.data( 'number' );
+      insertFeature(fromNumber, toNumber);
+      controlsChanged();
+      ev.preventDefault();
+      if (debug) { console.log("drop: "+ fromNumber + " to: " + toNumber); }
+    }
+  });
+
+  $('.controlrow').draggable({
+    cursor: 'move',
+    containment: 'parent',
+    stack: '#controlpanel div',
+    revert: true
+  });
 
 	initDescriptions();
 }
@@ -2428,16 +2665,23 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
             featureList.forEach(function(c)
             {
               if (getDistance([result.elements[i].lon, result.elements[i].lat],[c.wgs84lon, c.wgs84lat]) <= (radius+1)) {		dupe = true;	};
+              // Remove common unwanted nodes
+              if (result.elements[i].tags.hasOwnProperty('created_by') || result.elements[i].tags.hasOwnProperty('generator:source')) {		dupe = true;	};
             });
           }
-          if (debug) {console.log(dupe);}
+          if (debug) {console.log("dupe");}
     			if (!dupe)
     			{
+            var tags="";
+            Object.entries(result.elements[i].tags).forEach(function(t){
+             tags+=t[0] + ": " + t[1] + "\n";
+           });
             var control = new Feature({
               geometry: new Point(olProj.transform([result.elements[i].lon, result.elements[i].lat], "EPSG:4326", "EPSG:3857")),
               angle: 45,
               type: 'c_regular',
-              description: prefix + result.elements[i].tags[srcDescription]
+              description: (prefix + result.elements[i].tags[srcDescription]).replace("undefined",""),
+              tags: tags
             });
 
             if(boolTemp)
@@ -2449,8 +2693,9 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
             {
               control.set('id',topID++);
               control.set('number',"" + ++topNumber);
-              control.set('score', topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50)
+              control.set('score', topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50);
               control.setId(control.get('id'));
+              control.set('batch', batchNumber);
               layerControls.getSource().addFeature(control);
       				changed = true;
             }
@@ -2462,6 +2707,7 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
     		if (changed)
         {
           controlsChanged();
+          batchNumber++;
         }
     	}
     	else
@@ -2472,9 +2718,11 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
 
     })
       .fail(function( jqXHR, textStatus, errorThrown ) {
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown );
+        if (debug) {
+          console.log(jqXHR);
+          console.log(textStatus);
+          console.log(errorThrown );
+        }
         $( "#postboxes_searching" ).dialog( "close" );
     });
 
@@ -2505,7 +2753,8 @@ function handleGetOpenplaquesCallback(result)
         angle: 45,
         type: 'c_regular',
         score: topNumber < 20 ? 10 : topNumber < 30 ? 20 : topNumber < 40 ? 30: topNumber < 50 ? 40 : 50,
-        description: "Plaque: " + result.features[i].properties.inscription
+        description: "Plaque: " + ("" + result.features[i].properties.inscription).replace("undefined",""),
+        batch: batchNumber
       });
       control.setId(control.get('id'));
 	  	var dupe = false;
@@ -2524,7 +2773,10 @@ function handleGetOpenplaquesCallback(result)
 			}
 		}
 		$( "#getOpenplaques" ).button("disable");
-		if (changed)	{ controlsChanged();	}
+		if (changed)	{
+       controlsChanged();
+       batchNumber++;
+     	}
 	}
 	else
 	{
@@ -2554,7 +2806,7 @@ function updateUrl()
 function rotateToMagDec(){
   if (magDec){
 		olMap.getView().setRotation(-magDec * Math.PI/180);
-		handleRotate();
+		//handleRotate();
 	}
 }
 
@@ -2565,8 +2817,7 @@ function setdecl(v, callback){
 }
 
 function lookupMag(lat, lon) {
-   var url=
-"https://oomap.dna-software.co.uk/wmm?lat="+lat+"&lon="+lon;
+   var url = "https://oomap.dna-software.co.uk/wmm?lat="+lat+"&lon="+lon;
    $.get(url, function(response, status){
         setdecl(response, rotateToMagDec);
    });
@@ -2580,12 +2831,11 @@ function handlePreview(){
         url: getURL("pre"),
         crossOrigin: '',
         imageCenter: [sheetCentreLL[0], sheetCentreLL[1] + 0.0005 * trueScale], //this is centred on *map*, not *sheet* - need to adjust slightly based on margins.
-        imageScale: [1.016 * trueScale * 0.025/dpi,trueScale*0.0254/dpi],  //1.016 x scaling factor empirically determined - don't know why this is needed! metres per pixel.
+        imageScale: [trueScale * 0.0254/dpi,trueScale*0.0254/dpi],  //metres per pixel.
         imageRotate: olMap.getView().getRotation() * -1,
     });
     $( "#preview" ).button().addClass('loading');
     $( "#preview" ).html('Loading...');
-    //$(this).addClass('loading');
     layerPreview.setSource(geoimg);
 
     geoimg.on('change', function(event) { //imageloadend event isn't triggered, so use generic "change" event instead.
@@ -2603,7 +2853,6 @@ function handlePreview(){
     preview=false;
   }
 }
-
 
 $(document).ready(function()
 {

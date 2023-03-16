@@ -1,19 +1,20 @@
-<Layer name="ocean" status="on" srs="&srs900913;">
-    <StyleName>ocean</StyleName>
+<Layer name="land" status="on" srs="&srs900913;">
+    <StyleName>land</StyleName>
     <Datasource>
-        <Parameter name="type">csv</Parameter>
-        <Parameter name="inline">
-            wkt|name
-            POLYGON((-20037508.34 -20037508.34, -20037508.34 20037508.34, 20037508.34 20037508.34, 20037508.34 -20037508.34, -20037508.34 -20037508.34))|bounds
-        </Parameter>
-    </Datasource> 
+        &datasource-settings;
+        <Parameter name="table">
+            (SELECT ST_Intersection(way, &box3857;) as way from ocean) as ocean
+      </Parameter>
+    </Datasource>
 </Layer>
 
 <Layer name="coast-poly" status="on" srs="&srs900913;">
     <StyleName>coast-poly</StyleName>
     <Datasource>
-        <Parameter name="type">shape</Parameter>
-        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter>
+        &datasource-settings;
+        <Parameter name="table">
+            (SELECT ST_Intersection(way, &box3857;) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
+      </Parameter>
     </Datasource>
 </Layer>
 
@@ -54,7 +55,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,waterway,disused,name,
+            (select way,waterway,name,
             case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel
             from &prefix;_line
             where waterway in ('weir','river','canal','derelict_canal','stream','drain')
@@ -104,7 +105,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-        (select way,name,railway,aerialway,disused
+        (select way,name,railway,aerialway
         from &prefix;_point
         where railway in ('station','halt','tram_stop')
             or aerialway='station'

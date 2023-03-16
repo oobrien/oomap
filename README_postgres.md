@@ -147,3 +147,20 @@ TYPE					Type of contours - [OS, LIDAR, SRTM, COPE]
 ATTRIB				Text to use for attribution
 
 Load into the Postgres table "attrib" using shp2pgsql, placing the geometry into a field called "way".
+
+LIDAR composite view
+====================
+
+In Postgres:
+
+create or replace view all_lidar as
+	select way, height from lidar3 union all
+	select way, height from lidar_oz union all
+	select way, height from lidar_nz union all
+	select way, height from lidar_at union all 
+	select way, height from lidar_scot union all
+	select way, height from lidar_ca union all
+	select way, height from lidar_ni union all
+	select way, height from lidar_lu union all
+	select way, height from lidar_be union all
+	select way, height from lidar_fr;

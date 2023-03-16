@@ -1,14 +1,14 @@
-<Style name="ocean">
+<Style name="land">
     <Rule>
         &maxscale_zoom4;
-        <PolygonSymbolizer fill="&water;" />
+        <PolygonSymbolizer fill="&background;" />
     </Rule>
 </Style>
 
 <Style name="coast-poly">
     <Rule>
         &maxscale_zoom4;
-        <PolygonSymbolizer fill="&background;" gamma="0.8" />
+        <PolygonSymbolizer fill="&water;" gamma="0.8" />
     </Rule>
   </Style>
 
@@ -178,17 +178,17 @@
         &maxscale_zoom12;
         &minscale_zoom13;
         <Filter>[railway]='station'</Filter>
-        <TextSymbolizer face-name="&standard-font;" size="8" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="0">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&standard-font;" size="8" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="0">[name]</TextSymbolizer>
     </Rule>
     <Rule>
         &maxscale_zoom13;
         <Filter>[railway]='station'</Filter>
-        <TextSymbolizer face-name="&standard-font;" size="8" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="0">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&standard-font;" size="8" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="0">[name]</TextSymbolizer>
     </Rule>
     <Rule>
         &maxscale_zoom13;
         <Filter>[railway]='halt' or [railway]='tram_stop'</Filter>
-        <TextSymbolizer face-name="&standard-font;" size="8" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="0">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&standard-font;" size="8" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="0">[name]</TextSymbolizer>
     </Rule>
  </Style>
 
@@ -197,24 +197,24 @@
         &maxscale_zoom7;
         &minscale_zoom7;
         <Filter>[place] = 'city' or [place] = 'metropolis'</Filter>
-        <TextSymbolizer face-name="&title-font;" size="14" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="10">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&title-font;" size="14" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="10">[name]</TextSymbolizer>
     </Rule>
     <Rule>
         &maxscale_zoom8;
         &minscale_zoom8;
         <Filter>[place] = 'city' or [place] = 'metropolis'</Filter>
-        <TextSymbolizer face-name="&title-font;" size="16" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="10">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&title-font;" size="16" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="10">[name]</TextSymbolizer>
     </Rule>
     <Rule>
         &maxscale_zoom9;
         &minscale_zoom9;
         <Filter>[place] = 'city' or [place] = 'metropolis'</Filter>
-        <TextSymbolizer face-name="&title-font;" size="18" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="10" character-spacing="10" text-transform="uppercase">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&title-font;" size="18" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="10" character-spacing="10" text-transform="uppercase">[name]</TextSymbolizer>
     </Rule>
     <Rule>
         &maxscale_zoom10;
         <Filter>[place] = 'city' or [place] = 'metropolis'</Filter>
-        <TextSymbolizer face-name="&title-font;" size="30" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="10" character-spacing="10" text-transform="uppercase">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&title-font;" size="30" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="10" character-spacing="10" text-transform="uppercase">[name]</TextSymbolizer>
     </Rule>
 </Style>
 
@@ -222,7 +222,7 @@
     <Rule>
         &maxscale_zoom10;
         <Filter>[place] = 'town' or [place] = 'large_town' or [place] = 'small_town'</Filter>
-        <TextSymbolizer face-name="&title-font;" size="18" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="10" character-spacing="5" text-transform="uppercase">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&title-font;" size="18" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="10" character-spacing="5" text-transform="uppercase">[name]</TextSymbolizer>
     </Rule>
 </Style>
 
@@ -231,12 +231,12 @@
         &maxscale_zoom10;
         &minscale_zoom11;
         <Filter>[place] = 'suburb'</Filter>
-        <TextSymbolizer face-name="&title-font;" size="12" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="0" character-spacing="5" text-transform="uppercase">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&title-font;" size="12" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="0" character-spacing="5" text-transform="uppercase">[name]</TextSymbolizer>
     </Rule>
     <Rule>
         &maxscale_zoom11;
         <Filter>[place] = 'suburb'</Filter>
-        <TextSymbolizer face-name="&title-font;" size="13" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="0" character-spacing="5" text-transform="uppercase">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&title-font;" size="13" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="0" character-spacing="5" text-transform="uppercase">[name]</TextSymbolizer>
     </Rule>
 </Style>
 
@@ -244,7 +244,7 @@
     <Rule>
         &maxscale_zoom11;
         <Filter>[place] = 'village' or [place] = 'large_village'</Filter>
-        <TextSymbolizer face-name="&title-font;" size="10" fill="&words;" halo-radius="1" halo-fill="&halo;" wrap-width="0" text-transform="uppercase">[name]</TextSymbolizer>
+        <TextSymbolizer face-name="&title-font;" size="10" fill="&words;" orientation="&rotation;" halo-radius="1" halo-fill="&halo;" wrap-width="0" text-transform="uppercase">[name]</TextSymbolizer>
     </Rule>
 </Style>
 

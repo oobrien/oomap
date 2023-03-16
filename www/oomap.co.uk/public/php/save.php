@@ -68,16 +68,26 @@ $shortcode = uniqid();
 $action = mysqli_real_escape_string($conn, $inData['action']);
 $title =  mysqli_real_escape_string($conn, $inData['title']);
 $race_instructions = mysqli_real_escape_string($conn, $inData['race_instructions']);
-$eventdate = '';//mysqli_real_escape_string($conn, $inData['eventdate']);
-if ($eventdate === '')
+if (isset($inData['eventdate']))
 {
-	$eventdate = "null";
+	$eventdate = date('Y-m-d', strtotime($inData['eventdate']));
 }
 else
 {
-	$eventdate = "'" . $eventdate . "'";
+	$eventdate = NULL;
 }
-$club = '';//club';//mysqli_real_escape_string($conn, $inData['club']);
+if ($eventdate == '') {$eventdate = NULL;}
+if ($eventdate < '1970-01-02' or is_null($eventdate)) {$eventdate = 'NULL';}
+else {$eventdate = "'$eventdate'";}
+
+if (array_key_exists("club",$inData))
+{
+	$club = mysqli_real_escape_string($conn, $inData['club']);
+}
+else
+{
+	$club = '';
+}
 $style = mysqli_real_escape_string($conn, $inData['style']);
 $scale = mysqli_real_escape_string($conn, $inData['scale']);
 $papersize = mysqli_real_escape_string($conn, $inData['papersize']);
