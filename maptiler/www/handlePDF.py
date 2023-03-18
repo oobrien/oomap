@@ -96,7 +96,7 @@ def createImage(path, fileformat):
 
     mapid = p.get('mapid', 'new')
     club = p.get('club', '')
-    clubs = ['bdn','hh','havoc','waoc','nn','oo']
+    clubs = ['bdn','foothills','hh','havoc','waoc','nn','oo']
 
     slon = slat = flon = flat = 0
     if 'start' in p:

@@ -1657,7 +1657,7 @@ function handleLoadCallback(json)
 
 	//If failed, try looking up from oomap.co.uk load.php instead before giving up.
 		reqMapID = $("#savedMapID").val();
-		$.post('https://oomap.co.uk/load.php', {"shortcode":reqMapID}, handleLoadOldCallback);
+		$.post('/php/load_old.php', {"shortcode":reqMapID}, handleLoadOldCallback);
 	}
 }
 
