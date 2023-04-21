@@ -154,10 +154,10 @@ LIDAR composite view
 In Postgres:
 
 create or replace view all_lidar as
-	select way, height from lidar3 union all
+	select way, height from lidar2 union all
 	select way, height from lidar_oz union all
 	select way, height from lidar_nz union all
-	select way, height from lidar_at union all 
+	select way, height from lidar_at union all
 	select way, height from lidar_scot union all
 	select way, height from lidar_ca union all
 	select way, height from lidar_ni union all

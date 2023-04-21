@@ -123,7 +123,7 @@
 
 					<tr>
 						<th colspan='3' id='eventdate_holder'>Event Date<br /><input type="text" id="eventdate">&nbsp;<input type="text" id="eventdate_alternate" size="30"></th>
-						<th colspan='2' id='club_holder'>Club<br /><select id="club">
+						<th colspan='2' id='club_holder'><a href="https://oomap.dna-software.co.uk/help/club-logos/" target=”_blank” rel=”noopener noreferrer”>Club</a><br /><select id="club">
 							<option value="none">None</option>
 							<option value="bdn">Bris.DawnNav</option>
 							<option value="foothills">Foothills</option>
@@ -131,6 +131,7 @@
 							<option value="hh">HH</option>
 							<option value="nn">NN</option>
 							<option value="oo">O.Ottowa</option>
+							<option value="tvoc">TVOC</option>
 							<option value="waoc">WAOC</option>
 						</select></th>
 					</tr>
@@ -387,18 +388,28 @@
 					<input type="checkbox" id="fence" name="fence" value="yes">
 				</td>
 				<td>
+					<label for ="sidewalk"> Show sidewalks</label>
+				</td>
+				<td>
+					<input type="checkbox" id="sidewalk" name="sidewalk" value="yes">
+				</td>
+			</tr>
+			<tr>
+				<td>
 					<label for ="linear"> Linear course</label>
 				</td>
 				<td>
 					<input type="checkbox" id="linear" name="linear" value="yes">
 				</td>
 			</tr>
+			<tr>
 			<td>
 				<label for="dpi">Map resolution (dpi)</label>
 			</td>
 			<td>
 				<input type="text" name="dpi" id="dpi" size='3' maxlength='3' class="text ui-widget-content ui-corner-all" />
 			</td>
+		</tr>
 			</table>
 		  </fieldset>
 		</div>

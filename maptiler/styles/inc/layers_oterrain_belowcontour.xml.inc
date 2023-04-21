@@ -190,8 +190,8 @@
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
             where (highway is not null
-            and (tags->'footway' is null or tags ->'footway' != 'sidewalk')
-            and (tags->'cycleway' is null or tags->'cycleway' != 'sidewalk')
+            and (tags->'footway' is null or tags ->'footway' != 'sidewalk' or '&sidewalks;' = 'yes')
+            and (tags->'cycleway' is null or tags->'cycleway' != 'sidewalk' or '&sidewalks;' = 'yes')
             and (service is null or service !='driveway')
             and not (highway='footway' and access is not null and access ='private'))
             or railway is not null

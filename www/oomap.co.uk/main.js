@@ -81,6 +81,7 @@ var grid=true;
 var trees=true;
 var hedges=true;
 var fences=true;
+var sidewalks=false;
 var linear=false;
 var preview=false;
 
@@ -921,6 +922,7 @@ function init()
 				hedges = $('#hedges').is(':checked');
 				fences = $('#fence').is(':checked');
         linear = $('#linear').is(':checked');
+        sidewalks =  $('#sidewalk').is(':checked');
         layerLines.setVisible(linear);
         if(linear){
           $(".scorecol").addClass('hidden');
@@ -1454,6 +1456,7 @@ function handleAdvancedOptions(pid)
 			$('#hedges').prop('checked', hedges);
 			$('#fence').prop('checked', fences);
       $('#linear').prop('checked', linear);
+      $('#sidewalk').prop('checked', sidewalks);
 			$('#dpi').val(dpi);
 			$( "#advanced" ).dialog( "open" );
 }
@@ -2018,6 +2021,7 @@ function getURL(type)
   if (hedges) {url += "|hedges=yes"; } else {url += "|hedges=no"; }
   if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
   if (fences) {url += "|fences=yes"; } else {url += "|fences=no"; }
+  if (sidewalks) {url += "|sidewalks=yes"; } else {url += "|sidewalks=no"; }
   if (linear) {url += "|linear=yes"; } else {url += "|linear=no"; }
   url += "|dpi=" + dpi;
 

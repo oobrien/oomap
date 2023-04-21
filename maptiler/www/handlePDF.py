@@ -96,7 +96,7 @@ def createImage(path, fileformat):
 
     mapid = p.get('mapid', 'new')
     club = p.get('club', '')
-    clubs = ['bdn','foothills','hh','havoc','waoc','nn','oo']
+    clubs = ['bdn','foothills','hh','havoc','waoc','nn','oo','tvoc']
 
     slon = slat = flon = flat = 0
     if 'start' in p:
@@ -288,6 +288,7 @@ def createImage(path, fileformat):
         "\n<!ENTITY trees \"" + ("yes" if p.get('trees',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY hedges \"" + ("yes" if p.get('hedges',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY fences \"" + ("yes" if p.get('fences',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY sidewalks \"" + ("yes" if p.get('sidewalks',"no") != "no" else "no") + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">" + \
