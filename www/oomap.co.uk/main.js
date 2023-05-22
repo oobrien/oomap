@@ -546,6 +546,14 @@ function init()
   $("#layerMessage").hide();
   $("#undoMessage").show();
 
+  $.get("clubs.json", function (data) {
+    var html = "";
+    $.each(data, function (club, text) {
+      html += "<option value='" + club + "'>" + text + "</option>";
+    });
+    $("#club").html(html);
+  });
+
   $('#tempLayer').change(function() {
     if (this.checked) {
       //$('#c_poi_dist').prop('disabled', true);
@@ -2821,7 +2829,7 @@ function setdecl(v, callback){
 }
 
 function lookupMag(lat, lon) {
-   var url = "https://oomap.dna-software.co.uk/wmm?lat="+lat+"&lon="+lon;
+   var url = "wmm?lat="+lat+"&lon="+lon;
    $.get(url, function(response, status){
         setdecl(response, rotateToMagDec);
    });

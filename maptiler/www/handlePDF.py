@@ -96,7 +96,8 @@ def createImage(path, fileformat):
 
     mapid = p.get('mapid', 'new')
     club = p.get('club', '')
-    clubs = ['bdn','foothills','hh','havoc','waoc','nn','oo','tvoc']
+    if not club.isalpha():   #sanitise
+        club=''
 
     slon = slat = flon = flat = 0
     if 'start' in p:
@@ -180,7 +181,10 @@ def createImage(path, fileformat):
     if len(mapid) == 13:    #If existing id, use that, otherwise generate new one.
         tmpid = "h" + mapid #Add "h" prefix - postgres tables can't start with a number
     else:
-        tmpid = "h" + hex(int(time.time()))[2:10] + hex(int(time.time()*1000000) % 0x100000)[2:7]
+        m=time.time()
+        sec = math.floor(m)
+        usec = math.floor(1000000 * (m - sec))
+        tmpid = "h" + '%8x%05x' % (sec, usec)
     styleFile = home + "/styles/" + tmpid + ".xml"
 
     # Get contour attribution from custom Postgres DB table
@@ -657,8 +661,9 @@ def createImage(path, fileformat):
     ctx.stroke()
 
     # Adornments - Club logo
-    if style != "blueprint" and club in clubs:
-        logoSurface = cairo.ImageSurface.create_from_png(home + "/images/" + club + ".png")
+    clubPath = home + "/images/" + club + ".png"
+    if style != "blueprint" and os.path.isfile(clubPath):
+        logoSurface = cairo.ImageSurface.create_from_png(clubPath)
         ctx = cairo.Context(surface)
         scale = ADORN_CLOGO_SCALE / logoSurface.get_height()
         width = logoSurface.get_width() *scale

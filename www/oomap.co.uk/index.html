@@ -89,16 +89,15 @@
 					</tr>
 					<tr>
 						<td colspan='3'>
-							Contours
+							<a href="https://oomap.dna-software.co.uk/help/details/contours/" target=”_blank” rel=”noopener noreferrer”>Contours</a>
 							<div id="contours">
 								<input type="radio" id="SRTM-5" value="SRTM-5" name="contours" checked="checked"/><label for="SRTM-5"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (5m)</abbr></label>
 								<input type="radio" id="SRTM-10" value="SRTM-10" name="contours" /><label for="SRTM-10"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (10m)</abbr></label>
 								<input type="radio" id="COPE-5" value="COPE-5" name="contours" /><label for="COPE-5"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (5m)</abbr></label>
 								<input type="radio" id="COPE-10" value="COPE-10" name="contours" /><label for="COPE-10"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (10m)</abbr></label>
 								<input type="radio" id="OS-10" value="OS-10" name="contours"  /><label for="OS-10"><abbr title="Ordnance Survey, GB only (live preview)">OS (10m)</abbr></label>
-								<!-- <input type="radio" id="LIDAR-2p5" value="LIDAR-2p5" name="contours" /><label for="LIDAR-2p5"><abbr title="LIDAR, UK + bits of Oz, NZ, Austria & Canada (live preview)">LIDAR (2.5m)</abbr></label> -->
-								<input type="radio" id="LIDAR-5" value="LIDAR-5" name="contours" /><label for="LIDAR-5"><abbr title="LIDAR, UK, Austria, France + bits of Oz, NZ & Canada (live preview)">LIDAR (5m)</abbr></label>
-								<input type="radio" id="LIDAR-10" value="LIDAR-10" name="contours" /><label for="LIDAR-10"><abbr title="LIDAR, UK, Austria, France + bits of Oz, NZ & Canada (live preview)">LIDAR (10m)</abbr></label>
+								<input type="radio" id="LIDAR-5" value="LIDAR-5" name="contours" /><label for="LIDAR-5"><abbr title="LIDAR, where available (live preview)">LIDAR (5m)</abbr></label>
+								<input type="radio" id="LIDAR-10" value="LIDAR-10" name="contours" /><label for="LIDAR-10"><abbr title="LIDAR, where available (live preview)">LIDAR (10m)</abbr></label>
 								<input type="radio" id="NONE-0" value="NONE-0" name="contours" /><label for="NONE-0">None</label>
 							</div>
 						</td>
@@ -124,15 +123,7 @@
 					<tr>
 						<th colspan='3' id='eventdate_holder'>Event Date<br /><input type="text" id="eventdate">&nbsp;<input type="text" id="eventdate_alternate" size="30"></th>
 						<th colspan='2' id='club_holder'><a href="https://oomap.dna-software.co.uk/help/club-logos/" target=”_blank” rel=”noopener noreferrer”>Club</a><br /><select id="club">
-							<option value="none">None</option>
-							<option value="bdn">Bris.DawnNav</option>
-							<option value="foothills">Foothills</option>
-							<option value="havoc">HAVOC</option>
-							<option value="hh">HH</option>
-							<option value="nn">NN</option>
-							<option value="oo">O.Ottowa</option>
-							<option value="tvoc">TVOC</option>
-							<option value="waoc">WAOC</option>
+
 						</select></th>
 					</tr>
 
@@ -151,7 +142,6 @@
 					<a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are from various sources, as attributed on the PDF rendering. Plaques from Open Plaques project.'); return false;">Credit</a>
 					<a href="#" id="about"> About</a>
 					<a href="https://blog.oomap.co.uk/oom/" target=”_blank” rel=”noopener noreferrer”>Blog</a>
-				  <!-- <a href="https://www.orienteeringfoundation.org.uk/" target=”_blank” rel=”noopener noreferrer”>Support</a> -->
 				</div>
 				<script type='text/javascript'>kofiwidget2.init('Buy Ollie a coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
 				<script type='text/javascript'>kofiwidget2.init('Buy David a coffee', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script>
