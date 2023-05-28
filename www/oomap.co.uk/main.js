@@ -36,9 +36,12 @@ Proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=4
 var debug = false;
 
 //Site-specific constants - change these as required:
-var prefix1 = "https://tile.dna-software.co.uk/";
-var prefix2 = "https://tile.dna-software.co.uk/";
-var prefix3 = "https://tile.dna-software.co.uk/";
+//var prefix1 = "https://tile.dna-software.co.uk/";
+//var prefix2 = "https://tile.dna-software.co.uk/";
+//var prefix3 = "https://tile.dna-software.co.uk/";
+var prefix1 = "/tile/";
+var prefix2 = "/tile/";
+var prefix3 = "/tile/";
 var defaultMapTitle = "OpenOrienteeringMap";
 var defaultRaceDescription = "Race instructions";
 

@@ -20,6 +20,15 @@ except ImportError:
 import requests
 
 def processRequest(environ):
+
+    global web_root
+    web_root = environ['wsgi.url_scheme']+'://'
+    if environ.get('HTTP_HOST'):
+        web_root += environ['HTTP_HOST']
+    else:
+        web_root += environ['SERVER_NAME']
+    web_root += '/'
+
     path = environ['QUERY_STRING']
     p = parse_query(path)
     if isStr(p):
