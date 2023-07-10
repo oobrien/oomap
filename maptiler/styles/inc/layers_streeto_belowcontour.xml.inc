@@ -86,16 +86,6 @@
     </Datasource>
 </Layer>
 
-<Layer name="tunnels" status="on" srs="&srs900913;">
-    <StyleName>tunnels-core</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Intersection(way, &box3857;) as way,highway,amenity from &prefix;_line where tunnel in ('yes','true','1') order by z_order) as roads
-        </Parameter>
-    </Datasource>
-</Layer>
-
 <Layer name="oldbuildings" status="off" srs="&srs900913;">
     <StyleName>buildings-core</StyleName>
     <Datasource>
@@ -138,12 +128,39 @@
     </Datasource>
 </Layer>
 
+<Layer name="tunnels" status="on" srs="&srs900913;">
+    <StyleName>tunnels-core</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Intersection(way, &box3857;) as way,highway,amenity from &prefix;_line where tunnel in ('yes','true','1') order by z_order) as roads
+        </Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="line features" status="on" srs="&srs900913;">
     <StyleName>barriers</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
             (select ST_Intersection(way, &box3857;) as way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="driveways" status="on" srs="&srs900913;">
+    <StyleName>driveways</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Intersection(way, &box3857;) as way,highway,railway,amenity,service,access,
+            case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
+            case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
+            from &prefix;_line
+            where (highway = 'service'
+            and service = 'driveway')
+            order by z_order
+            ) as driveways
         </Parameter>
     </Datasource>
 </Layer>
@@ -171,22 +188,7 @@
         </Parameter>
     </Datasource>
 </Layer>
-<Layer name="driveways" status="on" srs="&srs900913;">
-    <StyleName>driveways</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Intersection(way, &box3857;) as way,highway,railway,amenity,service,access,
-            case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
-            case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
-            from &prefix;_line
-            where (highway = 'service'
-            and service = 'driveway')
-            order by z_order
-            ) as driveways
-        </Parameter>
-    </Datasource>
-</Layer>
+
 <Layer name="islands" status="on" srs="&srs900913;">
     <StyleName>islands</StyleName>
     <Datasource>

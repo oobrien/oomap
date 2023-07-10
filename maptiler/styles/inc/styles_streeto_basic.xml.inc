@@ -282,7 +282,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational'</Filter>
+        <Filter>[leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational' or [landuse] = 'playground' or [leisure] = 'playground'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
     </Rule>
     <Rule>

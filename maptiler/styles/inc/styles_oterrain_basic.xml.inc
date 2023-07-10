@@ -156,6 +156,18 @@
     </Rule>
 </Style>
 
+<Style name="driveways">
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom13;
+        <LineSymbolizer stroke="&driveway;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom14;
+        <LineSymbolizer stroke="&driveway;" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+</Style>
+
 <Style name="roads-core">
    <Rule>
        &maxscale_zoom12;

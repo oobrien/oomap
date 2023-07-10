@@ -12,6 +12,8 @@ export default {
   server: {
     proxy: {
       "/php": "https://oomap.dna-software.co.uk",
+      "/wmm": "https://oomap.dna-software.co.uk",
+      "/tile": "https://oomap.dna-software.co.uk",
       "/render": "https://oomap.dna-software.co.uk"
     }
   },

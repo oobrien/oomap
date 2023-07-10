@@ -503,6 +503,9 @@ h1, h2
 {
 	mix-blend-mode: multiply;
 }
+.sat
+{
+}
 /* jQuery-ui edits */
 
 .ui-checkboxradio-radio-label .ui-icon-background {

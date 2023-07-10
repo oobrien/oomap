@@ -12,7 +12,7 @@ import GeoImageLayer from 'ol-ext/layer/GeoImage';
 import VectorSource from 'ol/source/Vector';
 import Static from 'ol/source/ImageStatic';
 import Feature from 'ol/feature';
-import {OSM, XYZ} from 'ol/source';
+import {OSM, XYZ, TileJSON, BingMaps} from 'ol/source';
 import Select from 'ol/interaction/Select';
 import {Fill, Stroke, Style, Text, Circle, RegularShape} from 'ol/style';
 import {ScaleLine, defaults as defaultControls} from 'ol/control';
@@ -30,6 +30,7 @@ import './lib/jquery-ui.min.css';
 import 'ol/ol.css';
 import './style.css';
 import 'ol-ext/dist/ol-ext.css';
+import {getVectorContext} from 'ol/render.js';
 
 Proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
 
@@ -102,6 +103,7 @@ var layerControls;
 var layerGPX;
 var layerLines;
 var layerPreview;
+var layerSatellite;
 var titleFeature;
 var sheetCentreLL;
 var newControlLL = [0, 0];
@@ -309,6 +311,12 @@ function lineStyle(feature, resolution) //Lines between controls
 //var dotStyle = new Style({
 //});
 
+var styleBlack = new Style({
+  fill: new Fill({
+    color: 'black'
+  }),
+});
+
 var marginStyle = new Style({
 	fill: new Fill({ color: [255, 255, 255, 1]})
 });
@@ -406,10 +414,10 @@ function gpxStyle(feature) {
         speed.push(rate);
       }
       var maxSpeed = Math.max(...speed);
-      if (debug) console.log(maxSpeed);
+      if (debug) {console.log(maxSpeed);}
       while(speed.filter(function(x){return x > maxSpeed}).length < 0.05 * coordinates.length) {
         maxSpeed = maxSpeed * 0.95;
-        if (debug) console.log(maxSpeed);
+        if (debug) {console.log(maxSpeed);}
         if (maxSpeed < 0.1) break;
       };
       for (var i = 0; i < coordinates.length - 1; i++) {
@@ -643,12 +651,13 @@ function init()
     updateWhileAnimating: true,  className: 'colour'});
 	layerMapTitle = new VectorLayer({ title: "maptitle", style: titleStyle, source: sourceMT, zIndex: 2,
     updateWhileAnimating: true});
-	layerMapContent = new VectorLayer({ title: "mapcontent", style: contentStyle, source: sourceContent });
+	layerMapContent = new VectorLayer({ title: "mapcontent", style: null, source: sourceContent, zIndex: 2 });
 	layerControls = new VectorLayer({ title: "controls", style: controlStyle, source: sourceCons, className: 'features',
     updateWhileAnimating: true, zIndex: 4});
   layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 4 });
   layerPreview = new ImageLayer({ name: "Georef",  zIndex: 3});
   layerGPX = new VectorLayer({ title: "GPX", style: markerStyle, source: sourceGPX, zIndex: 4 });
+  layerSatellite = new TileLayer({opacity: 1, zIndex: 2, className: 'satellite', updateWhileAnimating: true, visible: false});
 
 	if (args['mapStyleID'])
 	{
@@ -689,15 +698,16 @@ function init()
 		[
 			layerMapnik,
 			layerOrienteering,
-	  		layerMapBorder,
-	  		layerMapContent,
-  		  layerMapSheet,
-	  		layerMapTitle,
-	  		layerMapCentre,
-	  		layerControls,
-        layerLines,
-        layerPreview,
-        layerGPX
+      layerMapSheet,
+      layerSatellite,
+  		layerMapContent,
+      layerMapBorder,
+  		layerMapTitle,
+  		layerMapCentre,
+  		layerControls,
+      layerLines,
+      layerPreview,
+      layerGPX
 		],
     overlays: [overlay],
 		controls: defaultControls({rotateOptions: {
@@ -820,7 +830,10 @@ function init()
 		'min':0,
 		'max':360,
 		'height':65,
-		'release' : function (v) { }
+		'release' : function (v) { },
+    'change' : function (v) {
+      layerControls.getSource().getFeatureById(currentID).set('angle', v);
+    }
 	});
 
 	var c_number = $( "#c_number" ),
@@ -913,6 +926,12 @@ function init()
 		  }
 		},
 		Cancel: function() {
+      if (controloptstate == "edit")	{  //Revert any temporary edits (label angle, control type...)
+        layerControls.getSource().getFeatureById(currentID).set('angle', $( "#newcontroloptions" ).data('angle'));
+        layerControls.getSource().getFeatureById(currentID).set('type', $( "#newcontroloptions" ).data('type'));
+        layerControls.getSource().getFeatureById(currentID).set('description', $( "#newcontroloptions" ).data('description'));
+        layerControls.getSource().getFeatureById(currentID).set('score', $( "#newcontroloptions" ).data('score'));
+      }
 		  $( this ).dialog( "close" );
 		}
 	  }
@@ -1186,6 +1205,22 @@ function init()
 		$.post('/php/load.php', {"shortcode":reqMapID}, handleLoadCallback);
 	}
 
+  //Try to clip to map content bounds - but not working.  Need to revisit.
+  layerSatellite.on('postrender', function (e) {
+    const vectorContext = getVectorContext(e);
+    e.context.globalCompositeOperation = 'destination-in';
+    layerMapContent.getSource().forEachFeature(function (feature) {
+      vectorContext.drawFeature(feature, styleBlack);
+      if (debug) {console.log(feature);}
+    });
+    e.context.globalCompositeOperation = 'source-over';
+  });
+
+  layerMapContent.getSource().on('addfeature', function () {
+    layerSatellite.setExtent(layerMapContent.getSource().getExtent());
+  });
+
+
   $(window).keydown(function (e) {
       var keyCode = e.which;
       if (debug) {console.log ("key: " + keyCode);}
@@ -1216,7 +1251,29 @@ function init()
         controlsChanged();
         e.preventDefault();
       }
+      if (keyCode == 83 && e.ctrlKey == true) {  //press "Ctrl-s" to toggle satellite map
+        toggleSatellite();
+        e.preventDefault();
+      }
   });
+}
+
+function toggleSatellite () {
+  if (!layerSatellite.getVisible() && state == "addcontrols"){
+    layerSatellite.setSource(
+      new BingMaps({
+        key: 'AqrZ3qN2WiRrmKnieQHkNHoR4AD_7ISxbjJLs8LR_YqRcSf1bOZSQTxBG2fKQ0cO',
+        imagerySet: 'Aerial',
+        // maxZoom: 19
+      })
+    );
+    layerSatellite.setExtent(layerMapContent.getSource().getExtent());
+    layerSatellite.setVisible(true);
+  }
+  else {
+    layerSatellite.setVisible(false);
+  }
+  rebuildMapSheet();
 }
 
 function updateTips( t ) {
@@ -1279,6 +1336,9 @@ function resetControlAddDialog(pid)
 function handleControlTypeChange()
 {
 	var type = $("#c_type :radio:checked").attr("id");
+  var control = null;
+  if (currentID) control = layerControls.getSource().getFeatureById(currentID);
+  if (control) control.set('type', type);  //render as new type while dialog is shown
 
 	if (type == "c_startfinish" || type == "c_cross" || type == "c_finish")
 	{
@@ -1446,14 +1506,21 @@ function handleControlEditOptions(pid)
       //currentID = parseInt(pid.substring(1)); //remove the 'e' prefix
 			currentID = pid.substring(1); //remove the 'e' prefix
 			currentNumber = null;
+      var oldControl = null;
 			var control = layerControls.getSource().getFeatureById(currentID);
 			if (control)
 			{
 					currentNumber = parseInt(control.get('number'));
 					newControlLL = control.getGeometry().getFirstCoordinate();
+          oldControl = {
+            angle: control.get('angle'),
+            type: control.get('type'),
+            score: control.get('score'),
+            description: control.get('description')
+          }
 			}
       $('.ui-dialog-buttonpane button:contains("Delete")').button().show();
-      $( "#newcontroloptions" ).dialog( "open");
+      $( "#newcontroloptions" ).data(oldControl).dialog( "open");  //attach data for selected control (for reversion if needed), then open dialog
 			resetControlAddDialog(pid);
 }
 
@@ -1478,7 +1545,7 @@ function handleControlDelete(pid)  //pid = "d<n>"
   var control = layerControls.getSource().getFeatureById(currentID);
 	if (control)
 	{
-		layerControls.getSource().removeFeature(control)
+  	layerControls.getSource().removeFeature(control);
 	}
   controlsChanged();
 }
@@ -1847,7 +1914,7 @@ function handleDblClick(evt)
 {
 
   var pixel = evt.pixel;
-
+   overlay.setPosition(undefined); //Remove any tooltips
 	olMap.forEachFeatureAtPixel(pixel, function(feature, layer)
 	{
 		//Has a map feature been clicked?
@@ -1966,7 +2033,8 @@ function getURL(type)
       finishText += c.lat.toFixed(0) + "," + c.lon.toFixed(0) + ",";
     })
     finishText  = finishText.substring(0, finishText.length - 1);
-  }  if(getSortedControls('c_cross').length > 0)
+  }
+  if(getSortedControls('c_cross').length > 0)
   {
     getSortedControls('c_cross').forEach(function(c)
     {
@@ -2472,13 +2540,14 @@ function rebuildMapSheet()
   }
 	var titleFeature = new Feature({ geometry: new Point([mapBound[0], mapBound[3] + (0.002 * trueScale)])});
 
-	layerMapBorder.getSource().addFeatures([westMargin, eastMargin, northMargin, southMargin, titleFeature]);
+  var angle = olMap.getView().getRotation();
+  layerMapBorder.getSource().addFeatures([westMargin, eastMargin, northMargin, southMargin, titleFeature]);
 	layerMapSheet.getSource().addFeatures([sheet]);
 	layerMapTitle.getSource().addFeatures([title]);
+
+  content.getGeometry().rotate(angle,sheetCentreLL);
   layerMapContent.getSource().addFeatures([content]);
 
-
-	var angle = olMap.getView().getRotation();
   //if (angle != rotAngle) {
 		layerMapBorder.getSource().getFeatures().forEach(function(f) {
 			f.getGeometry().rotate(angle,sheetCentreLL);
@@ -2519,10 +2588,20 @@ function rebuildMapControls()
 		$( "#getOpenplaques" ).button("enable");
     $( "#preview" ).button("enable");
 	}
+  //If finish present but no start, turn finish into start/finish
+  var finishes = layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_finish');
+  if (finishes.length > 0){
+  	if (layerControls.getSource().getFeatures().filter(feat=>feat.get('type')=='c_startfinish').length == 0){
+      finishes[0].set('type', 'c_startfinish');
+      finishes[0].setId('S');
+      finishes[0].set('id', 'S');
+    }
+  }
   var listC = getSortedControls("c_regular");
   var listS = getSortedControls("c_startfinish");
   var listF = getSortedControls("c_finish");
   if (listF.length == 0) {listF = listS}  //Reuse start as finish if needed
+  if (listS.length == 0) {listS = listF}  //Reuse finish as start if needed
   var list = listS.concat(listC, listF);
 
   layerLines.getSource().clear();
@@ -2606,6 +2685,15 @@ function rebuildDescriptions()
     stack: '#controlpanel div',
     revert: true
   });
+
+  $( ".controlrow" ).on( "dblclick", function() {
+    var cNum = $(this).data( 'number' );
+    var cList = layerControls.getSource().getFeatures().filter(feat => feat.get('number')==cNum)
+    if (cList.length > 0){
+      var cCentre = cList[0].getGeometry().getFirstCoordinate();
+      olMap.getView().animate({duration: 300, center: cCentre});
+    }
+  } );
 
 	initDescriptions();
 }
