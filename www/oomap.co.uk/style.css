@@ -5,9 +5,13 @@ body
 	font-size: 13px;
 }
 
-/* * { border: 1px solid red !IMPORTANT; }
-*/
-
+#mainwindow
+{
+	display: flex;
+	flex-flow: column;
+	height:100vh;
+	max-height: 100vh;
+}
 
 a:link, a:visited { color: #006699; }
 a:active, a:hover { color: #cc0032; }
@@ -16,23 +20,15 @@ a:active, a:hover { color: #cc0032; }
 /* 1. Top Panel */
 #toppanel
 {
-	top: 0;
-	left: 0;
-	right: 0;
-	background-color: #fff;
 	color: #666;
-	height: 37px;
-}
-
-h1, h2
-{
-	font-weight: lighter;
+	display: flex;
+	flex-flow: row wrap;
+	flex:none;
 }
 
 #title
 {
 	padding: 2px 10px 2px 10px;
-	width: 300px;
 	font-size: 22px;
 	height: 27px;
 	font-style: italic;
@@ -40,6 +36,8 @@ h1, h2
 	background-color: #cc0032;
 	font-variant: small-caps;
 	border-bottom-right-radius: 80px;
+	flex: 0 1 300px;
+	order: 0;
 }
 
 #titlestatus
@@ -49,126 +47,42 @@ h1, h2
 
 #search
 {
-	padding: 10px 10px 0 10px;
-	float: right;
+	padding: 5px 10px 0 10px;
+	order: 3;
 }
 
 #load
 {
-	padding: 10px 10px 0 10px;
-	float: right;
+	padding: 5px 10px 0 10px;
+	order:2;
 }
 
-#editions
+#savedMapID
 {
-	clear: both;
-	margin: 0 7px;
-	height: 35px;
+	width: 100px;
 }
-
-#editions div, #editions2 div
-{
-	font-size: 10px;
-}
-
-#uk, #ireland, #global, .editionbutton
-{
-	border-radius: 3px;
-	padding: 5px 0 5px 0;
-	margin: 0 7px 0 0;
-	font-size: 10px;
-	background-color: #08d;
-}
-
-#uk a, #ireland a, #global a, .editionbutton a
-{
-	color: white;
-	text-decoration: none;
-}
-
-.currentedition
-{
-	background-color: #cc0032 !IMPORTANT;
-}
-
-#wishlist
-{
-	font-size: 9px;
-	margin-right: 10px;
-	color: #000;
-	background-color: #fff;
-}
-
-#social
-{
-	float: left;
-}
-
-/* 2. Options Panel */
-
-#toolbar {
-	margin: 0 10px;
-    padding: 5px 5px 5px 0;
-    display: inline-block;
-    font-size: 10px;
-	/* height: 90px;
-	   overflow: auto;
-	 */
-  }
-  /* support: IE7 */
-  *+html #toolbar {
-    display: inline;
-  }
-
-  #create {
-	float: right;
-	width: 200px;
-	margin-right: 10px;
-    padding: 5px 1px 5px 10px;
-    display: inline-block;
-    font-size: 10px;
-	height: 108px;
-  }
-  #create button
-{
-	margin: 2px 0;
-}
-
-#optionspanel
-{
-	clear: both;
-}
-
-#mapstyle
-{
-	font-size: 8px;
-	margin: 0 15px 0 7px;
-}
-
-#spacerrow th { padding: 0 !IMPORTANT; border-width: 0 !IMPORTANT; }
-
 
 #messagePanelHolder
 {
 	font-family: Arial Narrow, sans-serif;
-	float: right;
 	opacity: 0.8;
 	text-align: center;
 	color: #000;
-	margin-top: 5px;
-	font-size: 10px;
+	margin-top: 0px;
+	font-size: 12px;
+	flex: 1 2 300px;
+	order: 1;
 }
 
 .messagePanel
 {
 	margin: 3px;
 	padding: 6px;
+	height: inherit;
 }
-
 
 #messageZoom
 {
-	display: block;
 	background-color: #faa;
 }
 
@@ -176,7 +90,6 @@ h1, h2
 {
 	background-color: #ff6;
 	display: none;
-
 }
 
 #messageAdd
@@ -185,9 +98,40 @@ h1, h2
 	display: none;
 }
 
-#generating
+/* 2. Options Panel */
+#optionspanel
 {
-	height: 290px;
+	display: flex;
+	flex-flow: row wrap;
+	flex: none;
+	justify-content: space-between;
+}
+
+#toolbar
+{
+	margin: 0 5px;
+  padding: 5px 5px 5px 0;
+  justify-self: left;
+  font-size: 10px;
+}
+
+#create
+{
+	width: 200px;
+	margin-right: 5px;
+	padding: 5px 1px 5px 10px;
+	font-size: 10px;
+}
+
+#create button
+{
+	margin: 2px 0;
+}
+
+#mapstyle
+{
+	font-size: 8px;
+	margin: 0 15px 0 7px;
 }
 
 
@@ -195,10 +139,11 @@ h1, h2
 
 #mainpanel
 {
-	position: absolute;
-	top: 172px;
-	bottom: 0;
-	width: 100%;
+	display: flex;
+	flex-flow: row wrap;
+	flex 1;
+	height: 100%;
+	min-height: 0;
 }
 
 .ui-dialog .ui-state-error { padding: .3em; }
@@ -206,34 +151,53 @@ h1, h2
 
 #map
 {
-	position: absolute;
-	top: 0;
-	bottom: 10px;
-	left: 10px;
-	right: 320px;
+	order: 0;
+	flex: 1 0 500px;
+	min-height: 500px;
 	border: 1px solid #aaa;
+	margin: 5px 0px 5px 5px;
+	height: 100%
+	layer: -1;
 }
 
+#rhs
+{
+	order: 1;
+	margin: 5px;
+	display: flex;
+	flex-flow: column wrap;
+	align-items: center;
+	display: flex;
+	max-height: calc(100% - 10px);
+	min-height: 500px;
+}
 /* Control descriptions */
 
 #controlpanel
 {
-	position: absolute;
-	clear: both;
-	right: 0;
-	top: 0;
-	width: 302px;
-	bottom: 140px;
-	margin: 0 7px 0 0;
-	padding: 0 1px 12px 1px;
-	overflow: auto;
+	overflow-y: scroll;
+	flex: 1 0;
+  padding: 0px 0px 0px 2px;
+	z-index: 0;
+}
+
+#controldescriptions
+{
+	display: grid;
+	background-color: rgba(255, 255, 255, 0.6);
+	grid-template-columns: 37px 29px 82px 82px 50px;
+	gap: 1px;
+	align-content: center;
 }
 
 .edit, .delete { font-size: 10px; }
 
 .controlrow {
-	font-size: 10px;
-	background-color: rgba(255, 255, 255, 0.6);
+
+	grid-column: 1 / span 5;
+	display: grid;
+	grid-template-columns: 37px 29px 82px 82px 50px;
+	gap: 1px;
 }
 
 .controlrow.ui-draggable-dragging {
@@ -248,18 +212,9 @@ h1, h2
 	background-color: rgba(255, 200, 200, 0.6);
 }
 
-#controldescriptions
+.ctext
 {
-	border-collapse: collapse;
-	table-layout: fixed;
-	width: 286px;
-}
-
-#controldescriptions td, #controldescriptions th
-{
-	border: 1px solid black;
-	padding: 5px;
-
+	padding-top: 10px;
 }
 
 #eventdate
@@ -269,56 +224,73 @@ h1, h2
 
 #eventdate_alternate { display: none; }
 
-#maptitle
+#maptitle, #racedescription
+{
+	font-size: 14px;
+	grid-column: 1 / span 4;
+}
+#edittitle, #editinstructions
+{
+	font-size: 14px;
+	grid-column: 5 / span 1;
+}
+#eventdate_holder, #scalecaption, #controlcaption
+{
+	grid-column: 1 / span 3;
+}
+#club_holder, #contourcaption, #pointscaption
+{
+	grid-column: 4 / span 2;
+}
+.grid, .grid2
+{
+	outline: 1px #aaa solid;
+	text-align: center;
+	padding: 3px;
+	display: flex;
+	flex-flow: row wrap;
+	align-items: center;
+	justify-content: center;
+}
+
+.grid2
+{
+	font-size: 11px;
+}
+.grid
 {
 	font-size: 14px;
 }
 
-#sponsor
+.desccol
 {
-	position: absolute;
-	right: 0;
-	margin: 0 10px;
-	width: 300px;
-	height: 250px;
-	bottom: 85px;
-	text-align: center;
-	vertical-align: middle;
+	grid-column: 3 / span 2;
+	justify-content: left;
+	text-align: left;
 }
-
-#supported
+.bold
 {
-	position: absolute;
-	right: 0;
-	margin: 10px 10px 0 10px;
-	width: 300px;
-	height: 150px;
-	bottom: 65px;
-	text-align: center;
-	vertical-align: middle;
+	font-weight: bold;
 }
-
-#sponsor div { padding: 50px; color: #006699; font-style: italic; font-size: 11px; clear: both; }
-#sponsor img { padding: 0; }
-
-#supported div { padding: 20px; color: #006699; font-style: italic; font-size: 11px; clear: both; }
-#supported img { padding: 0; }
-
 
 #attribution
 {
-        position: absolute;
-        right: 0;
-        margin: 10px;
-		padding: 5px 10px;
-        width: 278px;
-        height: 105px;
-        bottom: 0;
-        border: 1px solid #006699;
-        text-align: center;
+	margin-top: auto;
+	right: 0;
+	padding: 0px 0px;
+	width: 305px;
+	border-top: 1px solid black;
+	text-align: center;
 }
 
 #attribution div { color: #006699; font-style: italic; font-size: 11px; clear: both; margin-bottom: 5px; }
+
+/* Dialog - Generating map */
+
+#generating
+{
+	height: 290px;
+}
 
 /* Dialog - Add/Edit Control */
 
@@ -455,40 +427,6 @@ h1, h2
         margin-left: -11px;
       }
 
-@media screen and (min-width: 0px) and (max-width: 800px)
-{
-	#wishlist { display: none; }
-}
-
-@media screen and (min-width: 0px) and (max-width: 930px)
-{
-  #create {
-	float: right;
-	width: inherit;
-	margin-right: 10px;
-    padding: 0;
-    display: inline-block;
-    font-size: 8px;
-	height: inherit;
-  }
-  #create button
-	{
-	width: 150px;
-	margin: 0;
-	}
-	#toolbar { padding: 0px; font-size: 8px; }
-	#editions { height: 30px; }
-	#toppanel { height: 30px; }
-	#title { font-size: 14px; }
-
-}
-
-
-@media screen and (min-width: 0px) and (max-width: 950px)
-{
-	#messagePanelHolder { display: none; }
-}
-
 .features
 {
 	mix-blend-mode: multiply;
@@ -503,9 +441,7 @@ h1, h2
 {
 	mix-blend-mode: multiply;
 }
-.sat
-{
-}
+
 /* jQuery-ui edits */
 
 .ui-checkboxradio-radio-label .ui-icon-background {

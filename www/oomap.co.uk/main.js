@@ -8,11 +8,9 @@ import {Map, View} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 import ImageLayer from 'ol/layer/Image';
-import GeoImageLayer from 'ol-ext/layer/GeoImage';
 import VectorSource from 'ol/source/Vector';
-import Static from 'ol/source/ImageStatic';
 import Feature from 'ol/feature';
-import {OSM, XYZ, TileJSON, BingMaps} from 'ol/source';
+import {OSM, XYZ, BingMaps} from 'ol/source';
 import Select from 'ol/interaction/Select';
 import {Fill, Stroke, Style, Text, Circle, RegularShape} from 'ol/style';
 import {ScaleLine, defaults as defaultControls} from 'ol/control';
@@ -35,19 +33,15 @@ import {getVectorContext} from 'ol/render.js';
 Proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
 
 var debug = false;
+var oom = new Object;
 
 //Site-specific constants - change these as required:
-//var prefix1 = "https://tile.dna-software.co.uk/";
-//var prefix2 = "https://tile.dna-software.co.uk/";
-//var prefix3 = "https://tile.dna-software.co.uk/";
-var prefix1 = "/tile/";
-var prefix2 = "/tile/";
-var prefix3 = "/tile/";
-var defaultMapTitle = "OpenOrienteeringMap";
-var defaultRaceDescription = "Race instructions";
+oom.prefix = "/tile/";
+oom.defaultMapTitle = "OpenOrienteeringMap";
+oom.defaultRaceDescription = "Race instructions";
 
-//var apiServer = "https://overpass-api.de/api/interpreter";
-var apiServer = "https://overpass.kumi.systems/api/interpreter";
+//oom.apiServer = "https://overpass-api.de/api/interpreter";
+oom.apiServer = "https://overpass.kumi.systems/api/interpreter";
 
 var currentID = null;
 var currentNumber = null;
@@ -59,9 +53,9 @@ var rotAngle = 0;
 var magDec = null; //magnetic declination for map centre
 const hitTol = 8;	//pixel tolerance when selecting map features
 
-var mapTitle = defaultMapTitle;
+var mapTitle = oom.defaultMapTitle;
 var mapTitleDisplay = mapTitle;
-var raceDescription = defaultRaceDescription;
+var raceDescription = oom.defaultRaceDescription;
 var mapStyleID = "streeto-NONE-0";
 var mapStyleIDOnSource;
 var paper;
@@ -492,22 +486,16 @@ function setDefaults()
 
 function init()
 {
-  if (window.location.hostname == "oomap.dna-software.co.uk" || window.location.hostname == "localhost") {
-    $("a[href='https://blog.oomap.co.uk/oom/']").attr('href', 'https://oomap.dna-software.co.uk/help/blog/');
-  }
   $( "#mapstyle" ).controlgroup();
-
 	$( "#mapscale" ).controlgroup();
 	$( "#papersize" ).controlgroup();
 	$( "#paperorientation" ).controlgroup();
-
 	$( "#contours" ).controlgroup();
-
-	$( "#portrait" ).button( { icons: {primary: 'ui-icon-document'} } );
-	$( "#landscape" ).button( { icons: {primary: 'ui-icon-document-b'} } );
-
-	$( "#c_type" ).controlgroup();
+  $( "#c_type" ).controlgroup();
 	$( "#c_score" ).controlgroup();
+
+	$( "#portrait" ).checkboxradio( { icon: 'ui-icon-document'} );
+	$( "#landscape" ).checkboxradio( { icons: {primary: 'ui-icon-document-b'} } );
 
 	$( "#mapstyle input[type=radio]" ).on('change', handleStyleChange);
 	$( "#mapscale input[type=radio]" ).on('change', handleOptionChange);
@@ -1217,7 +1205,7 @@ function init()
   });
 
   layerMapContent.getSource().on('addfeature', function () {
-    layerSatellite.setExtent(layerMapContent.getSource().getExtent());
+    //layerSatellite.setExtent(layerMapSheet.getSource().getExtent());
   });
 
 
@@ -1267,7 +1255,7 @@ function toggleSatellite () {
         // maxZoom: 19
       })
     );
-    layerSatellite.setExtent(layerMapContent.getSource().getExtent());
+    layerSatellite.setExtent(layerMapSheet.getSource().getExtent());
     layerSatellite.setVisible(true);
   }
   else {
@@ -1439,13 +1427,15 @@ addcontrols - zoomed in, sheet placed
 		{
 			state = "initialzoom";
 			$("#messageCentre").hide();
+    	$("#messageAdd").hide();
 			$("#messageZoom").show("pulsate", {}, 500);
 		}
 		else if (state == "addcontrols")
 		{
 			state = "zoom";
 			$("#messageAdd").hide();
-			$("#messageZoom").show("pulsate", {}, 500);
+			$("#messageCentre").hide();
+      $("#messageZoom").show("pulsate", {}, 500);
 			//rebuildMapSheet();
 		}
 		layerOrienteering.setVisible(false); //hide contours
@@ -1479,7 +1469,7 @@ addcontrols - zoomed in, sheet placed
 			layerOrienteering.setSource(
 				new XYZ(
 					{
-						urls: [prefix1 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix2 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png", prefix3 + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png"],
+						urls: [oom.prefix + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png"],
 						attributions: ['Contours: various - see PDF output', ],
             maxZoom: 18,
 						"wrapX": true
@@ -1576,6 +1566,7 @@ function handleDeleteSheet()
 	layerMapTitle.getSource().clear();
 	layerMapContent.getSource().clear();
 	layerControls.getSource().clear();
+  layerSatellite.setVisible(false);
 
 	topID = 0;
 	topNumber = 0;
@@ -1630,11 +1621,11 @@ function validate()
 {
 	var validationMsg = "";
 
-	if (mapTitle == defaultMapTitle)
+	if (mapTitle == oom.defaultMapTitle)
 	{
 		validationMsg += "Map title not changed from default.<br />";
 	}
-	if (raceDescription == defaultRaceDescription)
+	if (raceDescription == oom.defaultRaceDescription)
 	{
 		validationMsg += "Race instructions not changed from default.<br />";
 	}
@@ -1815,7 +1806,6 @@ function handleGenerateClue()
 
 //Missing features from this version:
 //Label overlay
-//Aerial imagery overlay
 //lat/lon jump.
 
 function handleOptionChange()
@@ -1865,7 +1855,7 @@ function handleClick(evt)
 	{
   	var coordinate = evt.coordinate;
 		newControlLL = coordinate;
-    if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(olProj.transform(newControlLL, "EPSG:3857", "EPSG:4326"))))
+    if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate((newControlLL))))
 		{ //if control outside map area, alert
 			$( "#newcontroloutsidemap" ).dialog({
 			  modal: true,
@@ -1927,7 +1917,7 @@ function handleDblClick(evt)
 		{ //Clicked GPX/temp feature - promote to layerControls
       if (state == 'addcontrols' && feature.getGeometry().getType() == 'Point')
       { //only run if clicked item is a point, and a map has been placed
-        if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(olProj.transform(evt.coordinate, "EPSG:3857", "EPSG:4326"))))
+        if (!(layerMapContent.getSource().getFeatures()[0].getGeometry().intersectsCoordinate(evt.coordinate)))
         { //if event outside map area, alert
           $( "#newcontroloutsidemap" ).dialog({
             modal: true,
@@ -2497,8 +2487,6 @@ function rebuildMapSheet()
 	var paperNMBound = [	paperBound[0], 	mapBound[3],		paperBound[2], 	paperBound[3]];
 	var paperSMBound = [	paperBound[0], 	paperBound[1], 	paperBound[2], 	mapBound[1]];
 
-	var sheet = new Feature({ geometry: PolyFromExtent(paperBound) });
-
 	var titleSizeArr = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 9, 18, 36, 72, 144, 288];
 	fontSizeFromArr = (titleSizeArr[parseInt(olMap.getView().getZoom())]*(trueScale/16000)).toFixed(0);
 
@@ -2521,7 +2509,8 @@ function rebuildMapSheet()
 	title.set('xoff',  0);
 	title.set('yoff',  0);
 
-	var content = new Feature({ geometry: PolyFromExtent(mapBound) });
+	var sheet = new Feature({ geometry: PolyFromExtent(paperBound) });
+  var content = new Feature({ geometry: PolyFromExtent(mapBound) });
 	var westMargin = new Feature({ geometry: PolyFromExtent(paperWMBound) });
 	var eastMargin = new Feature({ geometry: PolyFromExtent(paperEMBound) });
 	var northMargin = new Feature({ geometry: PolyFromExtent(paperNMBound) });
@@ -2544,8 +2533,6 @@ function rebuildMapSheet()
   layerMapBorder.getSource().addFeatures([westMargin, eastMargin, northMargin, southMargin, titleFeature]);
 	layerMapSheet.getSource().addFeatures([sheet]);
 	layerMapTitle.getSource().addFeatures([title]);
-
-  content.getGeometry().rotate(angle,sheetCentreLL);
   layerMapContent.getSource().addFeatures([content]);
 
   //if (angle != rotAngle) {
@@ -2554,15 +2541,16 @@ function rebuildMapSheet()
   	});
 		layerMapSheet.getSource().getFeatures()[0].getGeometry().rotate(angle,sheetCentreLL);
 		layerMapTitle.getSource().getFeatures()[0].getGeometry().rotate(angle,sheetCentreLL);
+    layerMapContent.getSource().getFeatures()[0].getGeometry().rotate(angle,sheetCentreLL);
+
 		rotAngle = angle;
 	//}
-
-	wgs84Poly = content.getGeometry();
-	wgs84Poly.rotate(angle, sheetCentreLL);
+  layerSatellite.setExtent(layerMapSheet.getSource().getExtent());
+	wgs84Poly = content.clone().getGeometry();
+	//wgs84Poly.rotate(angle, sheetCentreLL);
 	wgs84Poly.transform("EPSG:3857", "EPSG:4326");
 
 	//rebuildDescriptions();
-
 	$( "#getraster,#getworldfile,#getkmz" ).button("disable");
 	$( "#createmap" ).button("enable");
 	$( "#deletesheet" ).button("enable");
@@ -2626,7 +2614,7 @@ function rebuildMapControls()
 
 function rebuildDescriptions()
 {
-	$("#controldescriptions tr.controlrow").remove();
+	$("#controldescriptions .controlrow").remove();
   const list = getSortedControls("c_regular");
 	var controlnum = list.length;
 	var maxscore = 0;
@@ -2647,18 +2635,18 @@ function rebuildDescriptions()
 	{
 		var control  = list[i];
 
-		$("#controldescriptions").find('tbody')
-			.append($('<tr>').addClass('controlrow').data( 'number', control.number )
-				.append($('<td class="numcol">')
+		$("#controldescriptions")
+			.append($('<div>').addClass('controlrow').data( 'number', control.number )
+				.append($('<div class="grid2 numcol">')
 					.append(control.number)
 				  )
-				.append($('<td class="scorecol">')
+				.append($('<div class="grid2 scorecol">')
 					.append(control.score)
 				  )
-				.append($('<td>').attr('colspan', '2')
+				.append($('<div class="grid2 desccol">')
 					.append(control.description.length > 28 ? control.description.substring(0,25) + "..."  : control.description)
 				  )
-				.append($('<th>')
+				.append($('<div class="grid2">')
 					.append($('<span>').addClass('edit').attr('id', 'e' + control.id).text('Edit').on('click', function() { handleControlEditOptions(this.id); })
 					  )
 					.append($('<span>').addClass('delete').attr('id', 'd' + control.id).text('Delete').on('click', function() { handleControlDelete(this.id); })
@@ -2750,7 +2738,7 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
 {
   var arr = wgs84Poly.flatCoordinates;
   if (isNaN(radius)) { radius = 0;}
-	var url = apiServer + '?data=[out:json][timeout:25];node[' + query + '](poly:\"' + arr[1] + " " + arr[0] + " " + arr[3] + " " + arr[2] + " " + arr[5] + " " + arr[4] + " " + arr[7] + " " + arr[6]+"\");out;";
+	var url = oom.apiServer + '?data=[out:json][timeout:25];node[' + query + '](poly:\"' + arr[1] + " " + arr[0] + " " + arr[3] + " " + arr[2] + " " + arr[5] + " " + arr[4] + " " + arr[7] + " " + arr[6]+"\");out;";
     $.get(url)
       .done(function( result, textStatus, jqXHR ) {
     	var changed = false;
@@ -2834,7 +2822,7 @@ function handleGetPois([query, prefix, srcDescription, orderBy=null, radius,bool
 
 function handleGetOpenplaques()
 {
-  var bounds = layerMapContent.getSource().getExtent();
+  var bounds = olProj.transform(layerMapContent.getSource().getExtent(), "EPSG:4326", "EPSG:3857");
 	var url = '/php/getopenplaques.php?bounds=[' + bounds[3] + "%2C" + bounds[0] + "]%2C[" + bounds[1] + "%2C" + bounds[2] + "]";
   $.get(url, null, handleGetOpenplaquesCallback);
 	$( "#openplaques_searching" ).dialog( "open" );
