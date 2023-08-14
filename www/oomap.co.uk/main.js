@@ -13,7 +13,7 @@ import Feature from 'ol/feature';
 import {OSM, XYZ, BingMaps} from 'ol/source';
 import Select from 'ol/interaction/Select';
 import {Fill, Stroke, Style, Text, Circle, RegularShape} from 'ol/style';
-import {ScaleLine, defaults as defaultControls} from 'ol/control';
+import {Control, ScaleLine, defaults as defaultControls} from 'ol/control';
 import * as olProj from 'ol/proj';
 import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteractions,} from 'ol/interaction';
 import GPX from 'ol/format/GPX';
@@ -104,6 +104,67 @@ var newControlLL = [0, 0];
 var mapBound;
 var wgs84Poly;
 var purple = 'rgba(220, 40, 255, 1)';
+
+class SatelliteControl extends Control {
+  /**
+   * @param {Object} [opt_options] Control options.
+   */
+  constructor(opt_options) {
+    const options = opt_options || {};
+    const tipLabel = options.tipLabel ? options.tipLabel : 'Toggle satellite view';
+
+    const button = document.createElement('button');
+    button.innerHTML = 'S';
+    button.title = tipLabel;
+
+    const element = document.createElement('div');
+    element.className = 'ol-sat-view ol-placed ol-unselectable ol-control';
+    element.appendChild(button);
+
+    super({
+      element: element,
+      target: options.target,
+    });
+
+    button.addEventListener('click', this.handleSatView.bind(this), false);
+  }
+
+  handleSatView() {
+    toggleSatellite();
+  }
+}
+
+class GreyControl extends Control {
+  /**
+   * @param {Object} [opt_options] Control options.
+   */
+  constructor(opt_options) {
+    const options = opt_options || {};
+    const tipLabel = options.tipLabel ? options.tipLabel : 'Toggle greyscale map';
+
+    const button = document.createElement('button');
+    button.innerHTML = 'G';
+    button.title = tipLabel;
+
+    const element = document.createElement('div');
+    element.className = 'ol-grey-view ol-placed ol-unselectable ol-control';
+    element.appendChild(button);
+
+    super({
+      element: element,
+      target: options.target,
+    });
+
+    button.addEventListener('click', this.handleGreyView.bind(this), false);
+  }
+
+  handleGreyView() {
+    var gr = $('.greyscale');
+    var col = $('.colour');
+    gr.removeClass('greyscale').addClass('colour');
+    col.removeClass('colour').addClass('greyscale');
+  }
+}
 
 const container = document.getElementById('popup');
 const overlayContent = document.getElementById('popup-content');
@@ -730,7 +791,9 @@ function init()
       }
     } }).extend(
 		[
-			new ScaleLine({'geodesic': true, 'units': 'metric'})
+			new ScaleLine({'geodesic': true, 'units': 'metric'}),
+      new SatelliteControl(),
+      new GreyControl()
 		]),
 		view: new View({
 			projection: "EPSG:3857",
@@ -1325,7 +1388,7 @@ function handleControlTypeChange()
 {
 	var type = $("#c_type :radio:checked").attr("id");
   var control = null;
-  if (currentID) control = layerControls.getSource().getFeatureById(currentID);
+  if (currentID && controloptstate == "edit") control = layerControls.getSource().getFeatureById(currentID);
   if (control) control.set('type', type);  //render as new type while dialog is shown
 
 	if (type == "c_startfinish" || type == "c_cross" || type == "c_finish")
@@ -1576,6 +1639,7 @@ function handleDeleteSheet()
   layerPreview.setSource();
   preview=false;
   state = "initialzoom";
+  $(".ol-placed").hide();
 	handleZoom();
 
 	$( "#createmap" ).button("disable");
@@ -1890,6 +1954,7 @@ function handleClick(evt)
 			updateUrl();
 		}
 		$( "#getraster,#getworldfile,#getkmz" ).button("disable");
+    $(".ol-placed").show();
 		sheetCentreLL = evt.coordinate;
 		lookupMag(olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0]);
     olMap.getView().setCenter(sheetCentreLL);

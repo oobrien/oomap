@@ -141,7 +141,7 @@ a:active, a:hover { color: #cc0032; }
 {
 	display: flex;
 	flex-flow: row wrap;
-	flex 1;
+	flex: 1;
 	height: 100%;
 	min-height: 0;
 }
@@ -427,6 +427,29 @@ a:active, a:hover { color: #cc0032; }
         margin-left: -11px;
       }
 
+.ol-sat-view {
+  top: 2.5em;
+  right: .5em;
+}
+
+.ol-grey-view {
+  top: 4.5em;
+  right: .5em;
+}
+.ol-placed {
+	display: none;
+}
+
+.ol-control {
+	background-color: #fff6;
+	border-radius: 4px;
+	padding: 2px;
+}
+
+.ol-control button {
+	color: #fff;
+	background-color: #003c8880;
+}
 .features
 {
 	mix-blend-mode: multiply;
