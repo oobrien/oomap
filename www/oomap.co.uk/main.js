@@ -15,7 +15,7 @@ import Select from 'ol/interaction/Select';
 import {Fill, Stroke, Style, Text, Circle, RegularShape} from 'ol/style';
 import {Control, ScaleLine, defaults as defaultControls} from 'ol/control';
 import * as olProj from 'ol/proj';
-import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteractions,} from 'ol/interaction';
+import { DragRotateAndZoom, Translate, DragAndDrop, defaults as defaultInteractions } from 'ol/interaction';
 import GPX from 'ol/format/GPX';
 import GeoJSON from 'ol/format/GeoJSON';
 import {Point, Polygon, LineString} from 'ol/geom';
@@ -2405,6 +2405,7 @@ function loadMap(data)
 	}
   batchNumber++;
 	mapID = reqMapID;
+  $(".ol-placed").show();
   rebuildMapSheet();  //DPD
 	rebuildMapControls();
   rebuildDescriptions();
