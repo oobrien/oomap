@@ -472,6 +472,7 @@
 <Style name="power">
     <Rule>
         &maxscale_zoom13;
+        <Filter>&power; = 'yes'</Filter>
         <MarkersSymbolizer file="&symbols;/power.svg" placement="line" spacing="30" max-error="0.5" transform="scale(1.2)" />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>

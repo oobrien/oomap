@@ -328,6 +328,7 @@
 <Style name="power">
     <Rule>
         &maxscale_zoom13;
+        <Filter>&power; = 'yes'</Filter>
         <MarkersSymbolizer file="&symbols;/power.svg" placement="line" spacing="30" max-error="0.5" transform="scale(1.2)" />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
@@ -378,12 +379,12 @@
 	<MarkersSymbolizer file="&symbols;/wall.svg" placement="line" spacing="8" max-error="0.5" transform="scale(0.6)" />
         <LineSymbolizer stroke="&black;" stroke-width="0.81" stroke-linecap="square" />
     </Rule>
-    <!-- <Rule>
+    <Rule>
         &maxscale_zoom13;
         <Filter>&fences; = 'yes' and [barrier] = 'fence'</Filter>
 	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />
         <LineSymbolizer stroke="&black;" stroke-width="0.79" stroke-linecap="square" />
-    </Rule> -->
+    </Rule>
 </Style>
 
 <Style name="symbols" comp-op="darken">

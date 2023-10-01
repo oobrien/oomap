@@ -81,6 +81,7 @@ var hedges=true;
 var fences=true;
 var sidewalks=false;
 var linear=false;
+var power=true;
 var preview=false;
 
 //OpenLayers single-instance objects
@@ -1004,6 +1005,7 @@ function init()
 				fences = $('#fence').is(':checked');
         linear = $('#linear').is(':checked');
         sidewalks =  $('#sidewalk').is(':checked');
+        power =  $('#power').is(':checked');
         layerLines.setVisible(linear);
         if(linear){
           $(".scorecol").addClass('hidden');
@@ -1588,6 +1590,7 @@ function handleAdvancedOptions(pid)
 			$('#fence').prop('checked', fences);
       $('#linear').prop('checked', linear);
       $('#sidewalk').prop('checked', sidewalks);
+      $('#power').prop('checked', power);
 			$('#dpi').val(dpi);
 			$( "#advanced" ).dialog( "open" );
 }
@@ -2156,6 +2159,7 @@ function getURL(type)
   if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
   if (fences) {url += "|fences=yes"; } else {url += "|fences=no"; }
   if (sidewalks) {url += "|sidewalks=yes"; } else {url += "|sidewalks=no"; }
+  if (power) {url += "|power=yes"; } else {url += "|power=no"; }
   if (linear) {url += "|linear=yes"; } else {url += "|linear=no"; }
   url += "|dpi=" + dpi;
 

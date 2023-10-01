@@ -301,6 +301,7 @@ def createImage(path, fileformat):
         "\n<!ENTITY trees \"" + ("yes" if p.get('trees',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY hedges \"" + ("yes" if p.get('hedges',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY fences \"" + ("yes" if p.get('fences',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY power \"" + ("yes" if p.get('power',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY sidewalks \"" + ("yes" if p.get('sidewalks',"no") != "no" else "no") + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
