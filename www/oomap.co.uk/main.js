@@ -1309,6 +1309,7 @@ function init()
         e.preventDefault();
       }
   });
+  window.dispatchEvent(new Event('resize'));
 }
 
 function toggleSatellite () {
@@ -1962,6 +1963,7 @@ function handleClick(evt)
 		lookupMag(olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0]);
     olMap.getView().setCenter(sheetCentreLL);
 		rebuildMapSheet();
+    rebuildDescriptions();
 		state = "addcontrols";
 		$("#messageCentre").hide();
 		$("#messageAdd").effect("pulsate", {}, 500);
