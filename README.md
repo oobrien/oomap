@@ -1,11 +1,11 @@
 OpenOrienteeringMap
 =====
 
-This is a fork of [oomap](https://github.com/oobrien/oomap) with the following main changes:
+This is v4 of [oomap](https://github.com/oobrien/oomap) with the following main changes from v3:
 
 **Global:**  Mapping data is up-to-date, as required OpenStreetMap data is queried directly when producing the final map.
 
-**Global:** No large large mapping databases are required as data is fetched as needed.  This significantly reduces the overhead in running & updating an oomap server.
+**Global:** No large mapping databases are required as data is fetched as needed.  This significantly reduces the overhead in running & updating an oomap server.
 
 **Global:**  The standard OpenStreetMap rendering is used at all scales for the web view; map previews can be generated.
 
@@ -23,7 +23,7 @@ This is a fork of [oomap](https://github.com/oobrien/oomap) with the following m
 
 **Global:**  Finer-grained control of map output with filters for trees, hedges, fences, walls and drives, and user-defined output resolution.
 
-**UK:**  Higher resolution contours (5m or 10m spacing) are available for most of England, Wales and Northern Ireland, derived from LIDAR data.
+**UK:**  Higher resolution contours (5m or 10m spacing) are available for most of England, Wales and Northern Ireland, derived from LIDAR data.  Some coverage in Scotland.
 
 **Local:**  LIDAR-based 5m and 10m contours available for France, Belgium, Austria, Luxembourg, population centres in Australia and New Zealand, and a few bits of Ontario, Canada.
 
