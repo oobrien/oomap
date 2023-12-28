@@ -2169,6 +2169,15 @@ function getURL(type)
   return url;
 }
 
+function encodeXML(myString) {
+      myString = myString.replace(/&/g, "&amp;")
+                         .replace(/</g, "&lt;")
+                         .replace(/>/g, "&gt;")
+                         .replace(/"/g, "&quot;")
+                         .replace(/'/g, "&apos;");
+      return myString;
+}
+
 function KMLposition(control)
 {
   var num;
@@ -2298,7 +2307,7 @@ function generateXML()
 	var xmlintro = '<?xml version="1.0" encoding="UTF-8"?>\n<CourseData xmlns="http://www.orienteering.org/datastandard/3.0"\n' +
     'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\niofVersion="3.0"\n';
 	xmlintro += 'createTime="' + now.toISOString() + '"\n creator="OpenOrienteeringMap v4">\n';
-	xmlintro += '<Event><Name>' + mapTitle + '</Name>\n</Event>\n';
+	xmlintro += '<Event><Name>' + encodeXML(mapTitle) + '</Name>\n</Event>\n';
 
 	var xmlheader = '<RaceCourseData>\n';
 	var xmlfooter = '</Course>\n</RaceCourseData>\n</CourseData>';
