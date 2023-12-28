@@ -10,7 +10,8 @@ home_base = os.getenv('OOM_HOME')
 ee_user = os.getenv('OOM_EE_USR')
 ee_pw = os.getenv('OOM_EE_PW')
 home = home_base + "/maptiler"
-web_root = 'https://tile.dna-software.co.uk/'
+
+web_root = 'https://oomap.dna-software.co.uk/' #Default; will be overwritten later
 
 def parse_query(url):
     p = parse_qs(url.replace("|", "&").replace("%7C", "&")) #Replace "|" to allow standard parsing; in case "|" gets URL-encoded also replace "%7C"

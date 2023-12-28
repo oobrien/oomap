@@ -20,6 +20,15 @@ except ImportError:
 import requests
 
 def processRequest(environ):
+
+    global web_root
+    web_root = environ['wsgi.url_scheme']+'://'
+    if environ.get('HTTP_HOST'):
+        web_root += environ['HTTP_HOST']
+    else:
+        web_root += environ['SERVER_NAME']
+    web_root += '/'
+
     path = environ['QUERY_STRING']
     p = parse_query(path)
     if isStr(p):
@@ -96,7 +105,8 @@ def createImage(path, fileformat):
 
     mapid = p.get('mapid', 'new')
     club = p.get('club', '')
-    clubs = ['bdn','hh','havoc','waoc','nn','oo']
+    if not club.isalpha():   #sanitise
+        club=''
 
     slon = slat = flon = flat = 0
     if 'start' in p:
@@ -180,7 +190,10 @@ def createImage(path, fileformat):
     if len(mapid) == 13:    #If existing id, use that, otherwise generate new one.
         tmpid = "h" + mapid #Add "h" prefix - postgres tables can't start with a number
     else:
-        tmpid = "h" + hex(int(time.time()))[2:10] + hex(int(time.time()*1000000) % 0x100000)[2:7]
+        m=time.time()
+        sec = math.floor(m)
+        usec = math.floor(1000000 * (m - sec))
+        tmpid = "h" + '%8x%05x' % (sec, usec)
     styleFile = home + "/styles/" + tmpid + ".xml"
 
     # Get contour attribution from custom Postgres DB table
@@ -288,6 +301,8 @@ def createImage(path, fileformat):
         "\n<!ENTITY trees \"" + ("yes" if p.get('trees',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY hedges \"" + ("yes" if p.get('hedges',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY fences \"" + ("yes" if p.get('fences',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY power \"" + ("yes" if p.get('power',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY sidewalks \"" + ("yes" if p.get('sidewalks',"no") != "no" else "no") + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">" + \
@@ -656,8 +671,9 @@ def createImage(path, fileformat):
     ctx.stroke()
 
     # Adornments - Club logo
-    if style != "blueprint" and club in clubs:
-        logoSurface = cairo.ImageSurface.create_from_png(home + "/images/" + club + ".png")
+    clubPath = home + "/images/" + club + ".png"
+    if style != "blueprint" and os.path.isfile(clubPath):
+        logoSurface = cairo.ImageSurface.create_from_png(clubPath)
         ctx = cairo.Context(surface)
         scale = ADORN_CLOGO_SCALE / logoSurface.get_height()
         width = logoSurface.get_width() *scale

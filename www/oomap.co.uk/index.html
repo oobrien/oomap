@@ -15,146 +15,143 @@
 
 	</head>
 	<body>
-		<div id='toppanel'>
-			<form id='search'> <label for="postcode"> Postcode: </label> <input type='text' size='10' id='postcode' />
-				<button id='searchButton' type="submit">Jump</button>
-			</form>
-			<form id='load'> <label for="savedMapID">Map ID:</label> <input type='text' size='10' id='savedMapID' />
-				<button id='loadButton' type="submit">Load</button>
-			</form>
-			<div id='messagePanelHolder'>
-				<div class='messagePanel' id='messageZoom'>Tip: zoom in to see the orienteering map, before setting options or adding controls.</div>
-				<div class='messagePanel' id='messageCentre'>Tip: click where you want the centre of your sheet to be. Don't forget you can drag the map to move it.</div>
-				<div class='messagePanel' id='messageAdd'>Tip: click to add controls, To move the map, select and then drag the blue marker. Once done, click "Save" to get PDF.</div>
-			</div>
-			<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v4.0</span></div>
-		</div>
-		<div id='optionspanel'>
-			<div id='toolbar' class="ui-widget-header ui-corner-all">
-				<table>
-					<tr>
-						<td rowspan='3' style='vertical-align: top;'>
-							<div id="mapstyle" class="buttonset">
-								<input type="radio" id="streeto" name="mapstyle" />
-									<label for="streeto"><img src='/images/oom_s.png' alt='Street-O' style='width: 60px; height: 60px;' /><br />StreetO</label>
-								<input type="radio" id="oterrain" name="mapstyle" />
-									<label for="oterrain"><img src='/images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
-								<input type="radio" id="blueprint" name="mapstyle" />
-									<label for="blueprint"><img src='/images/oom_blueprint.png' alt='Blueprint' style='width: 60px; height: 60px;' /><br />Blueprint</label>
-								<input type="radio" id="futurecity" name="mapstyle" />
-									<label for="futurecity"><img src='/images/oom_f.png' alt='Futurecity' style='width: 60px; height: 60px;' /><br />Futurecity</label>
-							</div>
-						</td>
-						<td colspan='3'>
-							Scale 1:
-							<div id="mapscale">
-								<input type="radio" id="s4000" value="4000" name="mapscale" /><label for="s4000">4000</label>
-								<input type="radio" id="s5000" value="5000" name="mapscale" /><label for="s5000">5000</label>
-								<input type="radio" id="s7500" value="7500" name="mapscale" /><label for="s7500">7500</label>
-								<input type="radio" id="s10000" value="10000" name="mapscale" checked="checked" /><label for="s10000">10000</label>
-								<input type="radio" id="s12500" value="12500" name="mapscale" /><label for="s12500">12500</label>
-								<input type="radio" id="s15000" value="15000" name="mapscale" /><label for="s15000">15k</label>
-								<input type="radio" id="s20000" value="20000" name="mapscale" /><label for="s20000">20k</label>
-								<input type="radio" id="s40000" value="40000" name="mapscale" /><label for="s40000">40k</label>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Sheet
-							<div id="papersize">
-								<input type="radio" id="p2970-2100" name="papersize" checked="checked" /><label for="p2970-2100">A4</label>
-								<input type="radio" id="p4200-2970" name="papersize" /><label for="p4200-2970">A3</label>
-								<input type="radio" id="p2794-2159" name="papersize" /><label for="p2794-2159">Letter</label>
-								<!-- <input type="radio" id="p4430-3140" name="papersize" /><label for="p4430-3140">RA3</label> -->
-							</div>
-						</td>
-						<td>
-							<div id="paperorientation">
-								<input type="radio" id="portrait" name="paperorientation" /><label for="portrait">Portrait</label>
-								<input type="radio" id="landscape" name="paperorientation" checked="checked" /><label for="landscape">Landscape</label>
-							</div>
-						</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td colspan='3'>
-							<div id="specialoptions">Delete
-								<button id='deletesheet'>Sheet</button>
-								<button id='deleteMarkers'>Markers</button>&nbsp;&nbsp;&nbsp;Add
-								<button id='getPostboxes'>Map Features</button>
-								<button id='getOpenplaques'>OpenPlaques</button>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td colspan='3'>
-							Contours
-							<div id="contours">
-								<input type="radio" id="SRTM-5" value="SRTM-5" name="contours" checked="checked"/><label for="SRTM-5"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (5m)</abbr></label>
-								<input type="radio" id="SRTM-10" value="SRTM-10" name="contours" /><label for="SRTM-10"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (10m)</abbr></label>
-								<input type="radio" id="COPE-5" value="COPE-5" name="contours" /><label for="COPE-5"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (5m)</abbr></label>
-								<input type="radio" id="COPE-10" value="COPE-10" name="contours" /><label for="COPE-10"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (10m)</abbr></label>
-								<input type="radio" id="OS-10" value="OS-10" name="contours"  /><label for="OS-10"><abbr title="Ordnance Survey, GB only (live preview)">OS (10m)</abbr></label>
-								<!-- <input type="radio" id="LIDAR-2p5" value="LIDAR-2p5" name="contours" /><label for="LIDAR-2p5"><abbr title="LIDAR, UK + bits of Oz, NZ, Austria & Canada (live preview)">LIDAR (2.5m)</abbr></label> -->
-								<input type="radio" id="LIDAR-5" value="LIDAR-5" name="contours" /><label for="LIDAR-5"><abbr title="LIDAR, UK, Austria, France + bits of Oz, NZ & Canada (live preview)">LIDAR (5m)</abbr></label>
-								<input type="radio" id="LIDAR-10" value="LIDAR-10" name="contours" /><label for="LIDAR-10"><abbr title="LIDAR, UK, Austria, France + bits of Oz, NZ & Canada (live preview)">LIDAR (10m)</abbr></label>
-								<input type="radio" id="NONE-0" value="NONE-0" name="contours" /><label for="NONE-0">None</label>
-							</div>
-						</td>
-					</tr>
-				</table>
-			</div>
-			<div id='create' class="ui-widget-header ui-corner-all">
-				<button id='createmap'>Save & get PDF map</button><br />
-				Get: <button id='getraster'>JPG</button>
-				<button id='getworldfile'>JGW</button>
-				<button id='createclue'>Clues</button><br />
-				MapRun: <button id='getkmz'>KMZ</button> <a href='#' id='getkml'>KML</a>&nbsp;&nbsp;&nbsp;<a href='#' id='getxml'><abbr title="IOF v3.0 XML, for e.g. UsynligO">XML</abbr></a><br />
-				<button id='opts'>Rendering options</button>
-				<button id='preview'>Preview</button>
-			</div>
-		</div>
-		<div id='mainpanel'>
-			<div id='controlpanel'>
-				<table id='controldescriptions'>
-					<tr id='spacerrow'><th style='width: 40px;'></th><th style='width: 30px;'></th><th></th><th></th><th style='width:64px;'></th></tr>
-					<tr><th colspan='4' id='maptitle'></th><th><span class="edit" id="edittitle">Edit</span></th></tr>
-
-					<tr>
-						<th colspan='3' id='eventdate_holder'>Event Date<br /><input type="text" id="eventdate">&nbsp;<input type="text" id="eventdate_alternate" size="30"></th>
-						<th colspan='2' id='club_holder'>Club<br /><select id="club">
-							<option value="none">None</option>
-							<option value="bdn">Bris.DawnNav</option>
-							<option value="havoc">HAVOC</option>
-							<option value="hh">HH</option>
-							<option value="nn">NN</option>
-							<option value="oo">O.Ottowa</option>
-							<option value="waoc">WAOC</option>
-						</select></th>
-					</tr>
-
-					<tr><th colspan='3' id='scalecaption'></th><th colspan='2' id='contourcaption'>10m&nbsp;contours</th></tr>
-					<tr><td colspan='4' id='racedescription'></td><th><span class="edit" id="editinstructions">Edit</span></th></tr>
-					<tr><th colspan='3' id='controlcaption'>0 controls</th><th colspan='2' id='pointscaption'>0 points</th></tr>
-				</table>
-				<br> <b>Drag</b> control descriptions in this table to re-order.<br><br>
-				<b>Ctrl-Z</b> will undo the last add controls operation.<br><br>
-				<b>Ctrl-G</b> will toggle a greyscale mapsheet.<br><br>
-			</div>
-
-			<div id='attribution'>
-				<div>
-					<a href="https://oomap.dna-software.co.uk/help/"  target=”_blank” rel=”noopener noreferrer”> <b>HELP</b></a>
-					<a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are from various sources, as attributed on the PDF rendering. Plaques from Open Plaques project.'); return false;">Credit</a>
-					<a href="#" id="about"> About</a>
-					<a href="https://blog.oomap.co.uk/oom/" target=”_blank” rel=”noopener noreferrer”>Blog</a>
-				  <!-- <a href="https://www.orienteeringfoundation.org.uk/" target=”_blank” rel=”noopener noreferrer”>Support</a> -->
+		<div id='mainwindow'>
+			<div id='toppanel'>
+				<form id='search'> <label for="postcode"> Postcode: </label> <input type='text' size='10' id='postcode' />
+					<button id='searchButton' type="submit">Jump</button>
+				</form>
+				<form id='load'> <label for="savedMapID">Map ID:</label> <input type='text' size='10' id='savedMapID' />
+					<button id='loadButton' type="submit">Load</button>
+				</form>
+				<div id='messagePanelHolder'>
+					<div class='messagePanel' id='messageZoom'>Tip: zoom in to see the orienteering map, before setting options or adding controls.</div>
+					<div class='messagePanel' id='messageCentre'>Tip: click where you want the centre of your sheet to be. Don't forget you can drag the map to move it.</div>
+					<div class='messagePanel' id='messageAdd'>Tip: click to add controls, To move the map, drag the blue marker. Once done, click "Save" to get PDF.</div>
 				</div>
-				<script type='text/javascript'>kofiwidget2.init('Buy Ollie a coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
-				<script type='text/javascript'>kofiwidget2.init('Buy David a coffee', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script>
+				<div id='title'>OPENORIENTEERINGMAP<span id='titlestatus'>v4.0</span></div>
 			</div>
-			<div id='map'></div>
+			<div id='optionspanel'>
+				<div id='toolbar' class="ui-widget-header ui-corner-all">
+					<table>
+						<tr>
+							<td rowspan='3' style='vertical-align: top;'>
+								<div id="mapstyle" class="buttonset">
+									<input type="radio" id="streeto" name="mapstyle" />
+										<label for="streeto"><img src='/images/oom_s.png' alt='Street-O' style='width: 60px; height: 60px;' /><br />StreetO</label>
+									<input type="radio" id="oterrain" name="mapstyle" />
+										<label for="oterrain"><img src='/images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
+									<input type="radio" id="blueprint" name="mapstyle" />
+										<label for="blueprint"><img src='/images/oom_blueprint.png' alt='Blueprint' style='width: 60px; height: 60px;' /><br />Blueprint</label>
+									<input type="radio" id="futurecity" name="mapstyle" />
+										<label for="futurecity"><img src='/images/oom_f.png' alt='Futurecity' style='width: 60px; height: 60px;' /><br />Futurecity</label>
+								</div>
+							</td>
+							<td colspan='3'>
+								Scale 1:
+								<div id="mapscale">
+									<input type="radio" id="s4000" value="4000" name="mapscale" /><label for="s4000">4000</label>
+									<input type="radio" id="s5000" value="5000" name="mapscale" /><label for="s5000">5000</label>
+									<input type="radio" id="s7500" value="7500" name="mapscale" /><label for="s7500">7500</label>
+									<input type="radio" id="s10000" value="10000" name="mapscale" checked="checked" /><label for="s10000">10000</label>
+									<input type="radio" id="s12500" value="12500" name="mapscale" /><label for="s12500">12500</label>
+									<input type="radio" id="s15000" value="15000" name="mapscale" /><label for="s15000">15k</label>
+									<input type="radio" id="s20000" value="20000" name="mapscale" /><label for="s20000">20k</label>
+									<input type="radio" id="s40000" value="40000" name="mapscale" /><label for="s40000">40k</label>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Sheet
+								<div id="papersize">
+									<input type="radio" id="p2970-2100" name="papersize" checked="checked" /><label for="p2970-2100">A4</label>
+									<input type="radio" id="p4200-2970" name="papersize" /><label for="p4200-2970">A3</label>
+									<input type="radio" id="p2794-2159" name="papersize" /><label for="p2794-2159">Letter</label>
+									<!-- <input type="radio" id="p4430-3140" name="papersize" /><label for="p4430-3140">RA3</label> -->
+								</div>
+							</td>
+							<td>
+								<div id="paperorientation">
+									<input type="radio" id="portrait" name="paperorientation" /><label for="portrait">Portrait</label>
+									<input type="radio" id="landscape" name="paperorientation" checked="checked" /><label for="landscape">Landscape</label>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr>
+							<td colspan='3'>
+								<div id="specialoptions">Delete
+									<button id='deletesheet'>Sheet</button>
+									<button id='deleteMarkers'>Markers</button>&nbsp;&nbsp;&nbsp;Add
+									<button id='getPostboxes'>Map Features</button>
+									<button id='getOpenplaques'>OpenPlaques</button>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan='3'>
+								<a href="https://oomap.dna-software.co.uk/help/details/contours/" target=”_blank” rel=”noopener noreferrer”>Contours</a>
+								<div id="contours">
+									<input type="radio" id="SRTM-5" value="SRTM-5" name="contours" checked="checked"/><label for="SRTM-5"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (5m)</abbr></label>
+									<input type="radio" id="SRTM-10" value="SRTM-10" name="contours" /><label for="SRTM-10"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (10m)</abbr></label>
+									<input type="radio" id="COPE-5" value="COPE-5" name="contours" /><label for="COPE-5"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (5m)</abbr></label>
+									<input type="radio" id="COPE-10" value="COPE-10" name="contours" /><label for="COPE-10"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (10m)</abbr></label>
+									<input type="radio" id="OS-10" value="OS-10" name="contours"  /><label for="OS-10"><abbr title="Ordnance Survey, GB only (live preview)">OS (10m)</abbr></label>
+									<input type="radio" id="LIDAR-5" value="LIDAR-5" name="contours" /><label for="LIDAR-5"><abbr title="LIDAR, where available (live preview)">LIDAR (5m)</abbr></label>
+									<input type="radio" id="LIDAR-10" value="LIDAR-10" name="contours" /><label for="LIDAR-10"><abbr title="LIDAR, where available (live preview)">LIDAR (10m)</abbr></label>
+									<input type="radio" id="NONE-0" value="NONE-0" name="contours" /><label for="NONE-0">None</label>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div id='create' class="ui-widget-header ui-corner-all">
+					<button id='createmap'>Save & get PDF map</button><br />
+					Get: <button id='getraster'>JPG</button>
+					<button id='getworldfile'>JGW</button>
+					<button id='createclue'>Clues</button><br />
+					MapRun: <button id='getkmz'>KMZ</button> <a href='#' id='getkml'>KML</a>&nbsp;&nbsp;&nbsp;<a href='#' id='getxml'><abbr title="IOF v3.0 XML, for e.g. UsynligO">XML</abbr></a><br />
+					<button id='opts'>Rendering options</button>
+					<button id='preview'>Preview</button>
+				</div>
+			</div>
+			<div id='mainpanel'>
+				<div id='rhs'>
+				<div id='controlpanel'>
+					<div id='controldescriptions'>
+						<div id='spacerrow' ></div>
+						<div id='maptitle' class='grid bold'></div>
+						<div class='grid'><div class='edit' id="edittitle">Edit</div></div>
+						<div id='eventdate_holder' class='grid'>
+							<span class='bold'>Event Date</span>
+							<input type="text" id="eventdate">&nbsp;<input type="text" id="eventdate_alternate" size="30">
+						</div>
+						<div id='club_holder' class='grid'><span class='bold'><a href="https://oomap.dna-software.co.uk/help/club-logos/" target=”_blank” rel=”noopener noreferrer”>Club</a></span><br />
+							<select id="club"></select></div>
+						<div id='scalecaption' class='grid bold'></div>
+						<div id='contourcaption' class='grid bold'>10m&nbsp;contours</div>
+						<div id='racedescription' class='grid'></div>
+						<div class='grid'><div class='edit' id="editinstructions">Edit</div></div>
+						<div id='controlcaption' class='grid bold'>0 controls</div>
+						<div id='pointscaption' class='grid bold'>0 points</div>
+					</div>
+					<div class='ctext'> <b>Drag</b> control descriptions in this table to re-order.</div>
+					<div class='ctext'><b>Ctrl-Z</b> will undo the last add controls operation.</div>
+				</div>
+
+				<div id='attribution'>
+					<div>
+						<a href="https://oomap.dna-software.co.uk/help/"  target=”_blank” rel=”noopener noreferrer”> <b>HELP</b></a>
+						<a href="" onclick="alert('Background data is Copyright OpenStreetMap contributors. The tile imagery used for the initial zoom layers is CC-By-SA OpenStreetMap. The contours are from various sources, as attributed on the PDF rendering. Plaques from Open Plaques project.'); return false;">Credit</a>
+						<a href="#" id="about"> About</a>
+						<a href="https://oomap.dna-software.co.uk/help/blog/" target=”_blank” rel=”noopener noreferrer”>Blog</a>
+					</div>
+					<script type='text/javascript'>kofiwidget2.init('Buy Ollie a coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
+					<script type='text/javascript'>kofiwidget2.init('Buy David a coffee', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script>
+				</div>
+			</div>
+				<div id='map'></div>
+			</div>
 		</div>
 		<div id="newcontroloptions" title="Control options" style='display: none;'>
 		  <p class="validateTips">Tip: There can only be one start or finish control. Adding another moves it.</p>
@@ -386,18 +383,34 @@
 					<input type="checkbox" id="fence" name="fence" value="yes">
 				</td>
 				<td>
+					<label for ="sidewalk"> Show sidewalks</label>
+				</td>
+				<td>
+					<input type="checkbox" id="sidewalk" name="sidewalk" value="yes">
+				</td>
+			</tr>
+			<tr>
+				<td>
 					<label for ="linear"> Linear course</label>
 				</td>
 				<td>
 					<input type="checkbox" id="linear" name="linear" value="yes">
 				</td>
+				<td>
+					<label for ="power">Show powerlines</label>
+				</td>
+				<td>
+					<input type="checkbox" id="power" name="power" value="yes">
+				</td>
 			</tr>
+			<tr>
 			<td>
 				<label for="dpi">Map resolution (dpi)</label>
 			</td>
 			<td>
 				<input type="text" name="dpi" id="dpi" size='3' maxlength='3' class="text ui-widget-content ui-corner-all" />
 			</td>
+		</tr>
 			</table>
 		  </fieldset>
 		</div>

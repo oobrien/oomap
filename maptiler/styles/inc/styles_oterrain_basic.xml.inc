@@ -156,6 +156,18 @@
     </Rule>
 </Style>
 
+<Style name="driveways">
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom13;
+        <LineSymbolizer stroke="&driveway;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom14;
+        <LineSymbolizer stroke="&driveway;" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    </Rule>
+</Style>
+
 <Style name="roads-core">
    <Rule>
        &maxscale_zoom12;
@@ -460,6 +472,7 @@
 <Style name="power">
     <Rule>
         &maxscale_zoom13;
+        <Filter>&power; = 'yes'</Filter>
         <MarkersSymbolizer file="&symbols;/power.svg" placement="line" spacing="30" max-error="0.5" transform="scale(1.2)" />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
