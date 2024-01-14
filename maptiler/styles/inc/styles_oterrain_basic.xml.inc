@@ -248,6 +248,7 @@
         <Filter>&path; and not &tunnel;</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2" />
     </Rule>
+
 </Style>
 
 <Style name="islands">
@@ -278,18 +279,25 @@
    <Rule>
         &maxscale_zoom12;
         <Filter>[landuse] = 'quarry'</Filter>
-        <PolygonPatternSymbolizer file="&symbols;/quarry2.png" />
+        <PolygonSymbolizer fill="&grey30;" gamma="0.6" />
+        <PolygonPatternSymbolizer file="&symbols;/quarry.svg" transform="scale(0.5)"/>
         <LineSymbolizer stroke="&grey50;" stroke-width="0.5" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'nature_reserve' or [landuse] = 'orchard'</Filter>
+        <Filter>[leisure] = 'nature_reserve'</Filter>
         <PolygonSymbolizer fill="&green30;" gamma="0.6" />
+    </Rule>
+		<Rule>
+        &maxscale_zoom12;
+        <Filter>[landuse] = 'orchard'</Filter>
+        <PolygonPatternSymbolizer file="&symbols;/orchard.svg" transform="scale(0.18, 0.18)"  />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         <Filter>([landuse] = 'cemetery' or [landuse] = 'grave_yard' or [amenity] = 'grave_yard')</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+				<PolygonPatternSymbolizer file="&symbols;/tomb.svg" transform="scale(0.2)"  />
     </Rule>
     <Rule>
         &maxscale_zoom12;
@@ -335,13 +343,13 @@
         &maxscale_zoom12;
         <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/blackdot.png" transform="scale(1.0, 1.0)" />
+        <PolygonPatternSymbolizer file="&symbols;/crop2.svg" transform="scale(0.25, 0.25)" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/sand.png" transform="scale(1.0, 1.0)" />
+        <PolygonPatternSymbolizer file="&symbols;/sand.svg" transform="scale(0.1, 0.1)" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
@@ -359,13 +367,17 @@
         <Filter>[leisure] = 'track'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2" />
     </Rule>
-</Style>
-
-<Style name="graveyard_overprint">
-    <Rule>
+		<Rule>
         &maxscale_zoom12;
-        <!-- <PolygonPatternSymbolizer file="&symbols;/tomb.png" transform="scale(0.01)" /> -->
+        <Filter>[landuse] = 'vineyard'</Filter>
+				<PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+        <PolygonPatternSymbolizer file="&symbols;/vineyard.svg" transform="scale(0.3, 0.3)" />
     </Rule>
+		<Rule>
+				 &maxscale_zoom12;
+				 <Filter>[natural] = 'scree'</Filter>
+				 <PolygonPatternSymbolizer file="&symbols;/scree.svg" transform="scale(0.3)"  />
+		 </Rule>
 </Style>
 
 <Style name="water_areas_casing">
@@ -449,7 +461,7 @@
     <Rule>
         &maxscale_zoom12;
         <Filter>([natural] = 'wetland' or [natural] = 'marsh')</Filter>
-        <PolygonPatternSymbolizer file="&symbols;/marsh.png" />
+        <PolygonPatternSymbolizer file="&symbols;/marsh.svg" transform="scale(0.014)" />
     </Rule>
 </Style>
 
@@ -529,6 +541,17 @@
         <MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.4" max-error="0.5" transform="scale(0.7)"  />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
+		<Rule>
+        &maxscale_zoom12;
+        &minscale_zoom13;
+        <Filter>[man_made] = 'cutline'</Filter>
+        <LineSymbolizer stroke="&yellow50;" stroke-width="1.0" stroke-linejoin="round" stroke-linecap="butt" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom14;
+        <Filter>[man_made] = 'cutline'</Filter>
+        <LineSymbolizer stroke="&yellow50;" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="butt" />
+    </Rule>
 </Style>
 
 <Style name="coast-line">
@@ -607,5 +630,39 @@
         &maxscale_zoom17;
         <Filter>[amenity]='bench' or [leisure]='picnic_table' or [amenity]='waste_basket' or [amenity]='recycling'</Filter>
         <PointSymbolizer file="&symbols;/cross.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
+    </Rule>
+		<Rule>
+        &maxscale_zoom15;
+        &minscale_zoom15;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(0.7,0.7)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom16;
+        &minscale_zoom16;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(1,1)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom17;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(1.3,1.3)" />
+    </Rule>
+		<Rule>
+        &maxscale_zoom15;
+        &minscale_zoom15;
+        <Filter>[natural]='rock' or [natural]='stone'</Filter>
+        <PointSymbolizer file="&symbols;/stone.svg" allow-overlap="true" transform="scale(0.1,0.1)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom16;
+        &minscale_zoom16;
+        <Filter>[natural]='rock' or [natural]='stone'</Filter>
+        <PointSymbolizer file="&symbols;/stone.svg" allow-overlap="true" transform="scale(0.13,0.13)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom17;
+        <Filter>[natural]='rock' or [natural]='stone'</Filter>
+        <PointSymbolizer file="&symbols;/stone.svg" allow-overlap="true" transform="scale(0.22,0.22)" />
     </Rule>
 </Style>

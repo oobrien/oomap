@@ -29,27 +29,12 @@
                 or leisure is not null
                 or amenity in ('parking','university','college','school','hospital','grave_yard')
                 or highway in ('pedestrian', 'services')
-                or "natural" in ('field','beach','heath','mud','wood','scrub','meadow','crop','grass','grassland')
+                or "natural" in ('field','beach','heath','mud','wood','scrub','meadow','crop','grass','grassland','scree')
                 or power in ('station','sub_station')
                 or tourism in ('attraction','camp_site','caravan_site','picnic_site','zoo')
             order by z_order,way_area desc
             ) as leisure
       </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="graveyard_overprint" status="on" srs="&srs900913;">
-    <StyleName>graveyard_overprint</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Intersection(way, &box3857;) as way,amenity,landuse
-            from &prefix;_polygon
-            where (landuse in ('cemetery', 'grave_yard')
-                or amenity = 'grave_yard')
-            order by z_order,way_area desc
-            ) as leisure
-        </Parameter>
     </Datasource>
 </Layer>
 
@@ -162,7 +147,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Intersection(way, &box3857;) as way,barrier,"natural",man_made,leisure from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
+            (select ST_Intersection(way, &box3857;) as way,barrier,"natural",man_made,leisure from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made in ('embankment','cutline')) as roads
         </Parameter>
     </Datasource>
 </Layer>
@@ -172,7 +157,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Intersection(way, &box3857;) as way,barrier,"natural",leisure from &prefix;_polygon where barrier is not null or "natural"='hedge') as barriers
+            (select ST_Intersection(way, &box3857;) as way,barrier,"natural",man_made,leisure from &prefix;_polygon where barrier is not null or "natural"='hedge') as barriers
         </Parameter>
     </Datasource>
 </Layer>

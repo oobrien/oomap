@@ -2293,7 +2293,7 @@ function getControlList()
   getSortedControls('c_finish').length == 0 ? list=list.concat(getSortedControls('c_startfinish')) : list=list.concat(getSortedControls('c_finish'));
   //If last control is start, recast as a finish.
   var fcontrol = list.pop();
-  if (fcontrol.type == 'c_startfinish') {fcontrol.type = 'c_finish';}
+  if (fcontrol.type == 'c_startfinish') {fcontrol.type = 'c_finish'; fcontrol.id = 'F';}
   list.push(fcontrol);
   return list;
 }

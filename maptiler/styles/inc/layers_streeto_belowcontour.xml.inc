@@ -19,7 +19,7 @@
                 or leisure is not null
                 or amenity in ('parking','university','college','school','hospital','grave_yard')
                 or highway in ('pedestrian', 'services')
-                or "natural" in ('field','beach','heath','mud','wood','scrub','meadow','crop','grass','grassland')
+                or "natural" in ('field','beach','heath','mud','wood','scrub','meadow','crop','grass','grassland','scree')
                 or power in ('station','sub_station')
                 or tourism in ('attraction','camp_site','caravan_site','picnic_site','zoo')
             order by z_order,way_area desc
