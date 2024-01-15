@@ -1,15 +1,15 @@
 <Style name="land">
-	<Rule>
-		&maxscale_zoom12;
-		<PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-	</Rule>
+  <Rule>
+    &maxscale_zoom12;
+    <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+  </Rule>
 </Style>
 
 <Style name="coast-poly">
-	<Rule>
-		&maxscale_zoom12;
-	    <PolygonSymbolizer fill="&blue50;" />
-	</Rule>
+  <Rule>
+    &maxscale_zoom12;
+      <PolygonSymbolizer fill="&blue50;" />
+  </Rule>
 </Style>
 
 <Style name="buildings-casing">
@@ -27,26 +27,26 @@
 </Style>
 
 <Style name="bridges-casing">
-	<Rule>
-		&maxscale_zoom13;
-		<Filter>&major_road;</Filter>
-		<LineSymbolizer stroke="&black;" stroke-width="9" stroke-linecap="butt" />
-	</Rule>
-	<Rule>
-		&maxscale_zoom13;
-		<Filter>&minor_road; or &service_road; or &track;</Filter>
-		<LineSymbolizer stroke="&black;" stroke-width="7.2" stroke-linecap="butt" />
-	</Rule>
-	<Rule>
-		&maxscale_zoom13;
-		<Filter>&path;</Filter>
-		<LineSymbolizer stroke="&black;" stroke-width="4.75" stroke-linecap="butt" />
-	</Rule>
-	<Rule>
-		&maxscale_zoom13;
-		<Filter>(&railway; or &tram;) and &rail; ='yes'</Filter>
-		<LineSymbolizer stroke="&black;" stroke-width="7" stroke-linecap="butt" />
-	</Rule>
+  <Rule>
+    &maxscale_zoom13;
+    <Filter>&major_road;</Filter>
+    <LineSymbolizer stroke="&black;" stroke-width="9" stroke-linecap="butt" />
+  </Rule>
+  <Rule>
+    &maxscale_zoom13;
+    <Filter>&minor_road; or &service_road; or &track;</Filter>
+    <LineSymbolizer stroke="&black;" stroke-width="7.2" stroke-linecap="butt" />
+  </Rule>
+  <Rule>
+    &maxscale_zoom13;
+    <Filter>&path;</Filter>
+    <LineSymbolizer stroke="&black;" stroke-width="4.75" stroke-linecap="butt" />
+  </Rule>
+  <Rule>
+    &maxscale_zoom13;
+    <Filter>(&railway; or &tram;) and &rail; ='yes'</Filter>
+    <LineSymbolizer stroke="&black;" stroke-width="7" stroke-linecap="butt" />
+  </Rule>
 </Style>
 
 <Style name="bridges-core">
@@ -288,7 +288,7 @@
         <Filter>[leisure] = 'nature_reserve'</Filter>
         <PolygonSymbolizer fill="&green30;" gamma="0.6" />
     </Rule>
-		<Rule>
+    <Rule>
         &maxscale_zoom12;
         <Filter>[landuse] = 'orchard'</Filter>
         <PolygonPatternSymbolizer file="&symbols;/orchard.svg" transform="scale(0.18, 0.18)"  />
@@ -297,7 +297,7 @@
         &maxscale_zoom12;
         <Filter>([landuse] = 'cemetery' or [landuse] = 'grave_yard' or [amenity] = 'grave_yard')</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-				<PolygonPatternSymbolizer file="&symbols;/tomb.svg" transform="scale(0.2)"  />
+        <PolygonPatternSymbolizer file="&symbols;/tomb.svg" transform="scale(0.2)"  />
     </Rule>
     <Rule>
         &maxscale_zoom12;
@@ -367,17 +367,17 @@
         <Filter>[leisure] = 'track'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2" />
     </Rule>
-		<Rule>
+    <Rule>
         &maxscale_zoom12;
         <Filter>[landuse] = 'vineyard'</Filter>
-				<PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
         <PolygonPatternSymbolizer file="&symbols;/vineyard.svg" transform="scale(0.3, 0.3)" />
     </Rule>
-		<Rule>
-				 &maxscale_zoom12;
-				 <Filter>[natural] = 'scree'</Filter>
-				 <PolygonPatternSymbolizer file="&symbols;/scree.svg" transform="scale(0.3)"  />
-		 </Rule>
+    <Rule>
+         &maxscale_zoom12;
+         <Filter>[natural] = 'scree'</Filter>
+         <PolygonPatternSymbolizer file="&symbols;/scree.svg" transform="scale(0.3)"  />
+     </Rule>
 </Style>
 
 <Style name="water_areas_casing">
@@ -397,25 +397,25 @@
 <!--
 <Style name="water_lines_casing">
     <Rule>
-	    <Filter>not &tunnel;</Filter>
+      <Filter>not &tunnel;</Filter>
         &maxscale_zoom12;
         &minscale_zoom12;
         <LineSymbolizer stroke="&black;" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="butt" />
     </Rule>
     <Rule>
-	    <Filter>not &tunnel;</Filter>
+      <Filter>not &tunnel;</Filter>
         &maxscale_zoom13;
         &minscale_zoom13;
         <LineSymbolizer stroke="&black;" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="butt" />
     </Rule>
     <Rule>
-	    <Filter>not &tunnel;</Filter>
+      <Filter>not &tunnel;</Filter>
         &maxscale_zoom14;
         &minscale_zoom16;
         <LineSymbolizer stroke="&black;" stroke-width="4.6" stroke-linejoin="round" stroke-linecap="butt" />
     </Rule>
     <Rule>
-	    <Filter>not &tunnel;</Filter>
+      <Filter>not &tunnel;</Filter>
         &maxscale_zoom17;
         <LineSymbolizer stroke="&black;" stroke-width="6.0" stroke-linejoin="round" stroke-linecap="butt" />
     </Rule>
@@ -433,25 +433,25 @@
 
 <Style name="water_lines_core">
     <Rule>
-	    <Filter>not &tunnel;</Filter>
+      <Filter>not &tunnel;</Filter>
         &maxscale_zoom12;
         &minscale_zoom12;
         <LineSymbolizer stroke="&blue50;" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
-	    <Filter>not &tunnel;</Filter>
+      <Filter>not &tunnel;</Filter>
         &maxscale_zoom13;
         &minscale_zoom13;
         <LineSymbolizer stroke="&blue50;" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
 <Rule>
-	    <Filter>not &tunnel;</Filter>
+      <Filter>not &tunnel;</Filter>
         &maxscale_zoom14;
         &minscale_zoom16;
         <LineSymbolizer stroke="&blue50;" stroke-width="3.0" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
     <Rule>
-	    <Filter>not &tunnel;</Filter>
+      <Filter>not &tunnel;</Filter>
         &maxscale_zoom17;
         <LineSymbolizer stroke="&blue50;" stroke-width="4.4" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
@@ -520,7 +520,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom14;
-	&minscale_zoom15;
+  &minscale_zoom15;
         <Filter>&hedges; = 'yes' and ([natural]='hedge' or [barrier] = 'hedge')</Filter>
         <LineSymbolizer stroke="&green100;" stroke-width="2" />
     </Rule>
@@ -541,7 +541,7 @@
         <MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.4" max-error="0.5" transform="scale(0.7)"  />
         <LineSymbolizer stroke="&black;" stroke-width="1.0" stroke-linecap="square" />
     </Rule>
-		<Rule>
+    <Rule>
         &maxscale_zoom12;
         &minscale_zoom13;
         <Filter>[man_made] = 'cutline'</Filter>
@@ -565,7 +565,7 @@
     <Rule>
         &maxscale_zoom13;
         &minscale_zoom13;
-	<Filter>&trees; = 'yes' and [natural]='tree'</Filter>
+  <Filter>&trees; = 'yes' and [natural]='tree'</Filter>
         <PointSymbolizer file="&symbols;/tree.svg" allow-overlap="true" transform="scale(0.15,0.15)" />
     </Rule>
     <Rule>
@@ -600,7 +600,7 @@
     <Rule>
         &maxscale_zoom15;
         &minscale_zoom15;
-	<Filter>[historic]='monument'</Filter>
+  <Filter>[historic]='monument'</Filter>
         <PointSymbolizer file="&symbols;/monument.svg" allow-overlap="true" transform="scale(0.4,0.4)" />
     </Rule>
     <Rule>
@@ -631,24 +631,7 @@
         <Filter>[amenity]='bench' or [leisure]='picnic_table' or [amenity]='waste_basket' or [amenity]='recycling'</Filter>
         <PointSymbolizer file="&symbols;/cross.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
-		<Rule>
-        &maxscale_zoom15;
-        &minscale_zoom15;
-        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
-        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(0.7,0.7)" />
-    </Rule>
     <Rule>
-        &maxscale_zoom16;
-        &minscale_zoom16;
-        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
-        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(1,1)" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom17;
-        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
-        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(1.3,1.3)" />
-    </Rule>
-		<Rule>
         &maxscale_zoom15;
         &minscale_zoom15;
         <Filter>[natural]='rock' or [natural]='stone'</Filter>
@@ -664,5 +647,48 @@
         &maxscale_zoom17;
         <Filter>[natural]='rock' or [natural]='stone'</Filter>
         <PointSymbolizer file="&symbols;/stone.svg" allow-overlap="true" transform="scale(0.22,0.22)" />
+    </Rule>
+</Style>
+
+
+<Style name="opaque_symbols">
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom15;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(0.7,0.7)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom16;
+        &minscale_zoom16;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(1,1)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom17;
+        &minscale_zoom18;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(1.3,1.3)" />
+    </Rule>
+</Style>
+
+<Style name="area_symbols">
+    <Rule>
+        &maxscale_zoom12;
+        &minscale_zoom15;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(0.7,0.7)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom16;
+        &minscale_zoom16;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(1,1)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom17;
+        &minscale_zoom18;
+        <Filter>[man_made]='water_well' or [man_made]='water_tower' or [man_made]='reservoir_covered' or [amenity]='fountain'</Filter>
+        <PointSymbolizer file="&symbols;/waterpoint.svg" allow-overlap="true" transform="scale(1.3,1.3)" />
     </Rule>
 </Style>

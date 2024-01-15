@@ -59,12 +59,15 @@
     <StyleName>power</StyleName>
     <Datasource>
         &datasource-settings;
-        <Parameter name="table">(select ST_Intersection(way, &box3857;) as way from &prefix;_line where "power"='line') as power</Parameter>
+        <Parameter name="table">
+          (select ST_Intersection(way, &box3857;) as way from &prefix;_line where "power"='line') as power
+        </Parameter>
     </Datasource>
 </Layer>
 
 <Layer name="symbols" status="on" srs="&srs900913;">
     <StyleName>symbols</StyleName>
+    <StyleName>opaque_symbols</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
@@ -72,6 +75,20 @@
             from &prefix;_point
             where ST_Intersects(way,&box3857;)
             ) as symbols
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="area_symbols" status="on" srs="&srs900913;">
+    <StyleName>area_symbols</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Centroid(way) as way, man_made, amenity
+            from &prefix;_polygon
+            where ST_Intersects(ST_Centroid(way),&box3857;)
+              and (man_made='water_well' or man_made='water_tower' or man_made='reservoir_covered' or amenity='fountain')
+            ) as areasymbols
         </Parameter>
     </Datasource>
 </Layer>

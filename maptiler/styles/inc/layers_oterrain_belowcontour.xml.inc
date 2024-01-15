@@ -195,7 +195,7 @@
             and (tags->'footway' is null or tags ->'footway' != 'sidewalk' or '&sidewalks;' = 'yes')
             and (tags->'cycleway' is null or tags->'cycleway' != 'sidewalk' or '&sidewalks;' = 'yes')
             and (service is null or service !='driveway')
-            and not (highway='footway' and access is not null and access ='private'))
+            and not (highway='footway' and access is not null and (access ='private' or access='no')))
             or railway is not null
             order by z_order
             ) as roads
