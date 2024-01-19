@@ -615,6 +615,29 @@
         <PointSymbolizer file="&symbols;/monument.svg" allow-overlap="true" transform="scale(0.8,0.8)" />
     </Rule>
     <Rule>
+        &maxscale_zoom14;
+        &minscale_zoom14;
+        <Filter>[man_made]='tower'</Filter>
+        <PointSymbolizer file="&symbols;/tower.svg" allow-overlap="true" transform="scale(0.02)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom15;
+        &minscale_zoom15;
+        <Filter>[man_made]='tower'</Filter>
+        <PointSymbolizer file="&symbols;/tower.svg" allow-overlap="true" transform="scale(0.025)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom16;
+        &minscale_zoom16;
+        <Filter>[man_made]='tower'</Filter>
+        <PointSymbolizer file="&symbols;/tower.svg" allow-overlap="true" transform="scale(0.04)" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom17;
+        <Filter>[man_made]='tower'</Filter>
+        <PointSymbolizer file="&symbols;/tower.svg" allow-overlap="true" transform="scale(0.06)" />
+    </Rule>
+    <Rule>
         &maxscale_zoom15;
         &minscale_zoom15;
         <Filter>[amenity]='bench' or [leisure]='picnic_table' or [amenity]='waste_basket' or [amenity]='recycling'</Filter>

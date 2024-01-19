@@ -4,7 +4,7 @@
             &datasource-settings-contours;
             <Parameter name="table">
 (
-  SELECT h.way as way, ST_Length(h.way) as length
+  SELECT ST_Rotate(h.way,&magn;, ST_Centroid(&box;)) as way, ST_Length(h.way) as length
   FROM
   (
     SELECT (ST_Dump(ST_LineMerge(ST_collect(g.way)))).geom as way
@@ -28,7 +28,7 @@
             &datasource-settings-contours;
             <Parameter name="table">
 (
-  SELECT h.way as way, ST_Length(h.way) as length
+  SELECT ST_Rotate(h.way,&magn;, ST_Centroid(&box;)) as way, ST_Length(h.way) as length
   FROM
   (
     SELECT (ST_Dump(ST_LineMerge(ST_collect(g.way)))).geom as way

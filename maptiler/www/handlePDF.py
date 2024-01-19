@@ -294,6 +294,8 @@ def createImage(path, fileformat):
         driveway_colour = "#01010101"
 
     import re
+    #magn = p.get('magn', '0')
+    magn = str(magdec*math.pi/180)
     insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">" + \
         "\n<!ENTITY driveway \"" + driveway_colour + "\">" + \
         "\n<!ENTITY rail \"" + ("yes" if p.get('rail',"yes") != "no" else "no") + "\">" + \
@@ -308,7 +310,8 @@ def createImage(path, fileformat):
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">" + \
         "\n<!ENTITY box \"" + polyString + "\">" + \
         "\n<!ENTITY box3857 \"" + polyString2 + "\">" + \
-        "\n<!ENTITY rotation \"" + str(rotation * 180/math.pi) + "\">"
+        "\n<!ENTITY rotation \"" + str(rotation * 180/math.pi) + "\">" + \
+        "\n<!ENTITY magn \"" + magn + "\">"
     searchstring="\%settings;"
     styleString = re.sub(searchstring,insertstring,styleString)
 
@@ -335,6 +338,7 @@ def createImage(path, fileformat):
 
     # Create map
     map = mapnik.Map(int(EXTENT_W*S2P), int(EXTENT_H*S2P))
+    #Need to adjsut this (above) if rotating the SQL queries to align patterns etc to mag N (area needs to be bigger)?  Or is this taken care of by EXTENT calcs anyway?
 
     # Load map configuration
     mapnik.load_map(map, styleFile)
@@ -391,7 +395,7 @@ def createImage(path, fileformat):
     ctx.clip() #Clip to map area
     ctx.save()
     ctx.translate(MAP_W*S2P/2,MAP_H*S2P/2) # translate origin to the center
-    ctx.rotate(rotation)
+    ctx.rotate(rotation+float(magn))
     ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
 
     mapnik.render(map, ctx, SCALE_FACTOR, 0, 0)
@@ -919,5 +923,5 @@ def test(path):
 
 
 if __name__ == '__main__':
-    test("style=streeto-LIDAR-5|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=hh|id=6043c1a44cc97|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2|linear=no")
+    test("style=streeto-COPE-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=hh|id=6043c1a44cc97|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2|linear=no")
     #test("style=oterrain-COPE-5|grid=no&paper=0.297,0.210|scale=10000|centre=6801767,-86381|id=6043c1a44cc93&rotation=0.2")
