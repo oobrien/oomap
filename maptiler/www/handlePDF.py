@@ -294,8 +294,8 @@ def createImage(path, fileformat):
         driveway_colour = "#01010101"
 
     import re
-    #magn = p.get('magn', '0')
-    magn = str(magdec*math.pi/180)
+    #magn = p.get('magn', '0') #set "magnetic N" through URL for testing
+    magn = str(magdec*math.pi/180) #magnetic N, in radians.  Rotate the map data this much before rendering to align patterns to mag N
     insertstring="%settings;\n<!ENTITY prefix \"" + tmpid + "\">" + \
         "\n<!ENTITY driveway \"" + driveway_colour + "\">" + \
         "\n<!ENTITY rail \"" + ("yes" if p.get('rail',"yes") != "no" else "no") + "\">" + \
@@ -337,8 +337,15 @@ def createImage(path, fileformat):
 
 
     # Create map
-    map = mapnik.Map(int(EXTENT_W*S2P), int(EXTENT_H*S2P))
-    #Need to adjsut this (above) if rotating the SQL queries to align patterns etc to mag N (area needs to be bigger)?  Or is this taken care of by EXTENT calcs anyway?
+    FULL_W = MAP_W * math.cos(rotation+float(magn)) + MAP_H * abs(math.sin(rotation+float(magn)))
+    FULL_H = MAP_H * math.cos(rotation+float(magn)) + MAP_W * abs(math.sin(rotation+float(magn)))
+    if FULL_W < EXTENT_W:
+        FULL_W = EXTENT_W
+        FULL_H = EXTENT_H
+    else:
+        cbbox = cbbox * (FULL_W/EXTENT_W)   #assumes bbox expands in W and H proportionately, but not sure that's the case.  Seems to work though.
+    map = mapnik.Map(int(FULL_W*S2P), int(FULL_H*S2P))
+    #Need to adjust this (above) if rotating the SQL queries to align patterns etc to mag N (area needs to be bigger).
 
     # Load map configuration
     mapnik.load_map(map, styleFile)
@@ -396,7 +403,7 @@ def createImage(path, fileformat):
     ctx.save()
     ctx.translate(MAP_W*S2P/2,MAP_H*S2P/2) # translate origin to the center
     ctx.rotate(rotation+float(magn))
-    ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
+    ctx.translate(-FULL_W*S2P/2,-FULL_H*S2P/2)
 
     mapnik.render(map, ctx, SCALE_FACTOR, 0, 0)
 
