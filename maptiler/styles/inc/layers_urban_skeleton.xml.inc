@@ -6,14 +6,14 @@
             wkt|name
             POLYGON((-20037508.34 -20037508.34, -20037508.34 20037508.34, 20037508.34 20037508.34, 20037508.34 -20037508.34, -20037508.34 -20037508.34))|bounds
         </Parameter>
-    </Datasource> 
+    </Datasource>
 </Layer>
 
 <Layer name="coast-poly" status="on" srs="&srs900913;">
     <StyleName>coast-poly</StyleName>
     <Datasource>
         <Parameter name="type">shape</Parameter>
-        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter> 
+        <Parameter name="file">&shapefiles;land-polygons-split-3857/land_polygons</Parameter>
     </Datasource>
 </Layer>
 
@@ -22,7 +22,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural",waterway,landuse,way_area
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,way_area
             from &prefix;_polygon
                     where waterway in ('dock','mill_pond','riverbank','canal','river')
                 or landuse in ('reservoir','water','basin')
@@ -38,7 +38,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,waterway,
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,waterway,
             case when tunnel in ('yes','true','1','culvert') then 'yes'::text else tunnel end as tunnel
             from &prefix;_line
             where waterway in ('weir','river','canal','derelict_canal','stream','drain')
@@ -54,7 +54,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural" from &prefix;_polygon
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural" from &prefix;_polygon
             where "natural" in ('land', 'island')
                 or "man_made" in ('pier')
             order by z_order,way_area desc) as land
@@ -68,7 +68,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,railway,amenity,
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,highway,railway,amenity,
             case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
@@ -79,6 +79,3 @@
         </Parameter>
     </Datasource>
 </Layer>
-
-
-

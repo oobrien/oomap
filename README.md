@@ -1,7 +1,13 @@
 OpenOrienteeringMap
 =====
 
-This is v4 of [oomap](https://github.com/oobrien/oomap) with the following main changes from v3:
+Open OrienteeringMap (oomap) is an online resource for quickly producing orienteering maps and courses, primarily aimed at informal urban score events but also usable for linear courses and more rural areas in some circumstances.  Maps rely on data from OpenStreetMap (https://openstreetmap.org).  Contour data comes from a variety of sources.
+![Example map](examples/example_output.png)
+The online resource is currently hosted at https://oomap.dna-software.co.uk/ with a backup at https://oomap.ptlnet.com/ and detailed help at https://oomap.dna-software.co.uk/help/
+
+Oomap was conceived by Oliver O'Brien, who developed it up to v3.  David Dixon has built on this to give v4.
+
+v4 of [oomap](https://github.com/oobrien/oomap) has the following main changes from v3:
 
 **Global:**  Mapping data is up-to-date, as required OpenStreetMap data is queried directly when producing the final map.
 
@@ -47,7 +53,7 @@ Setup
 Data
 ---
 
-You need a PostgreSQL/PostGIS database (I'm using PostgreSQL 10) - with coastline and (for the UK) contour data.  See [README_postgres.md](README_postgre.md) for more details.
+You need a PostgreSQL/PostGIS database (I'm using PostgreSQL 10) - with coastline and contour data.  See [README_postgres.md](README_postgre.md) for more details.
 
 Set up a database and tile server, eg. https://www.linuxbabe.com/ubuntu/openstreetmap-tile-server-ubuntu-18-04-osm
 

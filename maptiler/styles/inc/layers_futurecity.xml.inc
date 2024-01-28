@@ -3,7 +3,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (SELECT ST_Intersection(way, &box3857;) as way from ocean) as ocean
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from ocean) as ocean
       </Parameter>
     </Datasource>
 </Layer>
@@ -13,7 +13,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (SELECT ST_Intersection(way, &box3857;) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
       </Parameter>
     </Datasource>
 </Layer>
@@ -23,7 +23,7 @@
     <Datasource>
     &datasource-settings;
         <Parameter name="table">
-            (select way,"natural",landuse,leisure,name,way_area
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",landuse,leisure,name,way_area
             from &prefix;_polygon
             where leisure in ('park', 'garden', 'nature_reserve', 'common')
                 or landuse in ('forest', 'recreation_ground', 'village_green', 'meadow')
@@ -39,7 +39,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,"natural",waterway,landuse,name,way_area
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,name,way_area
             from &prefix;_polygon
             where waterway in ('dock','mill_pond','riverbank','canal','river')
                 or landuse in ('reservoir','water','basin')
@@ -55,7 +55,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,waterway,name,
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,waterway,name,
             case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel
             from &prefix;_line
             where waterway in ('weir','river','canal','derelict_canal','stream','drain')
@@ -72,7 +72,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,name,highway,railway,amenity,aeroway,
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,name,highway,railway,amenity,aeroway,
             case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
@@ -91,7 +91,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,highway,railway,amenity,aeroway,tunnel from &prefix;_polygon
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,highway,railway,amenity,aeroway,tunnel from &prefix;_polygon
             where highway in ('residential','unclassified','pedestrian','service','footway','track')
                 or amenity = 'parking'
             order by z_order,way_area desc) as roads
@@ -105,7 +105,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-        (select way,name,railway,aerialway
+        (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,name,railway,aerialway
         from &prefix;_point
         where railway in ('station','halt','tram_stop')
             or aerialway='station'
@@ -119,7 +119,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,place,name
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,place,name
             from &prefix;_point
             where place in ('city','metropolis')
             ) as placenames
@@ -132,7 +132,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,place,name
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,place,name
             from &prefix;_point
             where place in ('town','large_town','small_town')
             ) as placenames
@@ -146,7 +146,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,place,name
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,place,name
             from &prefix;_point
             where place in ('suburb','village','large_village','locality')
             ) as placenames
@@ -159,7 +159,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select way,name,highway,railway,amenity,aeroway,
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,name,highway,railway,amenity,aeroway,
             case when tunnel in ('yes','true','1') then 'yes'::text else tunnel end as tunnel,
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
