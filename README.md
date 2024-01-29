@@ -85,16 +85,12 @@ Examples
 
 The example images, using the XYZ map tile convention, have x=16090, y=10213, z=15. See http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames for further details.
 
-![futurecity](https://raw.github.com/oobrien/oomap/master/examples/futurecity_z15.png "futurecity") futurecity
+![streeto](examples/streeto_z15.png "streeto") streeto
 
-![futurecity_unicode](https://raw.github.com/oobrien/oomap/master/examples/futurecity_unicode_z15.png "futurecity_unicode") futurecity_unicode
+![oterrain](examples/oterrain_z15.png "oterrain") oterrain
 
-![streeto](https://raw.github.com/oobrien/oomap/master/examples/streeto_z15.png "streeto") streeto
+![blueprint](examples/blueprint_z15.png "blueprint") blueprint
 
-![streeto_norail](https://raw.github.com/oobrien/oomap/master/examples/streeto_norail_z15.png "streeto_norail") streeto_norail
+![futurecity](examples/futurecity_z15.png "futurecity") futurecity
 
-![oterrain](https://raw.github.com/oobrien/oomap/master/examples/oterrain_z15.png "oterrain") oterrain
-
-![blueprint](https://raw.github.com/oobrien/oomap/master/examples/blueprint_z15.png "blueprint") blueprint
-
-![urban_skeleton](https://raw.github.com/oobrien/oomap/master/examples/urban_skeleton_z15.png "urban_skeleton") urban_skeleton (not currently on OOMap)
+![urban_skeleton](examples/urban_skeleton_z15.png "urban_skeleton") urban_skeleton (not currently on OOMap)

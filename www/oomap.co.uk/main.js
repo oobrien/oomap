@@ -811,6 +811,7 @@ function init()
   		{	//target: $(".options").get(0),
   			polygon: false,
   			reverse: true,
+  			zoomOnSelect: 16,
   			position: true	// Search, with priority to geo position
   		});
   olMap.addControl (search);
@@ -2784,9 +2785,9 @@ function handleSearchPostcodeCallback(json)
 	if (result.success)
 	{
 		var zoom = olMap.getView().getZoom();
-		if (zoom < 13)
+		if (zoom < 16)
 		{
-			zoom = 13;
+			zoom = 16;
 		}
     olMap.getView().setCenter(Proj4("EPSG:27700", "EPSG:3857", [parseInt(result.easting), parseInt(result.northing)]));
 		olMap.getView().setZoom(zoom);
