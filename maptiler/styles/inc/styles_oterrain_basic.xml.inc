@@ -316,7 +316,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[natural] = 'field' or [natural] = 'heath' or [landuse] = 'conservation'</Filter>
+        <Filter>[natural] = 'field' or [natural] = 'heath' or [landuse] = 'conservation' or ([landuse] = 'school' and &schools; = 'yes') or  ([amenity] = 'school' and &schools; = 'yes')</Filter>
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
     </Rule>
    <Rule>
@@ -331,7 +331,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[landuse] = 'school' or [amenity] = 'school' or [amenity] = 'college' or [amenity] = 'university' or [amenity] = 'hospital'</Filter>
+        <Filter> ([landuse] = 'school' and &schools; = 'no') or  ([amenity] = 'school' and &schools; = 'no') or [amenity] = 'college' or [amenity] = 'university' or [amenity] = 'hospital'</Filter>
         <PolygonSymbolizer fill="&olive100;" gamma="0.6" />
     </Rule>
     <Rule>

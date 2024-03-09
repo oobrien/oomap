@@ -305,6 +305,7 @@ def createImage(path, fileformat):
         "\n<!ENTITY fences \"" + ("yes" if p.get('fences',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY power \"" + ("yes" if p.get('power',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY sidewalks \"" + ("yes" if p.get('sidewalks',"no") != "no" else "no") + "\">" + \
+        "\n<!ENTITY schools \"" + ("yes" if p.get('schools',"no") != "no" else "no") + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">" + \

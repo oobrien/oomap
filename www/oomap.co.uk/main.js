@@ -9,7 +9,7 @@ import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 import ImageLayer from 'ol/layer/Image';
 import VectorSource from 'ol/source/Vector';
-import Feature from 'ol/feature';
+import Feature from 'ol/Feature';
 import {OSM, XYZ, BingMaps} from 'ol/source';
 import Select from 'ol/interaction/Select';
 import {Fill, Stroke, Style, Text, Circle, RegularShape} from 'ol/style';
@@ -80,6 +80,7 @@ var trees=true;
 var hedges=true;
 var fences=true;
 var sidewalks=false;
+var schools=true;
 var linear=false;
 var power=true;
 var preview=false;
@@ -461,6 +462,8 @@ function gpxStyle(feature) {
     var speed = [];
     var time;
     var rate;
+	const smooth = 5;	//number of speed values either side of current point to average to smooth trace colour
+	var avgSpeed = 0;
     if(boolSpeed) {
       for (var i = 0; i < coordinates.length - 1; i++) {    //calc distance travelled, divide by time taken
         time = coordinates[i+1][3] - coordinates[i][3];
@@ -476,8 +479,13 @@ function gpxStyle(feature) {
         if (debug) {console.log(maxSpeed);}
         if (maxSpeed < 0.1) break;
       };
+	  for (var i=0; i<smooth; i++) {
+		avgSpeed = avgSpeed + speed[i]/(2 * smooth + 1);
+	  }
       for (var i = 0; i < coordinates.length - 1; i++) {
-        var hue = 220 + speed[i] * 240/maxSpeed; //range of 0 to speed exceeded by 5% of points
+		if (i>smooth) {avgSpeed -= speed[i-smooth-1]/(2 * smooth + 1)}	//remove the trailing speed value
+		if (i<coordinates.length-1-smooth)  {avgSpeed += speed[i+smooth]/(2 * smooth + 1)} //add the leading speed value
+        var hue = 220 + avgSpeed * 240/maxSpeed; //range of 0 to speed exceeded by 5% of points
         if (hue > 480) { hue = 480; }
         if (hue > 360) { hue -= 360; }
       //  else { hue = 230; } //If no time column in GPX, set hue to blue
@@ -1006,7 +1014,8 @@ function init()
 				fences = $('#fence').is(':checked');
         linear = $('#linear').is(':checked');
         sidewalks =  $('#sidewalk').is(':checked');
-        power =  $('#power').is(':checked');
+        schools =  $('#schools').is(':checked');
+		power =  $('#power').is(':checked');
         layerLines.setVisible(linear);
         if(linear){
           $(".scorecol").addClass('hidden');
@@ -1592,7 +1601,8 @@ function handleAdvancedOptions(pid)
 			$('#fence').prop('checked', fences);
       $('#linear').prop('checked', linear);
       $('#sidewalk').prop('checked', sidewalks);
-      $('#power').prop('checked', power);
+      $('#schools').prop('checked', schools);
+	        $('#power').prop('checked', power);
 			$('#dpi').val(dpi);
 			$( "#advanced" ).dialog( "open" );
 }
@@ -2162,6 +2172,7 @@ function getURL(type)
   if (drives) {url += "|drives=yes"; } else {url += "|drives=no"; }
   if (fences) {url += "|fences=yes"; } else {url += "|fences=no"; }
   if (sidewalks) {url += "|sidewalks=yes"; } else {url += "|sidewalks=no"; }
+  if (schools) {url += "|schools=no"; } else {url += "|schools=yes"; }
   if (power) {url += "|power=yes"; } else {url += "|power=no"; }
   if (linear) {url += "|linear=yes"; } else {url += "|linear=no"; }
   url += "|dpi=" + dpi;
