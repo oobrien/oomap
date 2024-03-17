@@ -84,6 +84,7 @@ var schools=true;
 var linear=false;
 var power=true;
 var preview=false;
+var kmzOverlay=false;
 
 //OpenLayers single-instance objects
 var olMap;
@@ -522,7 +523,7 @@ var contentStyle = new Style({
 var centreStyle = new Style({
 	image: new Circle({
 		stroke: new Stroke({color: 'rgba(0,0,255,1)', width: 1}),
-		fill: new Stroke({color: 'rgba(0,0,255,0.5)'}),
+		fill: new Fill({color: 'rgba(0,0,255,0.5)'}),
 		radius: 5
 	})
 });
@@ -1015,6 +1016,7 @@ function init()
         linear = $('#linear').is(':checked');
         sidewalks =  $('#sidewalk').is(':checked');
         schools =  $('#schools').is(':checked');
+		kmzOverlay =  $('#kmzcourse').is(':checked');
 		power =  $('#power').is(':checked');
         layerLines.setVisible(linear);
         if(linear){
@@ -1592,30 +1594,31 @@ function handleControlEditOptions(pid)
 
 function handleAdvancedOptions(pid)
 {
-			$('#rail').prop('checked', rail);
-			$('#grid').prop('checked', grid);
-			$('#drive').prop('checked', drives);
-			$('#wall').prop('checked', walls);
-			$('#tree').prop('checked', trees);
-			$('#hedges').prop('checked', hedges);
-			$('#fence').prop('checked', fences);
-      $('#linear').prop('checked', linear);
-      $('#sidewalk').prop('checked', sidewalks);
-      $('#schools').prop('checked', schools);
-	        $('#power').prop('checked', power);
-			$('#dpi').val(dpi);
-			$( "#advanced" ).dialog( "open" );
+	$('#rail').prop('checked', rail);
+	$('#grid').prop('checked', grid);
+	$('#drive').prop('checked', drives);
+	$('#wall').prop('checked', walls);
+	$('#tree').prop('checked', trees);
+	$('#hedges').prop('checked', hedges);
+	$('#fence').prop('checked', fences);
+    $('#linear').prop('checked', linear);
+    $('#sidewalk').prop('checked', sidewalks);
+    $('#schools').prop('checked', schools);
+	$('#kmzcourse').prop('checked', kmzOverlay);
+	$('#power').prop('checked', power);
+	$('#dpi').val(dpi);
+	$( "#advanced" ).dialog( "open" );
 }
 
 function handleControlDelete(pid)  //pid = "d<n>"
 {
 	currentID = pid.substring(1); //strip "d" prefix
-  var control = layerControls.getSource().getFeatureById(currentID);
+    var control = layerControls.getSource().getFeatureById(currentID);
 	if (control)
 	{
-  	layerControls.getSource().removeFeature(control);
+  		layerControls.getSource().removeFeature(control);
 	}
-  controlsChanged();
+    controlsChanged();
 }
 
 function controlsChanged(rebuild = true)
@@ -2138,7 +2141,7 @@ function getURL(type)
     url += mapID;
   }
 
-  if (type == 'kmz')
+  if (type == 'kmz' & !kmzOverlay)
   {
     url	+= "|start="
       + "|crosses=" + xText
@@ -2321,7 +2324,7 @@ function generateXML()
 	xmlintro += 'createTime="' + now.toISOString() + '"\n creator="OpenOrienteeringMap v4">\n';
 	xmlintro += '<Event><Name>' + encodeXML(mapTitle) + '</Name>\n</Event>\n';
 
-	var xmlheader = '<RaceCourseData>\n';
+	var xmlheader = '<RaceCourseData>\n<Map>\n<Scale>' + scale + '</Scale>\n</Map>';
 	var xmlfooter = '</Course>\n</RaceCourseData>\n</CourseData>';
 
 	xml += xmlintro;

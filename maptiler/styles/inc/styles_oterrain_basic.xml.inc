@@ -469,7 +469,8 @@
     <Rule>
         &maxscale_zoom12;
         <Filter>[leisure] = 'stadium'</Filter>
-        <PolygonSymbolizer fill="&black;" gamma="0.6" />
+        <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linejoin="miter" stroke-linecap="square" />
+        <PolygonSymbolizer fill="&grey50;" gamma="0.6" />
     </Rule>
 </Style>
 
