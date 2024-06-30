@@ -1,41 +1,3 @@
-<Layer name="coast-poly" status="on" srs="&srs900913;">
-    <StyleName>coast-poly</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
-      </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="water_areas" status="on" srs="&srs900913;">
-    <StyleName>water_areas</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,"water",way_area
-            from &prefix;_polygon
-                    where landuse in ('reservoir','water','basin')
-                or "natural" in ('lake','water')
-                or "water" = 'yes'
-            order by z_order,way_area desc
-            ) as water_areas
-        </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="piers" status="on" srs="&srs900913;">
-    <StyleName>islands</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural" from &prefix;_polygon
-            where "man_made" in ('pier')
-            order by z_order,way_area desc) as land
-        </Parameter>
-    </Datasource>
-</Layer>
-
 <Layer name="line features" status="on" srs="&srs900913;">
     <StyleName>cliffs</StyleName>
     <Datasource>
@@ -45,6 +7,7 @@
         </Parameter>
     </Datasource>
 </Layer>
+
 <Layer name="bridges" status="on" srs="&srs900913;">
     <StyleName>bridges-casing</StyleName>
     <StyleName>bridges-core</StyleName>
@@ -59,7 +22,7 @@
             from &prefix;_line
             where (highway is not null
                 or railway is not null)
-                and bridge in ('yes','true','1')
+                and (bridge is not null and bridge &lt;&gt; 'no')
             order by z_order
             ) as roads
         </Parameter>

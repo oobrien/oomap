@@ -3,7 +3,19 @@
         <Datasource>
             &datasource-settings;
             <Parameter name="table">
-(select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way, height, ST_Length(way) as length FROM &prefix;_srtm_line WHERE (height*2)::integer % (10*&contourSeparation;)::integer != 0 AND  (height*2)::integer % (2*&contourSeparation;)::integer = 0) as "cntrs10"
+(
+    WITH wetstuff as (
+    SELECT ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)
+    UNION ALL
+    SELECT ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way
+    FROM &prefix;_polygon
+    WHERE landuse in ('reservoir','water','basin') or "natural" in ('lake','water') or "water" = 'yes'
+    )
+    SELECT ST_Difference(ST_SetSRID(ST_Rotate(ST_Intersection(h.way, &box3857;),&magn;, ST_Centroid(&box3857;)),3857), ST_Union(w.way)) as way, h.height as height, ST_Length(h.way) as length 
+    FROM &prefix;_srtm_line h, wetstuff w 
+     WHERE (h.height*2)::integer % (10*&contourSeparation;)::integer != 0 AND  (h.height*2)::integer % (2*&contourSeparation;)::integer = 0
+    group by h.way, h.height
+) as "cntrs10"
             </Parameter>
         </Datasource>
 </Layer>
@@ -13,7 +25,19 @@
         <Datasource>
             &datasource-settings;
             <Parameter name="table">
-(select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way, height, ST_Length(way) as length FROM &prefix;_srtm_line WHERE (height*2)::integer % (10*&contourSeparation;)::integer = 0 ) as "cntrs50"
+(
+    WITH wetstuff as (
+    SELECT ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)
+    UNION ALL
+    SELECT ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way
+    FROM &prefix;_polygon
+    WHERE landuse in ('reservoir','water','basin') or "natural" in ('lake','water') or "water" = 'yes'
+    )
+    SELECT ST_Difference(ST_SetSRID(ST_Rotate(ST_Intersection(h.way, &box3857;),&magn;, ST_Centroid(&box3857;)),3857), ST_Union(w.way)) as way, h.height as height, ST_Length(h.way) as length 
+    FROM &prefix;_srtm_line h, wetstuff w 
+    WHERE (h.height*2)::integer % (10*&contourSeparation;)::integer = 0 
+    group by h.way, h.height
+) as "cntrs50"
             </Parameter>
         </Datasource>
 </Layer>

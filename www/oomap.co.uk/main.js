@@ -73,6 +73,8 @@ var previewWarning = true;
 
 var dpi = 150;  //advanced rendering options & default values
 if (localStorage.getItem("dpi")) dpi = parseInt(localStorage.getItem("dpi"));
+var overlayColour = 'A626FF'; 
+if (localStorage.getItem("overlayColour")) overlayColour = localStorage.getItem("overlayColour");
 var drives = false;
 if (localStorage.getItem("drives")) drives = (localStorage.getItem("drives")=="yes");
 var rail = true;
@@ -121,7 +123,7 @@ var sheetCentreLL;
 var newControlLL = [0, 0];
 var mapBound;
 var wgs84Poly;
-var purple = 'rgba(220, 40, 255, 1)';
+var purple = getColour(overlayColour);
 
 class SatelliteControl extends Control {
 	/**
@@ -200,6 +202,15 @@ var controloptstate = "add";
 
 let dragAndDropInteraction;
 
+function getColour(overlayColour) {
+	if (overlayColour.length == 6 && !isNaN(parseInt(overlayColour,16))) {
+		return('rgba('+parseInt(overlayColour.substring(0,2),16)+', '+parseInt(overlayColour.substring(2,4),16)+', '+parseInt(overlayColour.substring(4,6),16)+', 1)');
+	}
+	else {
+		return('rgba(166, 38, 255, 1)');
+	}
+}
+
 function setInteraction() {
 	if (dragAndDropInteraction) {
 		olMap.removeInteraction(dragAndDropInteraction);
@@ -250,27 +261,27 @@ function controlStyle(feature, resolution) {
 	switch (type) {
 		case "c_regular": //control - circle & number.    Transparent fill allows selection throughout
 			return [
-				new Style({
-					image: new Circle({
-						stroke: new Stroke({ color: purple, width: 10 * size }),
-						fill: new Fill({ color: 'rgba(255, 255, 255, 0)' }),
-						radius: 75 * size
-					}),
-					text: new Text({
-						textAlign: "center",
-						font: 120 * size + "px arial, verdana, sans-serif",
-						text: feature.get('number'),
-						fill: new Fill({ color: purple }),
-						offsetX: 5 * size * 35 * Math.sin((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation()),
-						offsetY: 5 * size * -35 * Math.cos((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation())
-					})
+			new Style({
+				image: new Circle({
+					stroke: new Stroke({ color: purple, width: 10 * size }),
+					fill: new Fill({ color: 'rgba(255, 255, 255, 0)' }),
+					radius: 75 * size
 				}),
-				new Style({
-					image: new Circle({
-						fill: new Fill({ color: purple }),
-						radius: 10 * size
-					})
-				})]
+				text: new Text({
+					textAlign: "center",
+					font: 120 * size + "px arial, verdana, sans-serif",
+					text: feature.get('number'),
+					fill: new Fill({ color: purple }),
+					offsetX: 5 * size * 35 * Math.sin((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation()),
+					offsetY: 5 * size * -35 * Math.cos((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation())
+				})
+			}),
+			new Style({
+				image: new Circle({
+					fill: new Fill({ color: purple }),
+					radius: 10 * size
+				})
+			})]
 			break;
 		case "c_startfinish": //start/finish - triangle & double circle
 			var boolFinish = layerControls.getSource().getFeatures().filter(feat => feat.get('type') == 'c_finish').length > 0;
@@ -283,7 +294,13 @@ function controlStyle(feature, resolution) {
 							stroke: new Stroke({ color: purple, width: 10 * size }),
 							fill: new Fill({ color: 'rgba(255, 255, 255, 0)' }),
 							angle: startAngle,
-							radius: 110 * size
+							radius: 100 * size
+						})
+					}),
+					new Style({
+						image: new Circle({
+							fill: new Fill({ color: purple }),
+							radius: 2 * size
 						})
 					})]
 			}
@@ -294,20 +311,26 @@ function controlStyle(feature, resolution) {
 							points: 3,
 							stroke: new Stroke({ color: purple, width: 10 * size }),
 							angle: startAngle,
-							radius: 110 * size
+							radius: 100 * size
 						})
 					}),
 					new Style({
 						image: new Circle({
 							stroke: new Stroke({ color: purple, width: 10 * size }),
-							radius: 70 * size
+							radius: 60 * size
 						})
 					}),
 					new Style({
 						image: new Circle({
 							stroke: new Stroke({ color: purple, width: 10 * size }),
 							fill: new Fill({ color: 'rgba(255, 255, 255, 0)' }),
-							radius: 90 * size
+							radius: 85 * size
+						})
+					}),
+					new Style({
+						image: new Circle({
+							fill: new Fill({ color: purple }),
+							radius: 2 * size
 						})
 					})]
 			}
@@ -317,14 +340,20 @@ function controlStyle(feature, resolution) {
 				new Style({
 					image: new Circle({
 						stroke: new Stroke({ color: purple, width: 10 * size }),
-						radius: 70 * size
+						radius: 60 * size
 					})
 				}),
 				new Style({
 					image: new Circle({
 						stroke: new Stroke({ color: purple, width: 10 * size }),
 						fill: new Fill({ color: 'rgba(255, 255, 255, 0)' }),
-						radius: 90 * size
+						radius: 85 * size
+					})
+				}),
+				new Style({
+					image: new Circle({
+						fill: new Fill({ color: purple }),
+						radius: 2 * size
 					})
 				})]
 			break;
@@ -342,14 +371,14 @@ function controlStyle(feature, resolution) {
 					})
 				})]
 			break;
-		case "c_crossingpoint": //text "]["
+		case "c_crossingpoint": //text ")("
 			return [
 				new Style({
 					text: new Text({
 						textAlign: "center",
 						baseAlign: "middle",
-						font: 90 * size + "px arial, verdana, sans-serif",
-						text: "][",
+						font: 100 * size + "px arial, verdana, sans-serif",
+						text: ")\u200A(",
 						fill: new Fill({ color: purple }),
 						offsetX: 0,
 						offsetY: 0,
@@ -377,10 +406,7 @@ function lineStyle(feature, resolution) //Lines between controls
 		)
 	});
 	return styles;
-};
-
-//var dotStyle = new Style({
-//});
+}; 
 
 var styleBlack = new Style({
 	fill: new Fill({
@@ -791,6 +817,12 @@ function init() {
 	})
 
 	translate.on('translating', function (evt) {
+		var feats = evt.features;
+		feats.forEach((feat) => {
+			if (feat.get('type') == 'c_regular') {
+				//feat.setStyle(styleControlSel);
+			}
+		});
 		handleDrag(evt);
 	})
 
@@ -1069,14 +1101,18 @@ function init() {
 				localStorage.setItem("power", power ? "yes" : "no");
 				privroads = $('#privroads').is(':checked');
 				localStorage.setItem("privroads", power ? "yes" : "no");
+				overlayColour = $('#purple').val();
+				if (isNaN(parseInt(overlayColour, 16))) { overlayColour = 'A626FF'; }
+				localStorage.setItem("overlayColour", overlayColour);
+				purple = getColour(overlayColour);
 				layerLines.setVisible(linear);
+				layerLines.changed();
 				setLinear(linear);
 				rebuildDescriptions();
 				layerControls.changed(); //force re-draw
 				dpi = parseInt($('#dpi').val());
 				if (isNaN(dpi)) { dpi = 150; }
 				localStorage.setItem("dpi", dpi);
-
 				$(this).dialog("close");
 			},
 			Cancel: function () {
@@ -1629,6 +1665,7 @@ function handleAdvancedOptions(pid) {
 	$('#power').prop('checked', power);
 	$('#privroads').prop('checked', privroads);
 	$('#dpi').val(dpi);
+	$('#purple').val(overlayColour);
 	$("#advanced").dialog("open");
 }
 
@@ -2139,6 +2176,7 @@ function getURL(type) {
 	if (privroads) { url += "|privroads=yes"; } else { url += "|privroads=no"; }
 	if (linear) { url += "|linear=yes"; } else { url += "|linear=no"; }
 	url += "|dpi=" + dpi;
+	url += "|purple=" + overlayColour;
 
 	if (debug) { console.log(url); }
 	return url;
@@ -2701,7 +2739,7 @@ function rebuildDescriptions() {
 
 	$(".controlrow").on("dblclick", function () {
 		var cNum = $(this).data('number');
-		var cList = layerControls.getSource().getFeatures().filter(feat => feat.get('number') == cNum)
+		var cList = layerControls.getSource().getFeatures().filter(feat => feat.get('number') == cNum && feat.get('type') == 'c_regular');
 		if (cList.length > 0) {
 			var cCentre = cList[0].getGeometry().getFirstCoordinate();
 			olMap.getView().animate({ duration: 300, center: cCentre });
@@ -2956,6 +2994,6 @@ function setLinear(linear) {
 	}
 }
 
-$(document).ready(function () {
+$(function () {
 	init();
 });

@@ -1,6 +1,8 @@
 {
  "none": "None",
+ "aoa": "Alberta O",
  "baoc": "BAOC",
+ "bcs": "Basecamp Silke.",
  "bdn": "Bris.DawnNav",
  "dee": "Deeside",
  "ebor": "Eborienteers",
@@ -19,8 +21,11 @@
  "nwo": "NWO",
  "oo": "O.Ottowa",
  "pfo": "PFO",
+ "potoc": "POTOC",
  "rr": "RR",
+ "seloc": "SELOC",
  "swoc": "SWOC",
  "tvoc": "TVOC",
- "waoc": "WAOC"
+ "waoc": "WAOC",
+ "wch": "Walton Chasers"
 }

@@ -8,6 +8,44 @@
     </Datasource>
 </Layer>
 
+<Layer name="coast-poly" status="on" srs="&srs900913;">
+    <StyleName>coast-poly</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
+      </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="water_areas" status="on" srs="&srs900913;">
+    <StyleName>water_areas</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,"water",way_area
+            from &prefix;_polygon
+                    where landuse in ('reservoir','water','basin','dock','mill_pond','riverbank','canal','river')
+                or "natural" in ('lake','water','land','marsh','scrub','wetland','glacier')
+                or "water" = 'yes'
+            order by z_order,way_area desc
+            ) as water_areas
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="islands" status="on" srs="&srs900913;">
+    <StyleName>islands</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural" from &prefix;_polygon
+            where "natural" in ('land', 'island')
+            order by z_order,way_area desc) as land
+        </Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="leisure" status="on" srs="&srs900913;">
     <StyleName>leisure</StyleName>
     <Datasource>
@@ -25,21 +63,6 @@
             order by z_order,way_area desc
             ) as leisure
       </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="water_areas" status="on" srs="&srs900913;">
-    <StyleName>water_areas</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,way_area
-            from &prefix;_polygon
-                    where waterway in ('dock','mill_pond','riverbank','canal','river')
-                or "natural" in ('land','marsh','scrub','wetland','glacier')
-            order by z_order,way_area desc
-            ) as water_areas
-        </Parameter>
     </Datasource>
 </Layer>
 
@@ -70,6 +93,18 @@
     </Datasource>
 </Layer>
 
+<Layer name="piers" status="on" srs="&srs900913;">
+    <StyleName>pavedareas</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural" from &prefix;_polygon
+            where "man_made" in ('pier')
+            order by z_order,way_area desc) as land
+        </Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="water_lines" status="on" srs="&srs900913;">
     <StyleName>water_lines</StyleName>
     <Datasource>
@@ -86,20 +121,6 @@
     </Datasource>
 </Layer>
 
-<Layer name="oldbuildings" status="off" srs="&srs900913;">
-    <StyleName>buildings-core</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,building,leisure,railway,amenity,landuse from &prefix;_polygon
-            where building is not null
-                or landuse='building'
-                or railway='station'
-                or amenity='place_of_worship'
-            order by z_order,way_area desc) as buildings
-        </Parameter>
-    </Datasource>
-</Layer>
 <Layer name="buildings" status="on" srs="&srs900913;">
     <StyleName>buildings-core</StyleName>
     <Datasource>
@@ -190,14 +211,3 @@
     </Datasource>
 </Layer>
 
-<Layer name="islands" status="on" srs="&srs900913;">
-    <StyleName>islands</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural" from &prefix;_polygon
-            where "natural" in ('land', 'island')
-            order by z_order,way_area desc) as land
-        </Parameter>
-    </Datasource>
-</Layer>
