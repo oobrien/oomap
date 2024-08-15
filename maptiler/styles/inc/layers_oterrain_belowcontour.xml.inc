@@ -8,6 +8,26 @@
     </Datasource>
 </Layer>
 
+<Layer name="leisure_lower" status="on" srs="&srs900913;">
+    <StyleName>leisure_lower</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+          (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
+          from &prefix;_polygon
+            where landuse is not null
+                or leisure is not null
+                or amenity in ('parking','university','college','school','hospital','grave_yard')
+                or highway in ('pedestrian', 'services')
+                or "natural" in ('field','beach','heath','mud','wood','scrub','meadow','crop','grass','grassland','scree','sand')
+                or power in ('station','sub_station')
+                or tourism in ('attraction','camp_site','caravan_site','picnic_site','zoo')
+            order by z_order,way_area desc
+            ) as leisure
+      </Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="coast-poly" status="on" srs="&srs900913;">
     <StyleName>coast-line</StyleName>
     <Datasource>
@@ -78,8 +98,8 @@
     </Datasource>
 </Layer>
 
-<Layer name="leisure" status="on" srs="&srs900913;">
-    <StyleName>leisure</StyleName>
+<Layer name="leisure_upper" status="on" srs="&srs900913;">
+    <StyleName>leisure_upper</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">

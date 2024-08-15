@@ -18,34 +18,15 @@
     </Datasource>
 </Layer>
 
-<Layer name="waterareas" status="on" srs="&srs900913;">
-    <StyleName>waterareas</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,name,way_area
-            from &prefix;_polygon
-            where waterway in ('dock','mill_pond','riverbank','canal','river')
-                or landuse in ('reservoir','water','basin')
-                or "natural" in ('lake','water','land','marsh','scrub','wetland','glacier')
-            order by z_order,way_area desc
-            ) as waterareas
-        </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="parkareas" status="on" srs="&srs900913;">
-    <StyleName>parkareas</StyleName>
+<Layer name="areas" status="on" srs="&srs900913;">
+    <StyleName>areas</StyleName>
     <Datasource>
     &datasource-settings;
         <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",landuse,leisure,name,way_area
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,leisure,name,way_area
             from &prefix;_polygon
-            where leisure in ('park', 'garden', 'nature_reserve', 'common')
-                or landuse in ('forest', 'recreation_ground', 'village_green', 'meadow')
-                or "natural" in ('wood', 'heath')
             order by z_order,way_area desc
-            ) as parkareas
+            ) as areas
         </Parameter>
     </Datasource>
 </Layer>

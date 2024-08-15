@@ -28,6 +28,19 @@
     </Rule>
 </Style>
 
+<Style name="areas">
+    <Rule>
+        &maxscale_zoom7;
+        <Filter>&park_area;</Filter>
+        <PolygonSymbolizer fill="&grass;" gamma="0.8" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom4;
+        <Filter>&water_area;</Filter>
+        <PolygonSymbolizer fill="&water;" gamma="0.8" />
+    </Rule>
+</Style>
+
  <Style name="waterlines">
     <Rule>
         &maxscale_zoom10;
