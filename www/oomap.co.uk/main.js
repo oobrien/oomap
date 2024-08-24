@@ -114,6 +114,7 @@ var layerMapSheet;
 var layerMapTitle;
 var layerMapContent;
 var layerControls;
+var layerHalos;
 var layerGPX;
 var layerLines;
 var layerPreview;
@@ -265,21 +266,22 @@ function controlStyle(feature, resolution) {
 				image: new Circle({
 					stroke: new Stroke({ color: purple, width: 10 * size }),
 					fill: new Fill({ color: 'rgba(255, 255, 255, 0)' }),
-					radius: 75 * size
+					radius: 70 * size
 				}),
 				text: new Text({
 					textAlign: "center",
-					font: 120 * size + "px arial, verdana, sans-serif",
+					font: 111 * size + "px arial, verdana, sans-serif",
 					text: feature.get('number'),
 					fill: new Fill({ color: purple }),
-					offsetX: 5 * size * 35 * Math.sin((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation()),
-					offsetY: 5 * size * -35 * Math.cos((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation())
+					stroke: new Stroke({ color: [255,255,255], width: 10 * size}),
+					offsetX: 5 * size * 33 * Math.sin((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation()),
+					offsetY: 5 * size * -33 * Math.cos((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation()) + 2 * size //extra offset to align canvas centre with cairo (PDF) centre
 				})
 			}),
 			new Style({
 				image: new Circle({
 					fill: new Fill({ color: purple }),
-					radius: 10 * size
+					radius: 8 * size
 				})
 			})]
 			break;
@@ -388,6 +390,28 @@ function controlStyle(feature, resolution) {
 			break;
 	}
 };
+function haloStyle(feature, resolution) {
+	var size = trueScale / (resolution * 16000);
+	var type = feature.getProperties().type;
+
+	switch (type) {
+		case "c_regular": //control - circle & number.    Transparent fill allows selection throughout
+			return [
+				new Style({
+					text: new Text({
+						textAlign: "center",
+						font: 111 * size + "px arial, verdana, sans-serif",
+						text: feature.get('number'),
+						fill: new Fill({color: [255,255,255] }),
+						stroke: new Stroke({ color: [255,255,255], lineJoin: 'mitre', width: 10 * size}),
+						offsetX: 5 * size * 33 * Math.sin((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation()),
+						offsetY: 5 * size * -33 * Math.cos((feature.get('angle') * Math.PI) / 180 + olMap.getView().getRotation()) + 2 * size //extra offset to align canvas centre with cairo centre
+					})
+			})];
+		default: 
+			return [];
+	}
+};
 
 
 function lineStyle(feature, resolution) //Lines between controls
@@ -401,6 +425,7 @@ function lineStyle(feature, resolution) //Lines between controls
 				stroke: new Stroke({
 					color: purple,
 					width: 10 * size,
+					lineCap: 'square'
 				})
 			}),
 		)
@@ -597,6 +622,7 @@ function init() {
 	$("#contours").controlgroup();
 	$("#c_type").controlgroup();
 	$("#c_score").controlgroup();
+	$("#linear").controlgroup({ direction: "vertical" });
 
 	$("#portrait").checkboxradio({ icon: 'ui-icon-document' });
 	$("#landscape").checkboxradio({ icons: { primary: 'ui-icon-document-b' } });
@@ -607,6 +633,7 @@ function init() {
 	$("#paperorientation input[type=radio]").on('change', handleOptionChange);
 	$("#c_type input[type=radio]").on('change', handleControlTypeChange);
 	$("#contours input[type=radio]").on('change', handleStyleChange);
+	$("#linear input[type=radio]").on('change', handleStyleChange);
 
 	$("#createmap").button({ icons: { primary: "ui-icon-disk" } }).on('click', function () { handleGenerateMap(); });
 	$("#getraster").button().on('click', function () { generateMap("jpg"); });
@@ -752,7 +779,7 @@ function init() {
 		title: "mapborder", style: marginStyle, source: sourceMB, zIndex: 2,
 		updateWhileAnimating: true
 	});
-	layerMapCentre = new VectorLayer({ title: "mapcentre", style: centreStyle, source: sourceMC, zIndex: 4 });
+	layerMapCentre = new VectorLayer({ title: "mapcentre", style: centreStyle, source: sourceMC, zIndex: 5 });
 	layerMapSheet = new VectorLayer({
 		title: "mapsheet", style: sheetStyle, source: sourceMS, zIndex: 2,
 		updateWhileAnimating: true, className: 'colour'
@@ -764,11 +791,15 @@ function init() {
 	layerMapContent = new VectorLayer({ title: "mapcontent", style: null, source: sourceContent, zIndex: 2 });
 	layerControls = new VectorLayer({
 		title: "controls", style: controlStyle, source: sourceCons, className: 'features',
+		updateWhileAnimating: true, zIndex: 5
+	});
+	layerHalos = new VectorLayer({
+		title: "halos", style: haloStyle, source: sourceCons, className: 'halos',
 		updateWhileAnimating: true, zIndex: 4
 	});
-	layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 4 });
+	layerLines = new VectorLayer({ title: "lines", style: lineStyle, source: sourceLines, className: 'features', visible: false, zIndex: 5 });
 	layerPreview = new ImageLayer({ name: "Georef", zIndex: 3 });
-	layerGPX = new VectorLayer({ title: "GPX", style: markerStyle, source: sourceGPX, zIndex: 4 });
+	layerGPX = new VectorLayer({ title: "GPX", style: markerStyle, source: sourceGPX, zIndex: 5 });
 	layerSatellite = new TileLayer({ opacity: 1, zIndex: 2, className: 'satellite', updateWhileAnimating: true, visible: false });
 
 	// Initialise map style.  Use one specified in URL first, otherwise use the previously chosen one.  Check
@@ -839,6 +870,7 @@ function init() {
 					layerMapBorder,
 					layerMapTitle,
 					layerMapCentre,
+					layerHalos,
 					layerControls,
 					layerLines,
 					layerPreview,
@@ -1089,8 +1121,8 @@ function init() {
 				localStorage.setItem("hedges", hedges ? "yes" : "no");
 				fences = $('#fence').is(':checked');
 				localStorage.setItem("fences", fences ? "yes" : "no");
-				linear = $('#linear').is(':checked');
-				localStorage.setItem("linear", linear ? "yes" : "no");
+				//linear = $('#linear').is(':checked');
+				//localStorage.setItem("linear", linear ? "yes" : "no");
 				sidewalks = $('#sidewalk').is(':checked');
 				localStorage.setItem("sidewalks", sidewalks ? "yes" : "no");
 				schools = $('#schools').is(':checked');
@@ -1105,9 +1137,9 @@ function init() {
 				if (isNaN(parseInt(overlayColour, 16))) { overlayColour = 'A626FF'; }
 				localStorage.setItem("overlayColour", overlayColour);
 				purple = getColour(overlayColour);
-				layerLines.setVisible(linear);
-				layerLines.changed();
-				setLinear(linear);
+				//layerLines.setVisible(linear);
+				//layerLines.changed();
+				//setLinear(linear);
 				rebuildDescriptions();
 				layerControls.changed(); //force re-draw
 				dpi = parseInt($('#dpi').val());
@@ -1402,9 +1434,6 @@ function init() {
 		}
 	});
 	setLinear(linear);
-	layerLines.setVisible(linear);
-	rebuildDescriptions();
-	layerControls.changed(); //force re-draw
 	window.dispatchEvent(new Event('resize'));
 }
 
@@ -1527,6 +1556,9 @@ function handleStyleChange() {
 	handleZoom();
 	updateUrl();
 	rebuildDescriptions();
+	$("#linear :radio:checked").attr("id") == "linear_no"?linear=false:linear=true;
+	localStorage.setItem("linear", linear ? "yes" : "no");
+	setLinear(linear);
 }
 
 function handleRotate() {
@@ -1658,7 +1690,7 @@ function handleAdvancedOptions(pid) {
 	$('#tree').prop('checked', trees);
 	$('#hedges').prop('checked', hedges);
 	$('#fence').prop('checked', fences);
-	$('#linear').prop('checked', linear);
+	//$('#linear').prop('checked', linear);
 	$('#sidewalk').prop('checked', sidewalks);
 	$('#schools').prop('checked', schools);
 	$('#kmzcourse').prop('checked', kmzOverlay);
@@ -1857,6 +1889,7 @@ function handleLoadOldCallback(json) {
 		if (debug) { console.log(result.data); }
 		//If successful, need to convert old-style data to updated format (different styles, added rotation value)
 		result.data.rotation = '0';
+		result.data.linear = '0';
 		if (result.data.style == 'streeto') { result.data.style = 'streeto-OS-10'; }
 		if ((result.data.style + "padding").substring(0, 8) == 'streeto_') { result.data.style = 'streeto-NONE-0'; }
 		if (result.data.style == 'oterrain') { result.data.style = 'oterrain-OS-10'; }
@@ -2079,7 +2112,8 @@ function saveMap() {
 			"centre_wgs84lat": olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[1],
 			"centre_wgs84lon": olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326")[0],
 			"controls": controlsForDB,
-			"rotation": olMap.getView().getRotation()
+			"rotation": olMap.getView().getRotation(),
+			"linear": linear?"true":"false"
 		}
 	};
 
@@ -2350,8 +2384,6 @@ function generateXML() {
 	}
 }
 
-
-
 function loadMap(data) {
 	if (debug) { console.log('loadMap'); }
 	state = "zoom";
@@ -2359,15 +2391,17 @@ function loadMap(data) {
 	mapTitle = data.title;
 	raceDescription = data.race_instructions;
 	var $style = $("#" + data.style.split("-")[0]);
-	var $styleL = $("[for=" + data.style.split("-")[0] + "]");
+	//var $styleL = $("[for=" + data.style.split("-")[0] + "]");
 	var $scale = $("#" + data.scale);
-	var $scaleL = $("[for=" + data.scale + "]");
+	//var $scaleL = $("[for=" + data.scale + "]");
 	var $papersize = $("#" + data.papersize);
-	var $papersizeL = $("[for=" + data.papersize + "]");
+	//var $papersizeL = $("[for=" + data.papersize + "]");
 	var $paperorientation = $("#" + data.paperorientation);
-	var $paperorientationL = $("[for=" + data.paperorientation + "]");
+	//var $paperorientationL = $("[for=" + data.paperorientation + "]");
 	var $contours = $("#" + data.style.split("-")[1] + "-" + data.style.split("-")[2]);
-	var $contoursL = $("[for=" + data.style.split("-")[1] + "-" + data.style.split("-")[2] + "]");
+	//var $contoursL = $("[for=" + data.style.split("-")[1] + "-" + data.style.split("-")[2] + "]");
+	(data.linear == "1" || data.linear == 1)?linear=true:linear=false;
+	var $linear = $("#" + (linear?"linear_yes":"linear_no"));
 
 	$('#eventdate').datepicker("setDate", data.eventdate);
 	$('#eventdate').datepicker("refresh");
@@ -2378,6 +2412,7 @@ function loadMap(data) {
 	$papersize.trigger("click");
 	$paperorientation.trigger("click");
 	$contours.trigger("click");
+	$linear.trigger("click");
 
 	layerControls.getSource().clear();
 	topID = 0;
@@ -2422,6 +2457,7 @@ function loadMap(data) {
 	batchNumber++;
 	mapID = reqMapID;
 	$(".ol-placed").show();
+	setLinear (linear);
 	rebuildMapSheet();  //DPD
 	rebuildMapControls();
 	rebuildDescriptions();
@@ -2664,16 +2700,19 @@ function rebuildMapControls() {
 		const scale = trueScale / 200;
 		const dx = list[i + 1].lon - list[i].lon;
 		const dy = list[i + 1].lat - list[i].lat;
-		const rotation = Math.atan2(dy, dx);
-		var start2 = [list[i].lon + Math.cos(rotation) * scale, list[i].lat + Math.sin(rotation) * scale];
-		if (list[i].type == 'c_startfinish') start2 = [list[i].lon + Math.cos(rotation) * scale * 1.3, list[i].lat + Math.sin(rotation) * scale * 1.3];
-		var end2 = [list[i + 1].lon - Math.cos(rotation) * scale, list[i + 1].lat - Math.sin(rotation) * scale];
-		if (list[i + 1].type != 'c_regular') end2 = [list[i + 1].lon - Math.cos(rotation) * scale * 1.2, list[i + 1].lat - Math.sin(rotation) * scale * 1.2];
+		const dist = (dx ** 2 + dy ** 2)** 0.5;	//distance between controls - only draw a line if > 2 control circle radii
+		if (dist > scale * 2) {
+			const rotation = Math.atan2(dy, dx);
+			var start2 = [list[i].lon + Math.cos(rotation) * scale * 0.9, list[i].lat + Math.sin(rotation) * scale * 0.9];
+			if (list[i].type == 'c_startfinish') start2 = [list[i].lon + Math.cos(rotation) * scale * 1.3, list[i].lat + Math.sin(rotation) * scale * 1.3];
+			var end2 = [list[i + 1].lon - Math.cos(rotation) * scale * 0.9, list[i + 1].lat - Math.sin(rotation) * scale * 0.9];
+			if (list[i + 1].type != 'c_regular') end2 = [list[i + 1].lon - Math.cos(rotation) * scale * 1.12, list[i + 1].lat - Math.sin(rotation) * scale * 1.12];
 
-		var line = new Feature({
-			geometry: new LineString([start2, end2]),
-		});
-		layerLines.getSource().addFeature(line);
+			var line = new Feature({
+				geometry: new LineString([start2, end2]),
+			});
+			layerLines.getSource().addFeature(line);
+		}
 	}
 	layerLines.getSource().changed();
 }
@@ -2987,11 +3026,15 @@ function handlePreview() {
 
 function setLinear(linear) {
 	if (linear) {
-		$(".scorecol").addClass('hidden');
+		//$(".scorecol").addClass('hidden');
 	}
 	else {
-		$(".scorecol").removeClass('hidden');
+		//$(".scorecol").removeClass('hidden');
 	}
+	layerLines.setVisible(linear);
+	layerLines.changed();
+	controlsChanged();
+	layerControls.getSource().changed();
 }
 
 $(function () {

@@ -88,6 +88,22 @@ else
 {
 	$club = '';
 }
+
+if (array_key_exists("linear",$inData))
+{
+	if($inData['linear'] == 'true')
+	{
+		$linecourse = 'true';
+	}
+	else
+	{
+		$linecourse = 'false';
+	}
+}
+else
+{
+	$linecourse = 'false';
+}
 $style = mysqli_real_escape_string($conn, $inData['style']);
 $scale = mysqli_real_escape_string($conn, $inData['scale']);
 $papersize = mysqli_real_escape_string($conn, $inData['papersize']);
@@ -96,7 +112,7 @@ $centre_lat = mysqli_real_escape_string($conn, $inData['centre_wgs84lat']);
 $centre_lon = mysqli_real_escape_string($conn, $inData['centre_wgs84lon']);
 $rotation = mysqli_real_escape_string($conn, $inData['rotation']);
 
-$writequery = "insert into map values('$next_id', '$shortcode', '$action', '$title', '$race_instructions', $eventdate, '$club', '$style', '$scale', '$papersize', '$paperorientation', '$centre_lat', '$centre_lon', '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now(), '$rotation')";
+$writequery = "insert into map (id, shortcode, action, title, race_instructions, eventdate, club, style, scale, papersize, paperorientation, centre_lat, centre_lon, created_by, created_by_ip, created_by_domain, created_date, access_count, last_accessed, rotation, linecourse) values('$next_id', '$shortcode', '$action', '$title', '$race_instructions', $eventdate, '$club', '$style', '$scale', '$papersize', '$paperorientation', '$centre_lat', '$centre_lon', '$created_by', '$created_by_ip', '$created_by_domain', now(), 0, now(), '$rotation', $linecourse)";
 $result = mysqli_query($conn, $writequery);
 if (!$result)
 {

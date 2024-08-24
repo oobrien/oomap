@@ -104,14 +104,20 @@ a:active, a:hover { color: #cc0032; }
 	display: flex;
 	flex-flow: row wrap;
 	flex: none;
-	justify-content: space-between;
+	justify-content: flex-start;
 }
 
 #toolbar
 {
-	margin: 0 5px;
+  margin: 0 3px 0 5px;
   padding: 5px 5px 5px 0;
-  justify-self: left;
+  font-size: 10px;
+}
+
+#toolbar2
+{
+  width: 75px;
+  padding: 12px 5px 5px 5px;
   font-size: 10px;
 }
 
@@ -119,6 +125,7 @@ a:active, a:hover { color: #cc0032; }
 {
 	width: 200px;
 	margin-right: 5px;
+	margin-left: auto;
 	padding: 5px 1px 5px 10px;
 	font-size: 10px;
 }
@@ -156,8 +163,7 @@ a:active, a:hover { color: #cc0032; }
 	min-height: 500px;
 	border: 1px solid #aaa;
 	margin: 5px 0px 5px 5px;
-	height: 100%
-	layer: -1;
+	height: 100%;
 }
 
 #rhs

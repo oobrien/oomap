@@ -504,13 +504,13 @@ def createImage(path, fileformat):
             controllon = float(controlsArr[4*i+3])
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
-            x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
-            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
-            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
+            x_bearing, y_bearing, width, height, x_advance, y_advance = ctx.text_extents(text)
+            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180 + rotation)
+            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180 + rotation)
             ctx.save()
             ctx.translate(controllonP*S2P, controllatP*S2P)
             ctx.rotate(-rotation)
-            ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
+            ctx.move_to(labelX*S2P-(width/2 + x_bearing), -labelY*S2P+(height/2))
             ctx.text_path(text)
             ctx.set_line_width(C_T*S2P)
             ctx.stroke_preserve()
@@ -536,36 +536,40 @@ def createImage(path, fileformat):
             ctx.arc(controllonP*S2P, controllatP*S2P, CDOT_R*S2P, 0, 2*math.pi)
             ctx.fill()
             if p.get('linear',"no") != "no":
-                angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
-                start2lonP = lastlonP + math.cos(angle) * C_R * (1.3 if i == 0 else 1.0)
-                start2latP = lastlatP + math.sin(angle) * C_R * (1.3 if i == 0 else 1.0)
-                end2lonP = controllonP - math.cos(angle) * C_R
-                end2latP = controllatP - math.sin(angle) * C_R
-                ctx.move_to(start2lonP*S2P, start2latP*S2P)
-                ctx.line_to(end2lonP*S2P, end2latP*S2P)  #draw line between controls
+                dist = ((lastlonP - controllonP)**2 + (lastlatP - controllatP)**2)**0.5
+                if dist > 2 * C_R:  # only draw a line if controls are > 2 circle radii apart.
+                    angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
+                    start2lonP = lastlonP + math.cos(angle) * C_R * (1.3 if i == 0 else 1.0)
+                    start2latP = lastlatP + math.sin(angle) * C_R * (1.3 if i == 0 else 1.0)
+                    end2lonP = controllonP - math.cos(angle) * C_R
+                    end2latP = controllatP - math.sin(angle) * C_R
+                    ctx.move_to(start2lonP*S2P, start2latP*S2P)
+                    ctx.line_to(end2lonP*S2P, end2latP*S2P)  #draw line between controls
                 lastlonP = controllonP
                 lastlatP = controllatP
 
             x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
-            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
-            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
+            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180 + rotation)
+            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180 + rotation)
             ctx.save()
             ctx.translate(controllonP*S2P, controllatP*S2P)
             ctx.rotate(-rotation)
-            ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
+            ctx.move_to(labelX*S2P-(width/2 + x_bearing), -labelY*S2P+(height/2))
             ctx.show_text(text)
             ctx.restore()
         # draw line from last control to finish
         if p.get('linear',"no") != "no":
             controllatP = (mapNLat-flat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (flon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
-            angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
-            start2lonP = lastlonP + math.cos(angle) * C_R
-            start2latP = lastlatP + math.sin(angle) * C_R
-            end2lonP = controllonP - math.cos(angle) * C_R * 1.2
-            end2latP = controllatP - math.sin(angle) * C_R * 1.2
-            ctx.move_to(start2lonP*S2P, start2latP*S2P)
-            ctx.line_to(end2lonP*S2P, end2latP*S2P)
+            dist = ((lastlonP - controllonP)**2 + (lastlatP - controllatP)**2)**0.5
+            if dist > 2 * C_R:  # only draw a line if controls are > 2 circle radii apart.
+                angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
+                start2lonP = lastlonP + math.cos(angle) * C_R
+                start2latP = lastlatP + math.sin(angle) * C_R
+                end2lonP = controllonP - math.cos(angle) * C_R * 1.2
+                end2latP = controllatP - math.sin(angle) * C_R * 1.2
+                ctx.move_to(start2lonP*S2P, start2latP*S2P)
+                ctx.line_to(end2lonP*S2P, end2latP*S2P)
         ctx.stroke()
 
     # Crosses and labels
