@@ -3,3 +3,4 @@ js/
 node_modules
 dist
 vscode/
+.vscode/

@@ -12,14 +12,6 @@
     </Rule>
 </Style>
 
-<Style name="water_areas">
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>&water_area;</Filter>
-        <PolygonSymbolizer fill="&blue50;" gamma="0.8" />
-    </Rule>
-</Style>
-
 <Style name="water_lines">
     <Rule>
 	    <Filter>not &tunnel;</Filter>
@@ -262,12 +254,25 @@
 <Style name="leisure_lower">
     <Rule>
         &maxscale_zoom12;
+        <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
+        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+    </Rule>
+ </Style>
+
+<Style name="leisure_upper">
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>&water_area;</Filter>
+        <PolygonSymbolizer fill="&blue50;" gamma="0.8" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
         <Filter>[natural] = 'wood' or [landuse] = 'wood' or [landuse] = 'forest'</Filter>
         <PolygonSymbolizer fill="&green30;" gamma="0.6" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'nature_reserve' or [landuse] = 'orchard'</Filter>
+        <Filter>[landuse] = 'orchard'</Filter>
         <PolygonSymbolizer fill="&green30;" gamma="0.6" />
     </Rule>
     <Rule>
@@ -280,9 +285,6 @@
         <Filter>[landuse] = 'park' or [landuse] = 'meadow' or [landuse] = 'grass' or [landuse] = 'recreation_ground' or [landuse] = 'village_green' or [landuse] = 'green'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
     </Rule>
- </Style>
-
-<Style name="leisure_upper">
     <Rule>
         &maxscale_zoom12;
         <Filter>[landuse] = 'landfill' or [landuse] = 'construction' or ([amenity] = 'school' and &schools; = 'no')</Filter>
@@ -318,11 +320,6 @@
         <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
     </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
-        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-    </Rule>
 </Style>
 
 <Style name="sports_grounds_pitch">
@@ -342,7 +339,7 @@
     </Rule>
 </Style>
 
-<Style name="cliffs">
+<Style name="barriers">
      <Rule>
         &maxscale_zoom13;
         <Filter>[natural] = 'cliff'</Filter>
@@ -355,9 +352,6 @@
         <MarkersSymbolizer file="&symbols;/embankment.svg" placement="line" offset="1.4" spacing="3" max-error="0.5" />
         <LineSymbolizer stroke="&brown100;" stroke-width="2.0" stroke-linecap="square" />
     </Rule>
-</Style>
-
-<Style name="barriers">
     <Rule>
         &maxscale_zoom12;
         &minscale_zoom12;
@@ -392,6 +386,10 @@
         <Filter>&fences; = 'yes' and [barrier] = 'fence'</Filter>
 	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />
         <LineSymbolizer stroke="&black;" stroke-width="0.79" stroke-linecap="square" />
+    </Rule>
+    <Rule>
+        <Filter>[man_made]='pier'</Filter>
+        <LineSymbolizer stroke="&brown;" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
 </Style>
 

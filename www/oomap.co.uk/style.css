@@ -163,7 +163,7 @@ a:active, a:hover { color: #cc0032; }
 	min-height: 500px;
 	border: 1px solid #aaa;
 	margin: 5px 0px 5px 5px;
-	height: 100%;
+	height: calc(100%-10px);
 }
 
 #rhs

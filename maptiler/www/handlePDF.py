@@ -585,11 +585,15 @@ def createImage(path, fileformat):
             controllon = float(crossesArr[2*i+1])
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
-            ctx.move_to((controllonP-CXLEN)*S2P, (controllatP+CXLEN)*S2P)
-            ctx.line_to((controllonP+CXLEN)*S2P, (controllatP-CXLEN)*S2P)
-            ctx.move_to((controllonP-CXLEN)*S2P, (controllatP-CXLEN)*S2P)
-            ctx.line_to((controllonP+CXLEN)*S2P, (controllatP+CXLEN)*S2P)
+            ctx.save()
+            ctx.translate(controllonP*S2P, controllatP*S2P)
+            ctx.rotate(-rotation)            
+            ctx.move_to(-CXLEN*S2P, CXLEN*S2P)
+            ctx.line_to(CXLEN*S2P, -CXLEN*S2P)
+            ctx.move_to(-CXLEN*S2P, -CXLEN*S2P)
+            ctx.line_to(CXLEN*S2P, CXLEN*S2P)
             ctx.stroke()
+            ctx.restore()
 
     #Crossing points and labels
     if len(cpsArr) > 0:

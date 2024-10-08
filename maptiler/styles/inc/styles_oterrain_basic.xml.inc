@@ -281,6 +281,32 @@
         <Filter>[landuse] = 'park' or [landuse] = 'meadow' or [landuse] = 'grass' or [landuse] = 'recreation_ground' or [landuse] = 'village_green' or [landuse] = 'green'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
     </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[natural] = 'field' or [natural] = 'heath' or [landuse] = 'conservation' or ([landuse] = 'school' and &schools; = 'yes') or  ([amenity] = 'school' and &schools; = 'yes')</Filter>
+        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+    </Rule>    
+     <Rule>
+        &maxscale_zoom12;
+        <Filter>[natural] = 'grass' or [natural] = 'grassland' or [natural] = 'meadow' or [tourism] = 'camp_site' or [tourism]='caravan_site' or [tourism] = 'picnic_site'</Filter>
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+    </Rule>
+   <Rule>
+        &maxscale_zoom12;
+        <Filter>[natural] = 'scrub'</Filter>
+        <PolygonPatternSymbolizer file="&symbols;/undergrowth.svg" transform="scale(1.0, 1.0)"  />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[natural] = 'wood' or [landuse] = 'wood' or [landuse] = 'forest'</Filter>
+        <PolygonSymbolizer fill="&white;" gamma="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+        <PolygonPatternSymbolizer file="&symbols;/crop2.svg" transform="scale(0.25, 0.25)" />
+    </Rule>
    <Rule>
         &maxscale_zoom12;
         <Filter>[landuse] = 'quarry'</Filter>
@@ -298,11 +324,6 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[natural] = 'wood' or [landuse] = 'wood' or [landuse] = 'forest'</Filter>
-        <PolygonSymbolizer fill="&white;" gamma="0.6" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
         <Filter>[landuse] = 'orchard'</Filter>
         <PolygonPatternSymbolizer file="&symbols;/orchard.svg" transform="scale(0.18, 0.18)"  />
     </Rule>
@@ -311,21 +332,6 @@
         <Filter>([landuse] = 'cemetery' or [landuse] = 'grave_yard' or [amenity] = 'grave_yard')</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
         <PolygonPatternSymbolizer file="&symbols;/tomb.svg" transform="scale(0.2)"  />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[natural] = 'grass' or [natural] = 'grassland' or [natural] = 'meadow' or [tourism] = 'camp_site' or [tourism]='caravan_site' or [tourism] = 'picnic_site'</Filter>
-        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[natural] = 'field' or [natural] = 'heath' or [landuse] = 'conservation' or ([landuse] = 'school' and &schools; = 'yes') or  ([amenity] = 'school' and &schools; = 'yes')</Filter>
-        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-    </Rule>
-   <Rule>
-        &maxscale_zoom12;
-        <Filter>[natural] = 'scrub'</Filter>
-        <PolygonPatternSymbolizer file="&symbols;/undergrowth.svg" transform="scale(1.0, 1.0)"  />
     </Rule>
     <Rule>
         &maxscale_zoom12;
@@ -341,12 +347,6 @@
         &maxscale_zoom12;
         <Filter>[leisure] = 'garden' or [landuse] = 'allotments' or [landuse] = 'military' or [landuse] = 'railway' or [tourism] = 'zoo'</Filter>
         <PolygonSymbolizer fill="&olive100;" gamma="0.6" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
-        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/crop2.svg" transform="scale(0.25, 0.25)" />
     </Rule>
     <Rule>
         &maxscale_zoom12;

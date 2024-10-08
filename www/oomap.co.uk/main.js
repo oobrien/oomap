@@ -695,7 +695,7 @@ function init() {
 		localStorage.setItem("club",$('#club').val())
 	});
 
-	$('#tempLayer').change(function () {
+	$('#tempLayer').on('change', function () {
 		if (this.checked) {
 			//$('#c_poi_dist').prop('disabled', true);
 			//$("label[for='c_poi_dist']").addClass( "grey" );
@@ -716,7 +716,7 @@ function init() {
 
 	tips = $(".validateTips");
 
-	$('#about').click(function (event) {
+	$('#about').on('click', function (event) {
 		event.preventDefault();
 		$("#welcome").dialog('open');
 	});
@@ -1398,7 +1398,7 @@ function init() {
 	});
 
 
-	$(window).keydown(function (e) {
+	$(window).on('keydown', function (e) {
 		var keyCode = e.which;
 		if (debug) { console.log("key: " + keyCode); }
 		if (keyCode == 68 && e.ctrlKey == true) {  //press "Ctrl-d" - toggle debug
@@ -2391,15 +2391,10 @@ function loadMap(data) {
 	mapTitle = data.title;
 	raceDescription = data.race_instructions;
 	var $style = $("#" + data.style.split("-")[0]);
-	//var $styleL = $("[for=" + data.style.split("-")[0] + "]");
 	var $scale = $("#" + data.scale);
-	//var $scaleL = $("[for=" + data.scale + "]");
 	var $papersize = $("#" + data.papersize);
-	//var $papersizeL = $("[for=" + data.papersize + "]");
 	var $paperorientation = $("#" + data.paperorientation);
-	//var $paperorientationL = $("[for=" + data.paperorientation + "]");
 	var $contours = $("#" + data.style.split("-")[1] + "-" + data.style.split("-")[2]);
-	//var $contoursL = $("[for=" + data.style.split("-")[1] + "-" + data.style.split("-")[2] + "]");
 	(data.linear == "1" || data.linear == 1)?linear=true:linear=false;
 	var $linear = $("#" + (linear?"linear_yes":"linear_no"));
 
@@ -2485,6 +2480,7 @@ function insertFeature(moveFrom, moveTo) {
 	}
 }
 //convert a control Object to an ol Feature
+/*
 function controlToFeature(control) {
 	var feature = new Feature({
 		geometry: new Point([control.lon, control.lat]),
@@ -2507,7 +2503,7 @@ function featureToControl(feature) {
 	control.lat = feature.getGeometry().getFirstCoordinate[1];
 	return control;
 }
-
+*/
 
 function getSortedControls(type = null) {
 	var list = layerControls.getSource().getFeatures();

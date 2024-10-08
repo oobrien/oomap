@@ -38,22 +38,6 @@
     </Datasource>
 </Layer>
 
-<Layer name="water_areas" status="on" srs="&srs900913;">
-    <StyleName>water_areas</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,"water",way_area
-            from &prefix;_polygon
-                    where landuse in ('reservoir','water','basin','dock','mill_pond','riverbank','canal','river')
-                or "natural" in ('lake','water','land','marsh','scrub','wetland','glacier')
-                or "water" = 'yes'
-            order by z_order,way_area desc
-            ) as water_areas
-        </Parameter>
-    </Datasource>
-</Layer>
-
 <Layer name="islands" status="on" srs="&srs900913;">
     <StyleName>islands</StyleName>
     <Datasource>
@@ -71,15 +55,16 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism,"water",waterway,way_area
             from &prefix;_polygon
             where landuse is not null
                 or leisure is not null
                 or amenity in ('parking','university','college','school','hospital','grave_yard')
                 or highway in ('pedestrian', 'services')
-                or "natural" in ('field','beach','heath','mud','wood','scrub','meadow','crop','grass','grassland','scree')
+                or "natural" is not null
                 or power in ('station','sub_station')
                 or tourism in ('attraction','camp_site','caravan_site','picnic_site','zoo')
+                or "water" = 'yes'
             order by z_order,way_area desc
             ) as leisure
       </Parameter>
@@ -196,7 +181,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made is not null) as roads
         </Parameter>
     </Datasource>
 </Layer>
