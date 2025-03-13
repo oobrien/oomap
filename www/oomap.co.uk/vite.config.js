@@ -1,6 +1,7 @@
 import inject from '@rollup/plugin-inject';
 
 
+
 export default {
   plugins: [
     inject({
@@ -20,6 +21,10 @@ export default {
   build: {
     sourcemap: true,
     rollupOptions: {
+      //input: {
+       // main: 'index.html',
+      //  test: 'index2.html',
+      //},
       output: {
            globals: {
 

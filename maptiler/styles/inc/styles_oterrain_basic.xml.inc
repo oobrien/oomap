@@ -314,9 +314,6 @@
         <PolygonPatternSymbolizer file="&symbols;/quarry.svg" transform="scale(0.5)"/>
         <LineSymbolizer stroke="&grey50;" stroke-width="0.5" />
     </Rule>
-</Style>
-
-<Style name="leisure_upper">
     <Rule>
         &maxscale_zoom12;
         <Filter>[landuse] = 'landfill' or [landuse] = 'construction'</Filter>
@@ -347,7 +344,27 @@
         &maxscale_zoom12;
         <Filter>[leisure] = 'garden' or [landuse] = 'allotments' or [landuse] = 'military' or [landuse] = 'railway' or [tourism] = 'zoo'</Filter>
         <PolygonSymbolizer fill="&olive100;" gamma="0.6" />
+    </Rule>    
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[landuse] = 'vineyard'</Filter>
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+        <PolygonPatternSymbolizer file="&symbols;/vineyard.svg" transform="scale(0.3, 0.3)" />
     </Rule>
+    <Rule>
+         &maxscale_zoom12;
+         <Filter>[natural] = 'scree'</Filter>
+         <PolygonPatternSymbolizer file="&symbols;/scree.svg" transform="scale(0.3)"  />
+     </Rule>  
+     <Rule>
+        &maxscale_zoom12;
+        <Filter>[amenity] = 'parking' or [landuse] = 'playground' or [leisure] = 'playground' or [landuse] = 'farmyard' or [landuse] = 'parking' </Filter>
+        <PolygonSymbolizer fill="&brown50;" gamma="0.6" />
+        <LineSymbolizer stroke="&black;" stroke-width="0.6" />
+    </Rule>      
+</Style>
+
+<Style name="leisure_upper">
     <Rule>
         &maxscale_zoom12;
         <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
@@ -356,7 +373,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[amenity] = 'parking' or [landuse] = 'playground' or [leisure] = 'playground' or [landuse] = 'farmyard' or [landuse] = 'parking' or [highway] = 'services'</Filter>
+        <Filter>[highway] = 'services'</Filter>
         <PolygonSymbolizer fill="&brown50;" gamma="0.6" />
         <LineSymbolizer stroke="&black;" stroke-width="0.6" />
     </Rule>
@@ -370,17 +387,6 @@
         <Filter>[leisure] = 'track'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2" />
     </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[landuse] = 'vineyard'</Filter>
-        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/vineyard.svg" transform="scale(0.3, 0.3)" />
-    </Rule>
-    <Rule>
-         &maxscale_zoom12;
-         <Filter>[natural] = 'scree'</Filter>
-         <PolygonPatternSymbolizer file="&symbols;/scree.svg" transform="scale(0.3)"  />
-     </Rule>
 </Style>
 
 <Style name="water_areas_casing">

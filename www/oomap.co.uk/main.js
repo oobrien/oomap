@@ -60,7 +60,7 @@ var mapStyleID;
 var mapStyleIDOnSource;
 var paper;
 var paper_pieces = [];
-var scale;
+var scale=10000;
 var trueScale = 10000;  //scale corrected for latitude, with sensible initial default
 var tips;
 var eventdate = "";
@@ -615,24 +615,44 @@ function setDefaults() {
 /* Initialisation */
 
 function init() {
-	$("#mapstyle").controlgroup();
-	$("#mapscale").controlgroup();
-	$("#papersize").controlgroup();
+	$.widget( "custom.iconselectmenu", $.ui.selectmenu, {
+		_renderItem: function( ul, item ) {
+			var li = $( "<li>" ),
+				wrapper = $( "<div>", { text: item.label } );
+
+			if ( item.disabled ) {
+				li.addClass( "ui-state-disabled" );
+			}
+
+			$( "<span>", {
+				style: item.element.attr( "data-style" ),
+				"class": "ui-icon " + item.element.attr( "data-class" )
+			})
+				.appendTo( wrapper );
+
+			return li.append( wrapper ).appendTo( ul );
+		}
+	});
+	//$("#mapstyle").controlgroup();
+	$("#mapscale").selectmenu();
+	$("#mapstyle").iconselectmenu().iconselectmenu("menuWidget").addClass( "ui-menu-icons style-icon" );
+	$("#papersize").selectmenu();
 	$("#paperorientation").controlgroup();
-	$("#contours").controlgroup();
+	$("#contours").selectmenu();
 	$("#c_type").controlgroup();
 	$("#c_score").controlgroup();
-	$("#linear").controlgroup({ direction: "vertical" });
+	$("#linear").controlgroup();
 
 	$("#portrait").checkboxradio({ icon: 'ui-icon-document' });
 	$("#landscape").checkboxradio({ icons: { primary: 'ui-icon-document-b' } });
 
-	$("#mapstyle input[type=radio]").on('change', handleStyleChange);
-	$("#mapscale input[type=radio]").on('change', handleOptionChange);
-	$("#papersize input[type=radio]").on('change', handleOptionChange);
+	//$("#mapstyle input[type=radio]").on('change', handleStyleChange);
+	$("#mapscale").on('selectmenuclose', handleScaleChange);
+	$("#mapstyle").on('iconselectmenuclose', handleStyleChange);
+	$("#papersize").on('selectmenuclose', handleOptionChange);
 	$("#paperorientation input[type=radio]").on('change', handleOptionChange);
 	$("#c_type input[type=radio]").on('change', handleControlTypeChange);
-	$("#contours input[type=radio]").on('change', handleStyleChange);
+	$("#contours").on('selectmenuclose', handleStyleChange);
 	$("#linear input[type=radio]").on('change', handleStyleChange);
 
 	$("#createmap").button({ icons: { primary: "ui-icon-disk" } }).on('click', function () { handleGenerateMap(); });
@@ -824,10 +844,12 @@ function init() {
 		mapStyleID = "streeto-LIDAR-5";
 	}
 	//Set the map style & contour buttons to match the choice.
-	$('#' + mapStyleID.split("-")[0]).prop('checked', true);
-	$('#mapstyle').controlgroup('refresh');
+	$("#mapstyle").val(mapStyleID.split("-")[0]);
+	//$("#mapstyle").iconselectmenu("refresh");
+	//$('#' + mapStyleID.split("-")[0]).prop('checked', true);
+	//$('#mapstyle').controlgroup('refresh');
 	$('#' + mapStyleID.split("-")[1] + "-" + mapStyleID.split("-")[2]).prop('checked', true);
-	$('#contours').controlgroup('refresh');
+	//$('#contours').controlgroup('refresh');
 
 	if (mapStyleID.split("-")[0] == "blueprint") {
 		mapTitle = "Blueprint";
@@ -1058,7 +1080,7 @@ function init() {
 					var control = new Feature({
 						geometry: new Point(newControlLL),
 						number: "" + newNumber,
-						angle: parseInt($("#c_angle").val()),
+						angle: parseInt($("#c_angle").val()-(olMap.getView().getRotation() * 180/Math.PI)+360)%360,
 						type: $("#c_type :radio:checked").attr("id"),
 						score: parseInt($("#c_score :radio:checked").val()),
 						description: $('<div>').text($("#c_description").val()).html().replace("undefined", ""),
@@ -1218,7 +1240,25 @@ function init() {
 			}
 		}
 	});
-
+	$("#setmapscale").dialog({
+		autoOpen: false,
+		height: 350,
+		width: 500,
+		modal: true,
+		buttons: {
+			OK: function () {
+				var sc = parseInt($("#s_customscale").val());
+				if (!isNaN(sc) && sc > 1000 && sc < 40000) {
+					scale = sc;
+					if (state == "addcontrols" || state == "zoom") {handleOptionChange();}
+				}
+				$(this).dialog("close");
+			},
+			Cancel: function () {
+				$(this).dialog("close");
+			}
+		}
+	});
 	$("#saving").dialog({
 		autoOpen: false,
 		height: 140,
@@ -1485,7 +1525,7 @@ function resetControlAddDialog(pid) {
 	$('#c_type').controlgroup('refresh');
 
 	//set dialog defaults:
-	$("#c_angle").val(45).trigger('change');
+	$("#c_angle").val(45).trigger('change');	//Default angle is 45deg relative to map, not to true N
 	//$("#c_score").val(10); //Don't change this - useful to keep current value.
 	$("#c_number").val("" + (topNumber + 1));
 	$("#c_description").val("");
@@ -1494,7 +1534,7 @@ function resetControlAddDialog(pid) {
 	if (pid != null) {
 		var control = layerControls.getSource().getFeatureById(pid.substring(1));
 		if (control) {
-			$("#c_angle").val(control.get('angle')).trigger('change');
+			$("#c_angle").val((control.get('angle')+parseInt(olMap.getView().getRotation() * 180/Math.PI + 360))%360).trigger('change');
 			$("#c_score" + control.get('score')).trigger("click"); //Underlying button
 			$("#c_number").val(control.get('number'));
 			$("#c_description").val(control.get('description'));
@@ -1547,7 +1587,8 @@ function handleControlTypeChange() {
 }
 
 function handleStyleChange() {
-	mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
+	mapStyleID = $("#mapstyle").val() + "-" + $("#contours").val();
+	console.log(mapStyleID);
 	localStorage.setItem("mapStyleID",mapStyleID);
 	if (mapID != "new") {
 		mapID = "new";
@@ -1582,6 +1623,8 @@ function handleRotate() {
 			//rotAngle = angle;
 			rebuildMapSheet();   //reposition map sheet so it remains horizontal
 			rebuildMapControls();
+			layerControls.getSource().changed();
+			layerHalos.getSource().changed();
 		}
 	}
 	catch { }
@@ -1635,13 +1678,13 @@ function handleZoom() {
 			$("#messageCentre").hide();
 			//rebuildMapSheet();
 		}
-		mapStyleID = $("#mapstyle :radio:checked").attr("id") + "-" + $("#contours :radio:checked").attr("id");
+		mapStyleID = $("#mapstyle").val() + "-" + $("#contours").val();
 
 		if (mapStyleIDOnSource != mapStyleID) {
 			layerOrienteering.setSource(
 				new XYZ(
 					{
-						urls: [oom.prefix + $("#contours :radio:checked").attr("id") + "/{z}/{x}/{y}.png"],
+						urls: [oom.prefix + $("#contours").val() + "/{z}/{x}/{y}.png"],
 						attributions: ['Contours: various - see PDF output',],
 						maxZoom: 18,
 						"wrapX": true
@@ -1951,6 +1994,15 @@ function handleGenerateClue() {
 //Label overlay
 //lat/lon jump.
 
+function handleScaleChange() {
+	if ($("#mapscale").val() == "custom") {
+		$("#setmapscale").dialog("open");
+		$("#s_customscale").val(scale);
+	} else {
+		handleOptionChange();
+	}
+}
+
 function handleOptionChange() {
 	if (debug) { console.log(state); }
 	if (state == "initialzoom") {
@@ -2104,8 +2156,8 @@ function saveMap() {
 			"eventdate": $.datepicker.formatDate("yy-mm-dd", $('#eventdate').datepicker("getDate")),
 			"club": $('#club').val(),
 			"style": mapStyleID,
-			"scale": $("#mapscale :radio:checked").attr("id"),
-			"papersize": $("#papersize :radio:checked").attr("id"),
+			"scale": "s" + scale,
+			"papersize": $("#papersize").val(),
 			"paperorientation": $("#paperorientation :radio:checked").attr("id"),
 			"centre_lat": sheetCentreLL[1],
 			"centre_lon": sheetCentreLL[0],
@@ -2390,23 +2442,29 @@ function loadMap(data) {
 
 	mapTitle = data.title;
 	raceDescription = data.race_instructions;
-	var $style = $("#" + data.style.split("-")[0]);
-	var $scale = $("#" + data.scale);
+	//var $style = $("#" + data.style.split("-")[0]);
+	//var $scale = $("#" + data.scale);
 	var $papersize = $("#" + data.papersize);
 	var $paperorientation = $("#" + data.paperorientation);
-	var $contours = $("#" + data.style.split("-")[1] + "-" + data.style.split("-")[2]);
+	//var $contours = $("#" + data.style.split("-")[1] + "-" + data.style.split("-")[2]);
 	(data.linear == "1" || data.linear == 1)?linear=true:linear=false;
 	var $linear = $("#" + (linear?"linear_yes":"linear_no"));
 
 	$('#eventdate').datepicker("setDate", data.eventdate);
 	$('#eventdate').datepicker("refresh");
 	$('#club').val(data.club);
-
-	$style.trigger("click");
-	$scale.trigger("click");
+	$('#mapstyle').val(data.style.split("-")[0]);
+	$('#mapstyle').iconselectmenu("refresh");
+	scale = data.scale.split("s")[1];
+	$('#mapscale').val(scale);
+	$('#mapscale').selectmenu("refresh");
+	$('#contours').val(data.style.split("-")[1] + "-" + data.style.split("-")[2]);
+	$('#contours').selectmenu("refresh");
+	//$style.trigger("click");
+	//$scale.trigger("click");
 	$papersize.trigger("click");
 	$paperorientation.trigger("click");
-	$contours.trigger("click");
+	//$contours.trigger("click");
 	$linear.trigger("click");
 
 	layerControls.getSource().clear();
@@ -2553,16 +2611,15 @@ function rebuildMapSheet() {
 
 	var papersize = "";
 
-	papersize = $("#papersize :radio:checked").attr("id");
+	papersize = $("#papersize").val();
 
 	if ($("#portrait").prop('checked')) { paper_pieces[0] = 0.0001 * papersize.substring(6); paper_pieces[1] = 0.0001 * papersize.substring(1, 5); }
 	else { paper_pieces[0] = 0.0001 * papersize.substring(1, 5); paper_pieces[1] = 0.0001 * papersize.substring(6); }
 	paper = paper_pieces[0] + "," + paper_pieces[1];
-
-	scale = -1;
-
-	scale = $("#mapscale :radio:checked").val();
-	scale = parseInt(scale);
+	if (!isNaN(parseInt($("#mapscale").val()))) {
+		scale = parseInt($("#mapscale").val());
+	}
+	console.log(scale);
 
 	var centroidllWGS84 = olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326");
 	var fudgeFactor = Math.cos(centroidllWGS84[1] * Math.PI / 180);
@@ -2719,7 +2776,7 @@ function rebuildDescriptions() {
 	var controlnum = list.length;
 	var maxscore = 0;
 
-	contourSeparation = $("#contours :radio:checked").attr("id").split("-")[1].replace("p", ".");
+	contourSeparation = $("#contours").val().split("-")[1].replace("p", ".");
 
 	for (var i = 0; i < list.length; i++) {
 		maxscore += list[i].score;

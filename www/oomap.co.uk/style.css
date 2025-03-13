@@ -141,6 +141,21 @@ a:active, a:hover { color: #cc0032; }
 	margin: 0 15px 0 7px;
 }
 
+option.style-icon {
+	background-repeat: no-repeat !important;
+	padding-left: 80px;
+}
+.style-icon .ui-icon {
+	background-position: left top;
+	width: 60px;
+	height: 60px;
+}
+#mapstyle-menu .ui-menu-item-wrapper {
+	padding: 3px 1em 82px .4em !important;
+}
+.ui-selectmenu-button.ui-button {
+	width: 10em !important;
+}
 
 /* 3. Main Panel */
 
@@ -163,7 +178,7 @@ a:active, a:hover { color: #cc0032; }
 	min-height: 500px;
 	border: 1px solid #aaa;
 	margin: 5px 0px 5px 5px;
-	height: calc(100%-10px);
+	height: calc(100% - 10px);
 }
 
 #rhs
