@@ -59,7 +59,8 @@ var raceDescription = oom.defaultRaceDescription;
 var mapStyleID;
 var mapStyleIDOnSource;
 var paper;
-var paper_pieces = [];
+var papersize="p2970-2100";
+var paper_pieces = [0.297,0.210];
 var scale=10000;
 var trueScale = 10000;  //scale corrected for latitude, with sensible initial default
 var tips;
@@ -99,6 +100,8 @@ var power = true;
 if (localStorage.getItem("power")) power = (localStorage.getItem("power")=="yes");
 var privroads = true;
 if (localStorage.getItem("privroads")) privroads = (localStorage.getItem("privroads")=="yes");
+var buildings = true;
+if (localStorage.getItem("buildings")) buildings = (localStorage.getItem("buildings")=="yes");
 var preview = false;
 var kmzOverlay = false;
 if (localStorage.getItem("kmzOverlay")) kmzOverlay = (localStorage.getItem("kmzOverlay")=="yes");
@@ -649,7 +652,7 @@ function init() {
 	//$("#mapstyle input[type=radio]").on('change', handleStyleChange);
 	$("#mapscale").on('selectmenuclose', handleScaleChange);
 	$("#mapstyle").on('iconselectmenuclose', handleStyleChange);
-	$("#papersize").on('selectmenuclose', handleOptionChange);
+	$("#papersize").on('selectmenuclose', handlePaperChange);
 	$("#paperorientation input[type=radio]").on('change', handleOptionChange);
 	$("#c_type input[type=radio]").on('change', handleControlTypeChange);
 	$("#contours").on('selectmenuclose', handleStyleChange);
@@ -1153,6 +1156,8 @@ function init() {
 				localStorage.setItem("kmzOverlay", kmzOverlay ? "yes" : "no");
 				power = $('#power').is(':checked');
 				localStorage.setItem("power", power ? "yes" : "no");
+				buildings = $('#buildings').is(':checked');
+				localStorage.setItem("buildings", buildings ? "yes" : "no");
 				privroads = $('#privroads').is(':checked');
 				localStorage.setItem("privroads", power ? "yes" : "no");
 				overlayColour = $('#purple').val();
@@ -1253,6 +1258,36 @@ function init() {
 					if (state == "addcontrols" || state == "zoom") {handleOptionChange();}
 				}
 				$(this).dialog("close");
+			},
+			Cancel: function () {
+				$(this).dialog("close");
+			}
+		}
+	});
+	$("#setpaper").dialog({
+		autoOpen: false,
+		height: 300,
+		width: 600,
+		modal: true,
+		buttons: {
+			OK: function () {
+				var sh = parseInt($("#s_custompaperh").val());
+				var sw = parseInt($("#s_custompaperw").val());
+				if (!isNaN(sh) && sh >= 100 && sh <= 450 && !isNaN(sw) && sw >= 100 && sw <= 450) {
+					if(sw > sh) { [sw, sh] = [sh, sw] };	//make sure sh is larger than sw
+					paper_pieces = [sh / 1000, sw / 1000];
+					$("#s_custompaperh").val(sh);
+					$("#s_custompaperw").val(sw);
+					if (debug) {console.log(papersize);}
+					if (state == "addcontrols" || state == "zoom") {handleOptionChange();}
+				}
+				else {
+					$("#papersize").val("p2970-2100");	//Set to A4 if values don't parse
+					papersize = "p2970-2100";
+					paper_pieces = [0.297, 0.210];
+				}
+				$(this).dialog("close");
+				handleOptionChange();
 			},
 			Cancel: function () {
 				$(this).dialog("close");
@@ -1739,6 +1774,7 @@ function handleAdvancedOptions(pid) {
 	$('#kmzcourse').prop('checked', kmzOverlay);
 	$('#power').prop('checked', power);
 	$('#privroads').prop('checked', privroads);
+	$('#buildings').prop('checked', buildings);
 	$('#dpi').val(dpi);
 	$('#purple').val(overlayColour);
 	$("#advanced").dialog("open");
@@ -1987,13 +2023,6 @@ function handleGenerateClue() {
 	}
 }
 
-//TODOs
-//About/Comments/attribution links.
-
-//Missing features from this version:
-//Label overlay
-//lat/lon jump.
-
 function handleScaleChange() {
 	if ($("#mapscale").val() == "custom") {
 		$("#setmapscale").dialog("open");
@@ -2001,6 +2030,17 @@ function handleScaleChange() {
 	} else {
 		handleOptionChange();
 	}
+}
+
+function handlePaperChange() {
+	if ($("#papersize").val() == "custom") {
+		$("#setpaper").dialog("open");
+		var sh = parseInt(Math.max(...paper_pieces) * 1000);
+		var sw = parseInt(Math.min(...paper_pieces) * 1000);
+		$("#s_custompaperh").val(sh);
+		$("#s_custompaperw").val(sw);
+	}
+	else {handleOptionChange();}
 }
 
 function handleOptionChange() {
@@ -2147,7 +2187,10 @@ function saveMap() {
 		generateMap("pdf");
 	}
 	var controlsForDB = getSortedControls(); //get all features
-
+	var psize=papersize;
+	if (papersize == "custom") {
+		psize = "p"+ parseInt(Math.max(...paper_pieces)*10000) + "-" + + parseInt(Math.min(...paper_pieces)*10000)
+	}
 	var json = {
 		"data": {
 			"action": "savemap",
@@ -2157,7 +2200,7 @@ function saveMap() {
 			"club": $('#club').val(),
 			"style": mapStyleID,
 			"scale": "s" + scale,
-			"papersize": $("#papersize").val(),
+			"papersize": psize,
 			"paperorientation": $("#paperorientation :radio:checked").attr("id"),
 			"centre_lat": sheetCentreLL[1],
 			"centre_lon": sheetCentreLL[0],
@@ -2216,7 +2259,7 @@ function getURL(type) {
 	var arr = site_href.split("/");
 	var url = arr[0] + "//" + arr[2] + "/render/" + type
 		+ "/?style=" + mapStyleID
-		+ "|paper=" + paper_pieces[0].toFixed(3) + "," + paper_pieces[1].toFixed(3)	//trim numbers in string to 3dp
+		+ "|paper=" + paper_pieces[$("#portrait").prop('checked')?1:0].toFixed(3) + "," + paper_pieces[$("#portrait").prop('checked')?0:1].toFixed(3)	//trim numbers in string to 3dp
 		+ "|scale=" + scale
 		+ "|centre=" + sheetCentreLL[1].toFixed(0) + "," + sheetCentreLL[0].toFixed(0)
 		+ "|title=" + escapeTitleText
@@ -2260,6 +2303,7 @@ function getURL(type) {
 	if (schools) { url += "|schools=no"; } else { url += "|schools=yes"; }
 	if (power) { url += "|power=yes"; } else { url += "|power=no"; }
 	if (privroads) { url += "|privroads=yes"; } else { url += "|privroads=no"; }
+	if (buildings) { url += "|buildings=yes"; } else { url += "|buildings=no"; }
 	if (linear) { url += "|linear=yes"; } else { url += "|linear=no"; }
 	url += "|dpi=" + dpi;
 	url += "|purple=" + overlayColour;
@@ -2442,11 +2486,31 @@ function loadMap(data) {
 
 	mapTitle = data.title;
 	raceDescription = data.race_instructions;
-	//var $style = $("#" + data.style.split("-")[0]);
-	//var $scale = $("#" + data.scale);
-	var $papersize = $("#" + data.papersize);
+	papersize = data.papersize;
+	var sh = (parseInt(papersize.substring(1,4))/1000).toFixed(4);
+	var sw = (parseInt(papersize.substring(6,9))/1000).toFixed(4);	
+	var exists = false;
+	$("#papersize option").each(function(){
+    	if (this.value == papersize) {
+        	exists = true;
+        	return false;
+    	}
+	});
+	if(exists) {
+		$('#papersize').val(papersize);
+	}
+	else {
+		$('#papersize').val("custom");
+		papersize="custom";
+	}
+	$('#papersize').selectmenu("refresh");
+	//if (data.paperorientation == "landscape") {
+		paper_pieces = [sh, sw];
+	//} else {
+	//paper_pieces = [sw, sh]; 
+	//}
+
 	var $paperorientation = $("#" + data.paperorientation);
-	//var $contours = $("#" + data.style.split("-")[1] + "-" + data.style.split("-")[2]);
 	(data.linear == "1" || data.linear == 1)?linear=true:linear=false;
 	var $linear = $("#" + (linear?"linear_yes":"linear_no"));
 
@@ -2456,15 +2520,23 @@ function loadMap(data) {
 	$('#mapstyle').val(data.style.split("-")[0]);
 	$('#mapstyle').iconselectmenu("refresh");
 	scale = data.scale.split("s")[1];
-	$('#mapscale').val(scale);
+	exists = false;
+	$("#mapscale option").each(function(){
+    	if (this.value == scale) {
+        	exists = true;
+        	return false;
+    	}
+	});
+	if(exists) {
+		$('#mapscale').val(scale);
+	}
+	else {
+		$('#mapscale').val("custom");
+	}
 	$('#mapscale').selectmenu("refresh");
 	$('#contours').val(data.style.split("-")[1] + "-" + data.style.split("-")[2]);
 	$('#contours').selectmenu("refresh");
-	//$style.trigger("click");
-	//$scale.trigger("click");
-	$papersize.trigger("click");
 	$paperorientation.trigger("click");
-	//$contours.trigger("click");
 	$linear.trigger("click");
 
 	layerControls.getSource().clear();
@@ -2473,12 +2545,7 @@ function loadMap(data) {
 	sheetCentreLL = olProj.transform([parseFloat(data.centre_lon), parseFloat(data.centre_lat)], "EPSG:4326", "EPSG:3857");
 	olMap.getView().setCenter(sheetCentreLL);
 	olMap.getView().setRotation(parseFloat(data.rotation));
-	if (data.scale == "s7500" || data.scale == "s5000" || data.scale == "s4000") {
-		olMap.getView().setZoom(15);
-	}
-	else {
-		olMap.getView().setZoom(14);
-	}
+	olMap.getView().setZoom(parseInt(scale)<8000?15:14);
 	if (debug) { console.log(sheetCentreLL); }
 
 	for (var i = 0; i < data.controls.length; i++) {
@@ -2609,17 +2676,15 @@ function rebuildMapSheet() {
 	layerMapTitle.getSource().clear();
 	layerMapContent.getSource().clear();
 
-	var papersize = "";
-
 	papersize = $("#papersize").val();
-
-	if ($("#portrait").prop('checked')) { paper_pieces[0] = 0.0001 * papersize.substring(6); paper_pieces[1] = 0.0001 * papersize.substring(1, 5); }
-	else { paper_pieces[0] = 0.0001 * papersize.substring(1, 5); paper_pieces[1] = 0.0001 * papersize.substring(6); }
-	paper = paper_pieces[0] + "," + paper_pieces[1];
+	if (papersize != "custom") {
+		paper_pieces[1] = 0.0001 * papersize.substring(6); 
+		paper_pieces[0] = 0.0001 * papersize.substring(1, 5);
+	}
+	if(debug) { console.log("Paper size is " + paper_pieces); }
 	if (!isNaN(parseInt($("#mapscale").val()))) {
 		scale = parseInt($("#mapscale").val());
 	}
-	console.log(scale);
 
 	var centroidllWGS84 = olProj.transform(sheetCentreLL, "EPSG:3857", "EPSG:4326");
 	var fudgeFactor = Math.cos(centroidllWGS84[1] * Math.PI / 180);
@@ -2628,7 +2693,9 @@ function rebuildMapSheet() {
 
 	var paper_dlon = paper_pieces[0] * trueScale;
 	var paper_dlat = paper_pieces[1] * trueScale;
-
+	if ($("#portrait").prop('checked')) {
+		[paper_dlon, paper_dlat] = [paper_dlat, paper_dlon];
+	}
 	var map_nm_dlat = 0.014 * trueScale;
 	var map_em_dlon = 0.008 * trueScale;
 	var map_sm_dlat = 0.013 * trueScale;

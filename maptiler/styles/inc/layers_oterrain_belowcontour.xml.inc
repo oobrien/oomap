@@ -168,10 +168,11 @@
         &datasource-settings;
         <Parameter name="table">
             (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,building,leisure,railway,amenity,landuse from &prefix;_polygon
-            where building is not null
+            where (building is not null
                 or landuse='building'
                 or railway='station'
-                or amenity='place_of_worship'
+                or amenity='place_of_worship')
+                and '&buildings;' = 'yes'
             order by z_order,way_area desc) as buildings
         </Parameter>
     </Datasource>

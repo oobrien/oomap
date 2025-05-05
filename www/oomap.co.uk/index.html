@@ -83,8 +83,9 @@
 										<option selected="selected" value="p2970-2100">A4</option>
 										<option value="p4200-2970">A3</option>
 										<option value="p2794-2159">Letter</option>
+										<option value="p3050-2150">RA4</option>
 										<!-- <option value="p4430-3140">RA3</option> -->
-										<!-- <option value="custom">Custom</option> -->
+										<option value="custom">Custom</option>
 									</select>
 								</div>
 							</td>
@@ -274,6 +275,35 @@
 			</table>
 		  </fieldset>
 		</div>
+		<div id="setpaper" title="Set custom paper size" style='display: none;'>
+		  <p class="validateTips"></p>
+		  <fieldset>
+			<table>
+			<tr>
+				<td>
+					<label for="s_custompaperh">Paper long edge (mm)</label>
+				</td>
+				<td>
+					<input type="text" size='8' maxlength='3' value=scale name="cutompaperh" id="s_custompaperh" class="text ui-widget-content ui-corner-all" />
+				</td>
+				<td>
+					(Between 100 and 450)
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="s_custompaperw">Paper short edge (mm)</label>
+				</td>
+				<td>
+					<input type="text" size='8' maxlength='3' value=scale name="cutompaperw" id="s_custompaperw" class="text ui-widget-content ui-corner-all" />
+				</td>
+				<td>
+					(Between 100 and 450)
+				</td>
+			</tr>
+			</table>
+		  </fieldset>
+		</div>
 		<div id="validationerror" title="Validation Error" style='display: none;'>
 			<table>
 				<tr><td class="ui-icon ui-icon-alert" style='margin: 0 7px 20px 0;'></td><td style='padding-bottom: 20px; vertical-align: top'>There were one or more errors validating your map.</td></tr>
@@ -449,10 +479,10 @@
 					<input type="checkbox" id="schools" name="schools" value="yes">
 				</td>
 				<td>
-					<label for ="kmzcourse"> Show course on kmz export</label>
+					<label for ="buidings"> Show buildings</label>
 				</td>
 				<td>
-					<input type="checkbox" id="kmzcourse" name="kmzcourse" value="yes">
+					<input type="checkbox" id="buildings" name="buildings" value="yes">
 				</td>
 			</tr>
 			<tr>
@@ -460,14 +490,15 @@
 					
 				</td>
 				<td>
+					
+				</td>
+				<td>
+					<label for ="kmzcourse"> Show course on kmz export</label>
+				</td>
+				<td>
+					<input type="checkbox" id="kmzcourse" name="kmzcourse" value="yes">
+				</td>
 				
-				</td>
-				<td>
-					
-				</td>
-				<td>
-					
-				</td>
 			</tr>
 			<tr>
 			<td>

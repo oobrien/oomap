@@ -160,6 +160,7 @@
                           or b.landuse='building'
                           or b.railway='station'
                           or b.amenity='place_of_worship')
+                          and '&buildings;' = 'yes'
                           and ST_Intersects(b.way, a.way2)
           ) as buildings
         </Parameter>
