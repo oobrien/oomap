@@ -15,7 +15,7 @@ wget https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
 unzip water-polygons-split-3857.zip
 cd water-polygons-split-3857/
 shp2pgsql -g way water_polygons public.water > water.sql
-psql -d otf1 -U osm -f water.sql > /dev/null
+psql -d gis -U osm -f water.sql > /dev/null
 ```
 
 OS Terrain® 50 download & processing

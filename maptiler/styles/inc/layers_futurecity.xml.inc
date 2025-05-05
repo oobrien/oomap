@@ -18,34 +18,29 @@
     </Datasource>
 </Layer>
 
-<Layer name="parkareas" status="on" srs="&srs900913;">
-    <StyleName>parkareas</StyleName>
+<Layer name="areas" status="on" srs="&srs900913;">
+    <StyleName>areas</StyleName>
     <Datasource>
     &datasource-settings;
         <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",landuse,leisure,name,way_area
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,leisure,name,way_area
             from &prefix;_polygon
-            where leisure in ('park', 'garden', 'nature_reserve', 'common')
-                or landuse in ('forest', 'recreation_ground', 'village_green', 'meadow')
-                or "natural" in ('wood', 'heath')
             order by z_order,way_area desc
-            ) as parkareas
+            ) as areas
         </Parameter>
     </Datasource>
 </Layer>
 
-<Layer name="waterareas" status="on" srs="&srs900913;">
-    <StyleName>waterareas</StyleName>
+<Layer name="pavedareas" status="on" srs="&srs900913;">
+    <StyleName>roadscasing</StyleName>
+    <StyleName>roadscore</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,name,way_area
-            from &prefix;_polygon
-            where waterway in ('dock','mill_pond','riverbank','canal','river')
-                or landuse in ('reservoir','water','basin')
-                or "natural" in ('lake','water','land','marsh','scrub','wetland','glacier')
-            order by z_order,way_area desc
-            ) as waterareas
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,highway,railway,amenity,aeroway,tunnel from &prefix;_polygon
+            where highway in ('residential','unclassified','pedestrian','service','footway','track')
+                or amenity = 'parking'
+            order by z_order,way_area desc) as roads
         </Parameter>
     </Datasource>
 </Layer>
@@ -81,20 +76,6 @@
                 or aeroway is not null
             order by z_order
             ) as roads
-        </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="pavedareas" status="on" srs="&srs900913;">
-    <StyleName>roadscasing</StyleName>
-    <StyleName>roadscore</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,highway,railway,amenity,aeroway,tunnel from &prefix;_polygon
-            where highway in ('residential','unclassified','pedestrian','service','footway','track')
-                or amenity = 'parking'
-            order by z_order,way_area desc) as roads
         </Parameter>
     </Datasource>
 </Layer>

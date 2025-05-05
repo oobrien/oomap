@@ -265,16 +265,47 @@
     </Rule>
 </Style>
 
-<Style name="leisure">
+<Style name="leisure_lower">
     <Rule>
         &maxscale_zoom12;
-        <Filter>[landuse] = 'landfill' or [landuse] = 'construction'</Filter>
-        <PolygonSymbolizer fill="&magenta50;" gamma="0.6" />
+        <Filter>[leisure] = 'nature_reserve'</Filter>
+        <PolygonSymbolizer fill="&green30;" gamma="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational'</Filter>
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[landuse] = 'park' or [landuse] = 'meadow' or [landuse] = 'grass' or [landuse] = 'recreation_ground' or [landuse] = 'village_green' or [landuse] = 'green'</Filter>
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[natural] = 'field' or [natural] = 'heath' or [landuse] = 'conservation' or ([landuse] = 'school' and &schools; = 'yes') or  ([amenity] = 'school' and &schools; = 'yes')</Filter>
+        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+    </Rule>    
+     <Rule>
+        &maxscale_zoom12;
+        <Filter>[natural] = 'grass' or [natural] = 'grassland' or [natural] = 'meadow' or [tourism] = 'camp_site' or [tourism]='caravan_site' or [tourism] = 'picnic_site'</Filter>
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+    </Rule>
+   <Rule>
+        &maxscale_zoom12;
+        <Filter>[natural] = 'scrub'</Filter>
+        <PolygonPatternSymbolizer file="&symbols;/undergrowth.svg" transform="scale(1.0, 1.0)"  />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         <Filter>[natural] = 'wood' or [landuse] = 'wood' or [landuse] = 'forest'</Filter>
         <PolygonSymbolizer fill="&white;" gamma="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+        <PolygonPatternSymbolizer file="&symbols;/crop2.svg" transform="scale(0.25, 0.25)" />
     </Rule>
    <Rule>
         &maxscale_zoom12;
@@ -285,8 +316,8 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'nature_reserve'</Filter>
-        <PolygonSymbolizer fill="&green30;" gamma="0.6" />
+        <Filter>[landuse] = 'landfill' or [landuse] = 'construction'</Filter>
+        <PolygonSymbolizer fill="&magenta50;" gamma="0.6" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
@@ -301,50 +332,39 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational'</Filter>
-        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[landuse] = 'park' or [landuse] = 'meadow' or [landuse] = 'grass' or [landuse] = 'recreation_ground' or [landuse] = 'village_green' or [landuse] = 'green'</Filter>
-        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[natural] = 'grass' or [natural] = 'grassland' or [natural] = 'meadow' or [tourism] = 'camp_site' or [tourism]='caravan_site' or [tourism] = 'picnic_site'</Filter>
-        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[natural] = 'field' or [natural] = 'heath' or [landuse] = 'conservation'</Filter>
-        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-    </Rule>
-   <Rule>
-        &maxscale_zoom12;
-        <Filter>[natural] = 'scrub'</Filter>
-        <PolygonPatternSymbolizer file="&symbols;/undergrowth.svg" transform="scale(1.0, 1.0)"  />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
         <Filter>[landuse] = 'residential' or [landuse] ='commercial' or [landuse] = 'industrial' or [landuse] = 'retail'</Filter>
         <PolygonSymbolizer fill="&olive100;" gamma="0.6" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[landuse] = 'school' or [amenity] = 'school' or [amenity] = 'college' or [amenity] = 'university' or [amenity] = 'hospital'</Filter>
+        <Filter> ([landuse] = 'school' and &schools; = 'no') or  ([amenity] = 'school' and &schools; = 'no') or [amenity] = 'college' or [amenity] = 'university' or [amenity] = 'hospital'</Filter>
         <PolygonSymbolizer fill="&olive100;" gamma="0.6" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
         <Filter>[leisure] = 'garden' or [landuse] = 'allotments' or [landuse] = 'military' or [landuse] = 'railway' or [tourism] = 'zoo'</Filter>
         <PolygonSymbolizer fill="&olive100;" gamma="0.6" />
-    </Rule>
+    </Rule>    
     <Rule>
         &maxscale_zoom12;
-        <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
+        <Filter>[landuse] = 'vineyard'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/crop2.svg" transform="scale(0.25, 0.25)" />
+        <PolygonPatternSymbolizer file="&symbols;/vineyard.svg" transform="scale(0.3, 0.3)" />
     </Rule>
+    <Rule>
+         &maxscale_zoom12;
+         <Filter>[natural] = 'scree'</Filter>
+         <PolygonPatternSymbolizer file="&symbols;/scree.svg" transform="scale(0.3)"  />
+     </Rule>  
+     <Rule>
+        &maxscale_zoom12;
+        <Filter>[amenity] = 'parking' or [landuse] = 'playground' or [leisure] = 'playground' or [landuse] = 'farmyard' or [landuse] = 'parking' </Filter>
+        <PolygonSymbolizer fill="&brown50;" gamma="0.6" />
+        <LineSymbolizer stroke="&black;" stroke-width="0.6" />
+    </Rule>      
+</Style>
+
+<Style name="leisure_upper">
     <Rule>
         &maxscale_zoom12;
         <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
@@ -353,7 +373,7 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[amenity] = 'parking' or [landuse] = 'playground' or [leisure] = 'playground' or [landuse] = 'farmyard' or [landuse] = 'parking' or [highway] = 'services'</Filter>
+        <Filter>[highway] = 'services'</Filter>
         <PolygonSymbolizer fill="&brown50;" gamma="0.6" />
         <LineSymbolizer stroke="&black;" stroke-width="0.6" />
     </Rule>
@@ -367,17 +387,6 @@
         <Filter>[leisure] = 'track'</Filter>
         <LineSymbolizer stroke="&black;" stroke-width="0.75" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,2" />
     </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[landuse] = 'vineyard'</Filter>
-        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
-        <PolygonPatternSymbolizer file="&symbols;/vineyard.svg" transform="scale(0.3, 0.3)" />
-    </Rule>
-    <Rule>
-         &maxscale_zoom12;
-         <Filter>[natural] = 'scree'</Filter>
-         <PolygonPatternSymbolizer file="&symbols;/scree.svg" transform="scale(0.3)"  />
-     </Rule>
 </Style>
 
 <Style name="water_areas_casing">
@@ -469,7 +478,8 @@
     <Rule>
         &maxscale_zoom12;
         <Filter>[leisure] = 'stadium'</Filter>
-        <PolygonSymbolizer fill="&black;" gamma="0.6" />
+        <LineSymbolizer stroke="&black;" stroke-width="0.8" stroke-linejoin="miter" stroke-linecap="square" />
+        <PolygonSymbolizer fill="&grey50;" gamma="0.6" />
     </Rule>
 </Style>
 

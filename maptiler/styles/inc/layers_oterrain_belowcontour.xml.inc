@@ -8,18 +8,8 @@
     </Datasource>
 </Layer>
 
-<Layer name="coast-poly" status="on" srs="&srs900913;">
-    <StyleName>coast-line</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
-      </Parameter>
-    </Datasource>
-</Layer>
-
-<Layer name="leisure" status="on" srs="&srs900913;">
-    <StyleName>leisure</StyleName>
+<Layer name="leisure_lower" status="on" srs="&srs900913;">
+    <StyleName>leisure_lower</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
@@ -38,17 +28,13 @@
     </Datasource>
 </Layer>
 
-<Layer name="sports_grounds" status="on" srs="&srs900913;">
-    <StyleName>sports_grounds</StyleName>
-    <StyleName>sports_grounds_pitch</StyleName>
+<Layer name="coast-poly" status="on" srs="&srs900913;">
+    <StyleName>coast-line</StyleName>
     <Datasource>
         &datasource-settings;
-        <Parameter name="table">(select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,leisure
-          from &prefix;_polygon
-           where leisure in ('sports_centre','stadium', 'pitch')
-           order by z_order,way_area desc
-           ) as sports_grounds
-        </Parameter>
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
+      </Parameter>
     </Datasource>
 </Layer>
 
@@ -94,10 +80,54 @@
         <Parameter name="table">
           (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,way_area
           from &prefix;_polygon
-            where waterway in ('dock','mill_pond','riverbank','canal','river')
-                or "natural" in ('land','glacier','pond')
+            where waterway in ('dock','mill_pond','riverbank','canal','river','reservoir','water','basin')
+                or "natural" in ('land','glacier','pond','lake','water')
             order by z_order,way_area desc
             ) as water_areas
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="coast-poly" status="on" srs="&srs900913;">
+    <StyleName>coast-poly</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
+      </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="leisure_upper" status="on" srs="&srs900913;">
+    <StyleName>leisure_upper</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+          (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism
+          from &prefix;_polygon
+            where landuse is not null
+                or leisure is not null
+                or amenity in ('parking','university','college','school','hospital','grave_yard')
+                or highway in ('pedestrian', 'services')
+                or "natural" in ('field','beach','heath','mud','wood','scrub','meadow','crop','grass','grassland','scree','sand')
+                or power in ('station','sub_station')
+                or tourism in ('attraction','camp_site','caravan_site','picnic_site','zoo')
+            order by z_order,way_area desc
+            ) as leisure
+      </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="sports_grounds" status="on" srs="&srs900913;">
+    <StyleName>sports_grounds</StyleName>
+    <StyleName>sports_grounds_pitch</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">(select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,leisure
+          from &prefix;_polygon
+           where leisure in ('sports_centre','stadium', 'pitch')
+           order by z_order,way_area desc
+           ) as sports_grounds
         </Parameter>
     </Datasource>
 </Layer>
@@ -138,10 +168,11 @@
         &datasource-settings;
         <Parameter name="table">
             (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,building,leisure,railway,amenity,landuse from &prefix;_polygon
-            where building is not null
+            where (building is not null
                 or landuse='building'
                 or railway='station'
-                or amenity='place_of_worship'
+                or amenity='place_of_worship')
+                and '&buildings;' = 'yes'
             order by z_order,way_area desc) as buildings
         </Parameter>
     </Datasource>
@@ -197,10 +228,11 @@
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
             where (highway is not null
-            and (tags->'footway' is null or tags ->'footway' != 'sidewalk' or '&sidewalks;' = 'yes')
-            and (tags->'cycleway' is null or tags->'cycleway' != 'sidewalk' or '&sidewalks;' = 'yes')
+            and (tags->'footway' is null or (tags ->'footway' != 'sidewalk' and tags ->'footway' != 'crossing') or '&sidewalks;' = 'yes')
+            and (tags->'cycleway' is null or (tags->'cycleway' != 'sidewalk' and  tags->'cycleway' != 'crossing') or '&sidewalks;' = 'yes')
             and (service is null or service !='driveway')
-            and not (highway='footway' and access is not null and (access ='private' or access='no')))
+            and not (highway='footway' and access is not null and (access ='private' or access='no'))
+            and (not (access is not null and (access ='private' or access='no')) or '&privroads;' = 'yes'))
             or railway is not null
             order by z_order
             ) as roads

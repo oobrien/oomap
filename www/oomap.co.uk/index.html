@@ -34,79 +34,101 @@
 				<div id='toolbar' class="ui-widget-header ui-corner-all">
 					<table>
 						<tr>
-							<td rowspan='3' style='vertical-align: top;'>
-								<div id="mapstyle" class="buttonset">
-									<input type="radio" id="streeto" name="mapstyle" />
-										<label for="streeto"><img src='/images/oom_s.png' alt='Street-O' style='width: 60px; height: 60px;' /><br />StreetO</label>
-									<input type="radio" id="oterrain" name="mapstyle" />
-										<label for="oterrain"><img src='/images/oom_p.png' alt='PseudO' style='width: 60px; height: 60px;' /><br />PseudO</label>
-									<input type="radio" id="blueprint" name="mapstyle" />
-										<label for="blueprint"><img src='/images/oom_blueprint.png' alt='Blueprint' style='width: 60px; height: 60px;' /><br />Blueprint</label>
-									<input type="radio" id="futurecity" name="mapstyle" />
-										<label for="futurecity"><img src='/images/oom_f.png' alt='Futurecity' style='width: 60px; height: 60px;' /><br />Futurecity</label>
+							<td colspan='1' style='vertical-align: top;'>
+								Style
+								<div>
+									<select name="mapstyle"  id="mapstyle">
+										<option selected="selected" value="streeto" data-class="style-icon" data-style="background-image: url('/images/oom_s.png');">StreetO</option>
+										<option value="oterrain" data-class="style-icon" data-style="background-image: url('/images/oom_p.png');">PseudO</option>
+										<option value="blueprint" data-class="style-icon" data-style="background-image: url('/images/oom_blueprint.png');">Blueprint</option>
+										<option value="futurecity" data-class="style-icon" data-style="background-image: url('/images/oom_f.png');">Futurecity</option>
+									</select>
 								</div>
 							</td>
-							<td colspan='3'>
-								Scale 1:
-								<div id="mapscale">
-									<input type="radio" id="s4000" value="4000" name="mapscale" /><label for="s4000">4000</label>
-									<input type="radio" id="s5000" value="5000" name="mapscale" /><label for="s5000">5000</label>
-									<input type="radio" id="s7500" value="7500" name="mapscale" /><label for="s7500">7500</label>
-									<input type="radio" id="s10000" value="10000" name="mapscale" checked="checked" /><label for="s10000">10000</label>
-									<input type="radio" id="s12500" value="12500" name="mapscale" /><label for="s12500">12500</label>
-									<input type="radio" id="s15000" value="15000" name="mapscale" /><label for="s15000">15k</label>
-									<input type="radio" id="s20000" value="20000" name="mapscale" /><label for="s20000">20k</label>
-									<input type="radio" id="s40000" value="40000" name="mapscale" /><label for="s40000">40k</label>
+							<td colspan='1'>
+								<a href="https://oomap.dna-software.co.uk/help/details/contours/" target=”_blank” rel=”noopener noreferrer”>Contours</a>
+								<div>
+								<select name="contours" id="contours">
+									<option value="SRTM-5"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (5m)</abbr></option>
+									<option value="SRTM-10"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (10m)</abbr></option>
+									<option value="COPE-5"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (5m)</abbr></option>
+									<option value="COPE-10"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (10m)</abbr></option>									
+									<option value="OS-10"><abbr title="Ordnance Survey, GB only (live preview)">OS (10m)</abbr></option>
+									<option selected="selected" value="LIDAR-5"><abbr title="LIDAR, where available (live preview)">LIDAR (5m)</abbr></option>
+									<option value="LIDAR-10"><abbr title="LIDAR, where available (live preview)">LIDAR (10m)</abbr></option>
+									<option value="NONE-0">None</option>	
+								</select>
+								</div>
+							</td>
+							<td colspan='1'>
+								Scale
+								<div>
+									<select name="mapscale"  id="mapscale">
+										<option value="4000">1:4,000</option>
+										<option value="5000">1:5,000</option>
+										<option value="7500">1:7,500</option>
+										<option selected="selected" value="10000">1:10,000</option>
+										<option value="12500">1:12,500</option>
+										<option value="15000">1:15,000</option>
+										<option value="20000">1:20,000</option>
+										<option value="40000">1:40,000</option>
+										<option value="custom">Custom</option>
+									</select>
+								</div>
+							</td>
+							<td>
+								Sheet
+								<div>
+									<select id="papersize" name="papersize">
+										<option selected="selected" value="p2970-2100">A4</option>
+										<option value="p4200-2970">A3</option>
+										<option value="p2794-2159">Letter</option>
+										<option value="p3050-2150">RA4</option>
+										<!-- <option value="p4430-3140">RA3</option> -->
+										<option value="custom">Custom</option>
+									</select>
 								</div>
 							</td>
 						</tr>
 						<tr>
-							<td>
-								Sheet
-								<div id="papersize">
-									<input type="radio" id="p2970-2100" name="papersize" checked="checked" /><label for="p2970-2100">A4</label>
-									<input type="radio" id="p4200-2970" name="papersize" /><label for="p4200-2970">A3</label>
-									<input type="radio" id="p2794-2159" name="papersize" /><label for="p2794-2159">Letter</label>
-									<!-- <input type="radio" id="p4430-3140" name="papersize" /><label for="p4430-3140">RA3</label> -->
-								</div>
-							</td>
-							<td>
+							
+							<td colspan='2'>
+								Orientation:
 								<div id="paperorientation">
 									<input type="radio" id="portrait" name="paperorientation" /><label for="portrait">Portrait</label>
 									<input type="radio" id="landscape" name="paperorientation" checked="checked" /><label for="landscape">Landscape</label>
 								</div>
 							</td>
-							<td></td>
+							<td colspan='2'>
+								Course type:
+								<div id="linear">									
+									<input type="radio" id="linear_no" name="linear" checked="checked" /><label for="linear_no">Score</label>
+									<input type="radio" id="linear_yes" name="linear" /><label for="linear_yes">Linear</label>
+								</div>
+							</td>
 						</tr>
 						<tr>
-							<td colspan='3'>
+							<td colspan='2'>
 								<div id="specialoptions">Delete
 									<button id='deletesheet'>Sheet</button>
-									<button id='deleteMarkers'>Markers</button>&nbsp;&nbsp;&nbsp;Add
+									<button id='deleteMarkers'>Markers</button>
+								</div>
+							</td>
+							<td colspan='2'>
+								<div id="specialoptions">Add
 									<button id='getPostboxes'>Map Features</button>
 									<button id='getOpenplaques'>OpenPlaques</button>
 								</div>
 							</td>
 						</tr>
 						<tr>
-							<td colspan='3'>
-								<a href="https://oomap.dna-software.co.uk/help/details/contours/" target=”_blank” rel=”noopener noreferrer”>Contours</a>
-								<div id="contours">
-									<input type="radio" id="SRTM-5" value="SRTM-5" name="contours" checked="checked"/><label for="SRTM-5"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (5m)</abbr></label>
-									<input type="radio" id="SRTM-10" value="SRTM-10" name="contours" /><label for="SRTM-10"><abbr title="NASA SRTM, Global up to N/S 60° (no preview)">SRTM (10m)</abbr></label>
-									<input type="radio" id="COPE-5" value="COPE-5" name="contours" /><label for="COPE-5"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (5m)</abbr></label>
-									<input type="radio" id="COPE-10" value="COPE-10" name="contours" /><label for="COPE-10"><abbr title="ESA GLO-30, Global (no preview)">GLO-30 (10m)</abbr></label>
-									<input type="radio" id="OS-10" value="OS-10" name="contours"  /><label for="OS-10"><abbr title="Ordnance Survey, GB only (live preview)">OS (10m)</abbr></label>
-									<input type="radio" id="LIDAR-5" value="LIDAR-5" name="contours" /><label for="LIDAR-5"><abbr title="LIDAR, where available (live preview)">LIDAR (5m)</abbr></label>
-									<input type="radio" id="LIDAR-10" value="LIDAR-10" name="contours" /><label for="LIDAR-10"><abbr title="LIDAR, where available (live preview)">LIDAR (10m)</abbr></label>
-									<input type="radio" id="NONE-0" value="NONE-0" name="contours" /><label for="NONE-0">None</label>
-								</div>
-							</td>
+							
 						</tr>
 					</table>
 				</div>
+
 				<div id='create' class="ui-widget-header ui-corner-all">
-					<button id='createmap'>Save & get PDF map</button><br />
+					<button id='createmap'>Save &amp; get PDF map</button><br />
 					Get: <button id='getraster'>JPG</button>
 					<button id='getworldfile'>JGW</button>
 					<button id='createclue'>Clues</button><br />
@@ -146,8 +168,7 @@
 						<a href="#" id="about"> About</a>
 						<a href="https://oomap.dna-software.co.uk/help/blog/" target=”_blank” rel=”noopener noreferrer”>Blog</a>
 					</div>
-					<script type='text/javascript'>kofiwidget2.init('Buy Ollie a coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
-					<script type='text/javascript'>kofiwidget2.init('Buy David a coffee', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script>
+					<script type='text/javascript'>kofiwidget2.init('Support Oomap', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script>
 				</div>
 			</div>
 				<div id='map'></div>
@@ -163,7 +184,7 @@
 					<input type="radio" id="c_startfinish" name="c_type" /><label for="c_startfinish"><img src='/images/c_startfinish.png' alt='Start and Finish' style='width: 60px; height: 60px;' /><br />Start<br />&nbsp;</label>
 					<input type="radio" id="c_finish" name="c_type" /><label for="c_finish"><img src='/images/c_finish.png' alt='Finish' style='width: 60px; height: 60px;' /><br />Finish<br />&nbsp;</label>
 					<input type="radio" id="c_cross" name="c_type" /><label for="c_cross"><img src='/images/c_cross.png' alt='Do not Cross' style='width: 60px; height: 60px;' /><br />Do Not<br />Cross: X</label>
-					<input type="radio" id="c_crossingpoint" name="c_type" /><label for="c_crossingpoint"><img src='/images/c_crossingpoint.png' alt='Crossing Point' style='width: 60px; height: 60px;' /><br />Crossing<br />Point: ][</label>
+					<input type="radio" id="c_crossingpoint" name="c_type" /><label for="c_crossingpoint"><img src='/images/c_crossingpoint.png' alt='Crossing Point' style='width: 60px; height: 60px;' /><br />Crossing<br />Point: )(</label>
 				</td>
 				<td style='text-align: center; padding: 0 30px;'>
 					<input type="text" id="c_angle" class="knob" value="45"><br /><label for="c_angle" id='anglelabel'>Number<br />position</label>
@@ -236,6 +257,53 @@
 			</table>
 		  </fieldset>
 		</div>
+		<div id="setmapscale" title="Set custom Scale" style='display: none;'>
+		  <p class="validateTips"></p>
+		  <fieldset>
+			<table>
+			<tr>
+				<td>
+					<label for="s_customscale">Scale 1:</label>
+				</td>
+				<td>
+					<input type="text" size='8' maxlength='5' value=scale name="cutomscale" id="s_customscale" class="text ui-widget-content ui-corner-all" />
+				</td>
+				<td>
+					(Between 1000 and 40000)
+				</td>
+			</tr>
+			</table>
+		  </fieldset>
+		</div>
+		<div id="setpaper" title="Set custom paper size" style='display: none;'>
+		  <p class="validateTips"></p>
+		  <fieldset>
+			<table>
+			<tr>
+				<td>
+					<label for="s_custompaperh">Paper long edge (mm)</label>
+				</td>
+				<td>
+					<input type="text" size='8' maxlength='3' value=scale name="cutompaperh" id="s_custompaperh" class="text ui-widget-content ui-corner-all" />
+				</td>
+				<td>
+					(Between 100 and 450)
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="s_custompaperw">Paper short edge (mm)</label>
+				</td>
+				<td>
+					<input type="text" size='8' maxlength='3' value=scale name="cutompaperw" id="s_custompaperw" class="text ui-widget-content ui-corner-all" />
+				</td>
+				<td>
+					(Between 100 and 450)
+				</td>
+			</tr>
+			</table>
+		  </fieldset>
+		</div>
 		<div id="validationerror" title="Validation Error" style='display: none;'>
 			<table>
 				<tr><td class="ui-icon ui-icon-alert" style='margin: 0 7px 20px 0;'></td><td style='padding-bottom: 20px; vertical-align: top'>There were one or more errors validating your map.</td></tr>
@@ -259,8 +327,8 @@
 				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='padding-bottom: 20px; vertical-align: top' id='saved_mapid'></td></tr>
 				<tr><td class="ui-icon ui-icon-info" style="margin: 0 7px 20px 0;"></td><td style='vertical-align: top'>
 					OpenOrienteeringMap receives no ongoing funding, but it has hosting costs and takes time to maintain. If this map is being used for an event, we would encourage you to support the project, simply by buying the creators a coffee:
-						<div style='text-align: center; padding: 10px;'><script type='text/javascript'>kofiwidget2.init('Buy Ollie a Coffee', '#8a2c2c', 'oobrien');kofiwidget2.draw();</script>
-						<script type='text/javascript'>kofiwidget2.init('Buy David a coffee', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script></div>
+						<div style='text-align: center; padding: 10px;'>
+						<script type='text/javascript'>kofiwidget2.init('Support Oomap', '#8a2c2c', 'Z8Z38ZEZV');kofiwidget2.draw();</script></div>
 				</td></tr>
 			</table>
 			<div style='clear: both;'></div>
@@ -391,10 +459,10 @@
 			</tr>
 			<tr>
 				<td>
-					<label for ="linear"> Linear course</label>
+					<label for ="privroads"> Show private roads</label>
 				</td>
 				<td>
-					<input type="checkbox" id="linear" name="linear" value="yes">
+					<input type="checkbox" id="privroads" name="privroads" value="yes">
 				</td>
 				<td>
 					<label for ="power">Show powerlines</label>
@@ -404,11 +472,46 @@
 				</td>
 			</tr>
 			<tr>
+				<td>
+					<label for ="schools"> Schools as OOB</label>
+				</td>
+				<td>
+					<input type="checkbox" id="schools" name="schools" value="yes">
+				</td>
+				<td>
+					<label for ="buidings"> Show buildings</label>
+				</td>
+				<td>
+					<input type="checkbox" id="buildings" name="buildings" value="yes">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					
+				</td>
+				<td>
+					
+				</td>
+				<td>
+					<label for ="kmzcourse"> Show course on kmz export</label>
+				</td>
+				<td>
+					<input type="checkbox" id="kmzcourse" name="kmzcourse" value="yes">
+				</td>
+				
+			</tr>
+			<tr>
 			<td>
 				<label for="dpi">Map resolution (dpi)</label>
 			</td>
 			<td>
 				<input type="text" name="dpi" id="dpi" size='3' maxlength='3' class="text ui-widget-content ui-corner-all" />
+			</td>
+			<td>
+				<label for="purple">Overlay colour (rgb hex)</label>
+			</td>
+			<td>
+				<input type="text" name="purple" id="purple" size='6' maxlength='6' class="text ui-widget-content ui-corner-all" />
 			</td>
 		</tr>
 			</table>

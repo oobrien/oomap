@@ -5,4 +5,3 @@
 <!-- <!ENTITY prefix "planet_osm"> -->
 <!ENTITY datasource-settings SYSTEM "db.xml.inc">
 <!ENTITY datasource-settings-contours SYSTEM "db_contours.xml.inc">
-<!ENTITY datasource-settings-otf SYSTEM "db_otf.xml.inc">

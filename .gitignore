@@ -2,3 +2,6 @@
 js/
 node_modules
 dist
+vscode/
+.vscode/
+maptiler/www/maptoken.py

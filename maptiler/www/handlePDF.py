@@ -63,6 +63,10 @@ def createImage(path, fileformat):
     C_T = 0.00035*C_SCALE_FACTOR
     CL_H = 0.005*C_SCALE_FACTOR
     CTEXT_S = 0.005*C_SCALE_FACTOR
+    CXLEN = 0.0012*C_SCALE_FACTOR
+    CXINGGAP = 0.0007*C_SCALE_FACTOR
+    CXINGRADIUS = 0.005*C_SCALE_FACTOR
+    CXINGARC = 0.36*C_SCALE_FACTOR
 
     CONTENT_NM = 0.0045
     MAP_NM = 0.014
@@ -85,8 +89,16 @@ def createImage(path, fileformat):
     ADORN_ARROW_W = 0.012
     ADORN_LOGO_W = 0.018
 
-    style = p['style']
-    if style != "crew" and style != 'blueprint' and style != "urban_skeleton" and style != "streeto" and style != "oterrain" and style != "futurecity" and style != "adhoc":
+    hexPurple = p.get('purple','')
+    try:
+        int(hexPurple, 16)  #will throw an error if hexPurple isn't a hex string
+    except:
+        hexPurple = ''
+    if len(hexPurple) != 6:
+        hexPurple = 'A626FF'
+    purpleTuple = (int(hexPurple[0:2],16)/256, int(hexPurple[2:4],16)/256, int(hexPurple[4:6],16)/256) 
+    style = p.get('style','none')
+    if style not in ['blueprint', 'urban_skeleton', 'streeto', 'oterrain', 'futurecity', 'adhoc']:
         return "Unknown style."
 
     PAPER_W = float(p['paper'].split(",")[0])
@@ -98,11 +110,7 @@ def createImage(path, fileformat):
         rotation = float(p['rotation'])
     except:
         rotation = 0
-    try:
-        title = p['title']
-    except:
-        title = "OpenOrienteeringMap"
-
+    title = p.get('title', 'OpenOrienteeringMap')
     mapid = p.get('mapid', 'new')
     club = p.get('club', '')
     if not club.isalpha():   #sanitise
@@ -137,6 +145,8 @@ def createImage(path, fileformat):
     wmmParams = {'lat':str(wgs84lat), 'lon':str(wgs84lon)}
     wmmResponse = requests.get(web_root+"wmm", params = wmmParams)
     magdec = float(wmmResponse.text)
+    # the map data is pre-rotated by declination, so capture the aggregate rotation value:
+    rotation2 = rotation + magdec*math.pi/180
 
     if style == "adhoc":
         MAP_EM = MAP_WM
@@ -145,13 +155,22 @@ def createImage(path, fileformat):
 
     MAP_W = PAPER_W - MAP_WM - MAP_EM
     MAP_H = PAPER_H - MAP_NM - MAP_SM
-    EXTENT_W = MAP_W * math.cos(rotation) + MAP_H * abs(math.sin(rotation))
-    EXTENT_H = MAP_H * math.cos(rotation) + MAP_W * abs(math.sin(rotation))
+    #calculate the magN-aligned extents of the map (for scaling/compositing map):
+    EXTENT_W = MAP_W * math.cos(rotation2) + MAP_H * abs(math.sin(rotation2))
+    EXTENT_H = MAP_H * math.cos(rotation2) + MAP_W * abs(math.sin(rotation2))
+    #calculate the TrueN-aligned extents of the map (for querying data using a bounding box):
+    T_EXTENT_W = MAP_W * math.cos(rotation) + MAP_H * abs(math.sin(rotation))
+    T_EXTENT_H = MAP_H * math.cos(rotation) + MAP_W * abs(math.sin(rotation))
 
     mapSLat = clat - (EXTENT_H/2)*scaleCorrected
     mapNLat = clat + (EXTENT_H/2)*scaleCorrected
     mapWLon = clon - (EXTENT_W/2)*scaleCorrected
     mapELon = clon + (EXTENT_W/2)*scaleCorrected
+
+    TmapSLat = clat - (T_EXTENT_H/2)*scaleCorrected
+    TmapNLat = clat + (T_EXTENT_H/2)*scaleCorrected
+    TmapWLon = clon - (T_EXTENT_W/2)*scaleCorrected
+    TmapELon = clon + (T_EXTENT_W/2)*scaleCorrected
 
     pagePolyUnrotated = ((clon - (MAP_W/2 + MAP_WM) * scaleCorrected,
                             clat - (MAP_H/2 + MAP_SM) * scaleCorrected),
@@ -185,8 +204,8 @@ def createImage(path, fileformat):
     with open(styleFile, mode="r") as f:
                styleString = f.read()
 
-    bx=transformer.transform_bounds(mapWLon, mapSLat, mapELon, mapNLat, direction = 'INVERSE')
-    bbox2 = mapnik.Box2d(bx[3],bx[2],bx[1],bx[0])
+    bx=transformer.transform_bounds(TmapWLon, TmapSLat, TmapELon, TmapNLat, direction = 'INVERSE')
+    tbbox = mapnik.Box2d(bx[3],bx[2],bx[1],bx[0])
     if len(mapid) == 13:    #If existing id, use that, otherwise generate new one.
         tmpid = "h" + mapid #Add "h" prefix - postgres tables can't start with a number
     else:
@@ -214,7 +233,8 @@ def createImage(path, fileformat):
     else:
         contour_text = ""
         contour_table = "lidar_null"
-
+    cur.close()
+    conn.close()
     # If stylefile exists, data has been recently fetched - can use existing DB tables.
     # Recreate stylefile regardless - might need a new style on existing data.
 
@@ -223,8 +243,7 @@ def createImage(path, fileformat):
           "User-Agent" : "OpenOrienteeringMap;oomap@dna-software.co.uk"}
         api2 = overpass.API(endpoint = "https://overpass.kumi.systems/api/interpreter", timeout=120, headers = headers)
         api = overpass.API(endpoint = "https://overpass-api.de/api/interpreter", timeout=120, headers = headers)
-        MapQuery = overpass.MapQuery(bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
-        #MapQuery = 'is_in({},{});(area._[natural ~ "."];area._[landuse ~ "."];);>->.a;((node({},{},{},{});.a;);<;>;);'.format(wgs84lat,wgs84lon,bbox2.miny,bbox2.minx,bbox2.maxy,bbox2.maxx)
+        MapQuery = overpass.MapQuery(tbbox.miny,tbbox.minx,tbbox.maxy,tbbox.maxx)
         try:
             response = api.get(MapQuery, responseformat="xml")
         except: #if first api fails try the second
@@ -237,12 +256,13 @@ def createImage(path, fileformat):
         tmpname = "/tmp/" + tmpid + ".osm"
         with open(tmpname,mode="wb") as f:
                f.write(response.encode("utf-8"))
-        # Populate Postgres db with data, using tables with temporary id prefix
 
-        os.system("osm2pgsql -d otf1 --hstore --multi-geometry --number-processes 1" + \
+        # Populate Postgres db with data, using tables with temporary id prefix
+        os.system("osm2pgsql -d gis --hstore --multi-geometry --number-processes 1" + \
             " -p " + tmpid + \
             " --tag-transform-script /home/osm/openstreetmap-carto/openstreetmap-carto.lua" + \
             " --style /home/osm/openstreetmap-carto/openstreetmap-carto.style -C 200 -U osm "+ tmpname)
+
         os.unlink(tmpname)  #Finished with temporary osm data file - delete.
 
         if p['contour'] == "SRTM" or p['contour'] == "COPE":
@@ -252,8 +272,8 @@ def createImage(path, fileformat):
                 sourceText = " --source=srtm1 --srtm-version=3 "
             else:
                 sourceText = " --source=cope1"
-            phyString="phyghtmap --area="+str(bbox2.minx-0.0002)+":"+str(bbox2.miny-0.0002)+":"+ \
-                str(bbox2.maxx+0.0002)+":"+str(bbox2.maxy+0.0002)+ sourceText + \
+            phyString="phyghtmap --area="+str(tbbox.minx-0.0002)+":"+str(tbbox.miny-0.0002)+":"+ \
+                str(tbbox.maxx+0.0002)+":"+str(tbbox.maxy+0.0002)+ sourceText + \
                 " --earthexplorer-user=" + ee_user + " --earthexplorer-password=" + ee_pw + \
                 " --hgtdir=" + home_base + "/hgt -p " + home_base + "/"+tmpid + " >> " + home_base + "/phy.log"
             os.system(phyString)
@@ -261,8 +281,8 @@ def createImage(path, fileformat):
             os.system("gdalbuildvrt "+ home_base + "/"+tmpid + "_a.vrt " +  home_base + "/"+tmpid + "_lon*")
             #Resample at 10m intervals to get smoother contours.  Reproject at the same time
             os.system("gdalwarp -r cubic -tr 10 10 -s_srs EPSG:4326 -t_srs EPSG:3857 -te_srs EPSG:4326 -te " + \
-                str(bbox2.minx-0.0001)+" "+str(bbox2.miny-0.0001)+" "+ \
-                str(bbox2.maxx+0.0001)+" "+str(bbox2.maxy+0.0001)+ \
+                str(tbbox.minx-0.0001)+" "+str(tbbox.miny-0.0001)+" "+ \
+                str(tbbox.maxx+0.0001)+" "+str(tbbox.maxy+0.0001)+ \
                 " -of SAGA -ot Float32 " + home_base + "/"+tmpid + "_a.vrt " + home_base + "/"+tmpid + ".sdat")
             #Apply Guassian blur to further smooth contours
             os.system("saga_cmd grid_filter \"Gaussian Filter\" -SIGMA 2.0 -KERNEL_RADIUS 12 -INPUT " + home_base + "/"+tmpid + ".sdat -RESULT " + home_base + "/"+tmpid + "_s")
@@ -277,7 +297,8 @@ def createImage(path, fileformat):
                 os.system("cp " + home_base + "/null.shx " + home_base + "/"+tmpid + ".shx")
                 os.system("cp " + home_base + "/null.dbf " + home_base + "/"+tmpid + ".dbf")
             #then load contours to database
-            os.system("shp2pgsql -g way -s 3857 " + home_base + "/"+tmpid + ".shp " + tmpid + "_srtm_line | psql -h localhost -p 5432 -U osm -d otf1")
+            os.system("shp2pgsql -g way -s 3857 " + home_base + "/"+tmpid + ".shp " + tmpid + "_srtm_line | psql -h localhost -p 5432 -U osm -d gis")
+
             contour_table = tmpid + "_srtm_line"
             import glob
             for i in glob.glob(home_base +'/'+tmpid+'*'):
@@ -305,6 +326,9 @@ def createImage(path, fileformat):
         "\n<!ENTITY fences \"" + ("yes" if p.get('fences',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY power \"" + ("yes" if p.get('power',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY sidewalks \"" + ("yes" if p.get('sidewalks',"no") != "no" else "no") + "\">" + \
+        "\n<!ENTITY schools \"" + ("yes" if p.get('schools',"no") != "no" else "no") + "\">" + \
+        "\n<!ENTITY privroads \"" + ("yes" if p.get('privroads',"yes") != "no" else "no") + "\">" + \
+        "\n<!ENTITY buildings \"" + ("yes" if p.get('buildings',"yes") != "no" else "no") + "\">" + \
         "\n<!ENTITY lidartable \"" + contour_table + "\">" + \
         "\n<!ENTITY contourSeparation \"" + p['interval'] + "\">" + \
         "\n<!ENTITY layers-contours SYSTEM \"inc/layers_contours_" + p['contour'] + ".xml.inc\">" + \
@@ -337,14 +361,7 @@ def createImage(path, fileformat):
 
 
     # Create map
-    FULL_W = MAP_W * math.cos(rotation+float(magn)) + MAP_H * abs(math.sin(rotation+float(magn)))
-    FULL_H = MAP_H * math.cos(rotation+float(magn)) + MAP_W * abs(math.sin(rotation+float(magn)))
-    if FULL_W < EXTENT_W:
-        FULL_W = EXTENT_W
-        FULL_H = EXTENT_H
-    else:
-        cbbox = cbbox * (FULL_W/EXTENT_W)   #assumes bbox expands in W and H proportionately, but not sure that's the case.  Seems to work though.
-    map = mapnik.Map(int(FULL_W*S2P), int(FULL_H*S2P))
+    map = mapnik.Map(int(EXTENT_W*S2P), int(EXTENT_H*S2P))
     #Need to adjust this (above) if rotating the SQL queries to align patterns etc to mag N (area needs to be bigger).
 
     # Load map configuration
@@ -403,7 +420,7 @@ def createImage(path, fileformat):
     ctx.save()
     ctx.translate(MAP_W*S2P/2,MAP_H*S2P/2) # translate origin to the center
     ctx.rotate(rotation+float(magn))
-    ctx.translate(-FULL_W*S2P/2,-FULL_H*S2P/2)
+    ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)
 
     mapnik.render(map, ctx, SCALE_FACTOR, 0, 0)
 
@@ -440,7 +457,7 @@ def createImage(path, fileformat):
     if slon != 0 and slat != 0:
         ctx = cairo.Context(surface)
         ctx.set_operator(cairo.Operator.MULTIPLY)
-        ctx.set_source_rgb(0.651, 0.149, 1)
+        ctx.set_source_rgb(*purpleTuple)
         ctx.translate(MAP_WM*S2P + MAP_W*S2P/2,MAP_NM*S2P + MAP_H*S2P/2) # translate origin to the center
         ctx.rotate(rotation)    # rotate map to correct angle
         ctx.translate(-EXTENT_W*S2P/2,-EXTENT_H*S2P/2)  # set origin to NW corner
@@ -488,20 +505,20 @@ def createImage(path, fileformat):
             controllon = float(controlsArr[4*i+3])
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
-            x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
-            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
-            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
+            x_bearing, y_bearing, width, height, x_advance, y_advance = ctx.text_extents(text)
+            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180 + rotation)
+            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180 + rotation)
             ctx.save()
             ctx.translate(controllonP*S2P, controllatP*S2P)
             ctx.rotate(-rotation)
-            ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
+            ctx.move_to(labelX*S2P-(width/2 + x_bearing), -labelY*S2P+(height/2))
             ctx.text_path(text)
             ctx.set_line_width(C_T*S2P)
             ctx.stroke_preserve()
             ctx.fill()
             ctx.restore()
 
-        ctx.set_source_rgb(0.651, 0.149, 1)
+        ctx.set_source_rgb(*purpleTuple)
         ctx.set_operator(cairo.Operator.MULTIPLY)
         lastlonP = (slon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
         lastlatP = (mapNLat-slat)*EXTENT_H/(mapNLat-mapSLat)
@@ -520,82 +537,90 @@ def createImage(path, fileformat):
             ctx.arc(controllonP*S2P, controllatP*S2P, CDOT_R*S2P, 0, 2*math.pi)
             ctx.fill()
             if p.get('linear',"no") != "no":
-                angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
-                start2lonP = lastlonP + math.cos(angle) * C_R * (1.3 if i == 0 else 1.0)
-                start2latP = lastlatP + math.sin(angle) * C_R * (1.3 if i == 0 else 1.0)
-                end2lonP = controllonP - math.cos(angle) * C_R
-                end2latP = controllatP - math.sin(angle) * C_R
-                ctx.move_to(start2lonP*S2P, start2latP*S2P)
-                ctx.line_to(end2lonP*S2P, end2latP*S2P)  #draw line between controls
+                dist = ((lastlonP - controllonP)**2 + (lastlatP - controllatP)**2)**0.5
+                if dist > 2 * C_R:  # only draw a line if controls are > 2 circle radii apart.
+                    angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
+                    start2lonP = lastlonP + math.cos(angle) * C_R * (1.3 if i == 0 else 1.0)
+                    start2latP = lastlatP + math.sin(angle) * C_R * (1.3 if i == 0 else 1.0)
+                    end2lonP = controllonP - math.cos(angle) * C_R
+                    end2latP = controllatP - math.sin(angle) * C_R
+                    ctx.move_to(start2lonP*S2P, start2latP*S2P)
+                    ctx.line_to(end2lonP*S2P, end2latP*S2P)  #draw line between controls
                 lastlonP = controllonP
                 lastlatP = controllatP
 
             x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
-            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180)
-            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180)
+            labelX = C_R*2.5*math.sin(math.pi*labelAngle/180 + rotation)
+            labelY = C_R*2.5*math.cos(math.pi*labelAngle/180 + rotation)
             ctx.save()
             ctx.translate(controllonP*S2P, controllatP*S2P)
             ctx.rotate(-rotation)
-            ctx.move_to(labelX*S2P-width/2, -labelY*S2P+height/2)
+            ctx.move_to(labelX*S2P-(width/2 + x_bearing), -labelY*S2P+(height/2))
             ctx.show_text(text)
             ctx.restore()
         # draw line from last control to finish
         if p.get('linear',"no") != "no":
             controllatP = (mapNLat-flat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (flon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
-            angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
-            start2lonP = lastlonP + math.cos(angle) * C_R
-            start2latP = lastlatP + math.sin(angle) * C_R
-            end2lonP = controllonP - math.cos(angle) * C_R * 1.2
-            end2latP = controllatP - math.sin(angle) * C_R * 1.2
-            ctx.move_to(start2lonP*S2P, start2latP*S2P)
-            ctx.line_to(end2lonP*S2P, end2latP*S2P)
+            dist = ((lastlonP - controllonP)**2 + (lastlatP - controllatP)**2)**0.5
+            if dist > 2 * C_R:  # only draw a line if controls are > 2 circle radii apart.
+                angle = math.atan2((controllatP - lastlatP), (controllonP - lastlonP))
+                start2lonP = lastlonP + math.cos(angle) * C_R
+                start2latP = lastlatP + math.sin(angle) * C_R
+                end2lonP = controllonP - math.cos(angle) * C_R * 1.2
+                end2latP = controllatP - math.sin(angle) * C_R * 1.2
+                ctx.move_to(start2lonP*S2P, start2latP*S2P)
+                ctx.line_to(end2lonP*S2P, end2latP*S2P)
         ctx.stroke()
 
     # Crosses and labels
     if len(crossesArr) > 0:
         #ctx = cairo.Context(surface)
-        ctx.set_source_rgb(0.651, 0.149, 1)
+        ctx.set_source_rgb(*purpleTuple)
         ctx.set_operator(cairo.Operator.MULTIPLY)
-        ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-        ctx.set_font_size(CTEXT_S*S2P/1.5)
-        #ctx.set_source_rgb(1, 0, 0)
+        ctx.set_line_width(C_T*S2P)
         numCrosses = len(crossesArr)//2
         for i in range(numCrosses):
-            text = "X"
+            #text = "X"
             controllat = float(crossesArr[2*i])
             controllon = float(crossesArr[2*i+1])
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
-            x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
-            ctx.move_to((controllonP)*S2P-width/2, (controllatP)*S2P+height/2)
-            ctx.show_text(text)
+            ctx.save()
+            ctx.translate(controllonP*S2P, controllatP*S2P)
+            ctx.rotate(-rotation)            
+            ctx.move_to(-CXLEN*S2P, CXLEN*S2P)
+            ctx.line_to(CXLEN*S2P, -CXLEN*S2P)
+            ctx.move_to(-CXLEN*S2P, -CXLEN*S2P)
+            ctx.line_to(CXLEN*S2P, CXLEN*S2P)
+            ctx.stroke()
+            ctx.restore()
 
     #Crossing points and labels
     if len(cpsArr) > 0:
         #ctx = cairo.Context(surface)
-        ctx.set_source_rgb(0.651, 0.149, 1)
-        ctx.set_operator(cairo.Operator.DARKEN)
-        ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-        ctx.set_font_size(CTEXT_S*S2P/1.1)
-        #ctx.set_source_rgb(1, 0, 0)
+        ctx.set_source_rgb(*purpleTuple)
+        ctx.set_operator(cairo.Operator.MULTIPLY)
+        ctx.set_line_width(C_T*S2P)
         numCps = len(cpsArr)//3
         for i in range(numCps):
-            text = "]["
+            #text = "]["
             controlAngle = float(cpsArr[3*i])
             controllat = float(cpsArr[3*i+1])
             controllon = float(cpsArr[3*i+2])
             controlAngleRads = math.pi*controlAngle/180
             controllatP = (mapNLat-controllat)*EXTENT_H/(mapNLat-mapSLat)
             controllonP = (controllon-mapWLon)*EXTENT_W/(mapELon-mapWLon)
-            x_bearing, y_bearing, width, height, x_advance, y_advance = ctx.text_extents(text)[:6]
-            ctx.move_to((controllonP)*S2P, (controllatP)*S2P)
+            ctx.save()
+            ctx.translate((controllonP)*S2P, (controllatP)*S2P)
             ctx.rotate(controlAngleRads)
-            ctx.rel_move_to(-width/2, height/3.5)
-            ctx.show_text(text)
-            ctx.rotate(-1.0*controlAngleRads)
-            #ctx.save()
-
+            ctx.new_sub_path()
+            ctx.arc ((-CXINGGAP-CXINGRADIUS)*S2P, 0, CXINGRADIUS * S2P,  -CXINGARC, CXINGARC)
+            ctx.new_sub_path()
+            ctx.arc ((CXINGGAP+CXINGRADIUS)*S2P, 0, CXINGRADIUS * S2P,  math.pi-CXINGARC, math.pi+CXINGARC)
+            ctx.stroke()
+            ctx.restore()
+ 
     # Adornments - Title
     ctx = cairo.Context(surface)
     ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
@@ -784,7 +809,7 @@ def createImage(path, fileformat):
     #Delete temporary style file and postgres tables (everything beginning with "h"):
     #BUT - don't delete here as may be needed for related query.  Periodically clean out with cron job instead
     #os.unlink(styleFile)
-    #dropTables = 'psql -U osm otf1 -t -c "select \'drop table \\"\' || tablename || \'\\" cascade;\' from pg_tables where schemaname = \'public\' and tablename like \'h%\'"  | psql -U osm otf1'
+    #dropTables = 'psql -U osm gis -t -c "select \'drop table \\"\' || tablename || \'\\" cascade;\' from pg_tables where schemaname = \'public\' and tablename like \'h%\'"  | psql -U osm gis'
     #os.system(dropTables)
 
     return file
@@ -930,5 +955,5 @@ def test(path):
 
 
 if __name__ == '__main__':
-    test("style=streeto-COPE-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=hh|id=6043c1a44cc97|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2|linear=no")
-    #test("style=oterrain-COPE-5|grid=no&paper=0.297,0.210|scale=10000|centre=6801767,-86381|id=6043c1a44cc93&rotation=0.2")
+    #test("style=streeto-COPE-10|paper=0.297,0.210|scale=10000|centre=6801767,-86381|title=ÅFurzton%20%28Milton%20Keynes%29|club=hh|id=6043c1a44cc97|start=6801344,-86261|crosses=|cps=45,6801960,-86749,90,6802960,-88000|controls=10,45,6801960,-86749,11,45,6802104,-85841,12,45,6802080,-85210,13,45,6802935,-86911,14,45,6801793,-87307,15,45,6802777,-86285,16,45,6801244,-85573,17,45,6801382,-86968,18,45,6802357,-87050,19,45,6802562,-87288,20,45,6802868,-87303,21,45,6802204,-86342,22,45,6803011,-86008,23,45,6802600,-85081,24,45,6801903,-84580,25,45,6801024,-85382,26,45,6800718,-86400,27,45,6801139,-87112,28,45,6801717,-86519,29,45,6801736,-85549,30,45,6801769,-88206,31,45,6802161,-87795,32,45,6800919,-87618,33,45,6801989,-86099,34,45,6800546,-85621,35,45,6801631,-84795,36,45,6802309,-84403,37,45,6803126,-86223,38,45,6802061,-87174,39,45,6801674,-87828,40,45,6802567,-87962,41,45,6800627,-86772,42,45,6802080,-84250,43,45,6803212,-85320,44,45,6801091,-88631|rotation=0.2|linear=no")
+    test("style=oterrain-SRTM-5|paper=0.297,0.210|scale=10000|centre=6808314,-25707|title=OpenOrienteeringMap|eventdate=|club=hh|id=66533f1db72fd|start=6808175,-25491|finish=6808234,-26035|crosses=6808385,-25093,6808069,-24972,6808440,-26209|cps=163,6808590,-25710,73,6808087,-26772|controls=1,45,6809268,-25747,2,45,6807742,-25506|rotation=0.2915|grid=yes|rail=yes|walls=yes|trees=yes|hedges=yes|drives=no|fences=yes|sidewalks=no|schools=no|power=yes|privroads=yes|linear=no|dpi=75|purple=EE11FF")

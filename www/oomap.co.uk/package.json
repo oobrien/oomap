@@ -8,12 +8,12 @@
   },
   "devDependencies": {
     "@rollup/plugin-inject": "^4.0.4",
-    "vite": "^2.6.7"
+    "vite": "^2.9.17"
   },
   "dependencies": {
     "jquery": "^3.7.1",
     "jquery-ui-dist": "^1.13.0",
-    "ol": "7.1",
+    "ol": "9.0",
     "ol-ext": "4.0",
     "proj4": "^2.7.5"
   }

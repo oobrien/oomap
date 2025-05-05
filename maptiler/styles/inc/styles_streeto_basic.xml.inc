@@ -12,14 +12,6 @@
     </Rule>
 </Style>
 
-<Style name="water_areas">
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>&water_area;</Filter>
-        <PolygonSymbolizer fill="&blue50;" gamma="0.8" />
-    </Rule>
-</Style>
-
 <Style name="water_lines">
     <Rule>
 	    <Filter>not &tunnel;</Filter>
@@ -259,11 +251,19 @@
     </Rule>
 </Style>
 
-<Style name="leisure">
+<Style name="leisure_lower">
     <Rule>
         &maxscale_zoom12;
-        <Filter>[landuse] = 'landfill' or [landuse] = 'construction' or [amenity] = 'school'</Filter>
-        <PolygonSymbolizer fill="&magenta50;" gamma="0.6" />
+        <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
+        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+    </Rule>
+ </Style>
+
+<Style name="leisure_upper">
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>&water_area;</Filter>
+        <PolygonSymbolizer fill="&blue50;" gamma="0.8" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
@@ -272,17 +272,12 @@
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>[leisure] = 'nature_reserve' or [landuse] = 'orchard'</Filter>
+        <Filter>[landuse] = 'orchard'</Filter>
         <PolygonSymbolizer fill="&green30;" gamma="0.6" />
     </Rule>
     <Rule>
         &maxscale_zoom12;
-        <Filter>([landuse] = 'cemetery' or [landuse] = 'grave_yard' or [amenity] = 'grave_yard')</Filter>
-        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational' or [landuse] = 'playground' or [leisure] = 'playground'</Filter>
+        <Filter>[leisure] = 'common' or [leisure] = 'park' or [leisure] = 'recreation_ground' or [leisure] = 'golf_course' or [landuse] = 'sport' or [landuse] = 'recreational'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
     </Rule>
     <Rule>
@@ -291,6 +286,21 @@
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
     </Rule>
     <Rule>
+        &maxscale_zoom12;
+        <Filter>[landuse] = 'landfill' or [landuse] = 'construction' or ([amenity] = 'school' and &schools; = 'no')</Filter>
+        <PolygonSymbolizer fill="&magenta50;" gamma="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>([landuse] = 'cemetery' or [landuse] = 'grave_yard' or [amenity] = 'grave_yard')</Filter>
+        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
+    </Rule>
+    <Rule>
+        &maxscale_zoom12;
+        <Filter>[landuse] = 'playground' or [leisure] = 'playground'</Filter>
+        <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
+    </Rule>
+   <Rule>
         &maxscale_zoom12;
         <Filter>[natural] = 'grass' or [natural] = 'grassland' or [natural] = 'meadow' or [tourism] = 'camp_site' or [tourism]='caravan_site' or [tourism] = 'picnic_site'</Filter>
         <PolygonSymbolizer fill="&yellow100;" gamma="0.6" />
@@ -308,11 +318,6 @@
     <Rule>
         &maxscale_zoom12;
         <Filter>[landuse] = 'field' or [natural] = 'crop' or [landuse] = 'farm' or [landuse] = 'farmland'</Filter>
-        <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
-    </Rule>
-    <Rule>
-        &maxscale_zoom12;
-        <Filter>[natural] = 'mud' or [natural] = 'beach' or [natural] = 'sand'</Filter>
         <PolygonSymbolizer fill="&yellow50;" gamma="0.6" />
     </Rule>
 </Style>
@@ -334,7 +339,7 @@
     </Rule>
 </Style>
 
-<Style name="cliffs">
+<Style name="barriers">
      <Rule>
         &maxscale_zoom13;
         <Filter>[natural] = 'cliff'</Filter>
@@ -347,9 +352,6 @@
         <MarkersSymbolizer file="&symbols;/embankment.svg" placement="line" offset="1.4" spacing="3" max-error="0.5" />
         <LineSymbolizer stroke="&brown100;" stroke-width="2.0" stroke-linecap="square" />
     </Rule>
-</Style>
-
-<Style name="barriers">
     <Rule>
         &maxscale_zoom12;
         &minscale_zoom12;
@@ -384,6 +386,10 @@
         <Filter>&fences; = 'yes' and [barrier] = 'fence'</Filter>
 	<MarkersSymbolizer file="&symbols;/fence.svg" placement="line" spacing="8" offset="1.0" max-error="0.5" transform="scale(0.6)"  />
         <LineSymbolizer stroke="&black;" stroke-width="0.79" stroke-linecap="square" />
+    </Rule>
+    <Rule>
+        <Filter>[man_made]='pier'</Filter>
+        <LineSymbolizer stroke="&brown;" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" />
     </Rule>
 </Style>
 

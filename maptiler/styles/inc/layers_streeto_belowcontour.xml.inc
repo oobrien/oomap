@@ -8,8 +8,8 @@
     </Datasource>
 </Layer>
 
-<Layer name="leisure" status="on" srs="&srs900913;">
-    <StyleName>leisure</StyleName>
+<Layer name="leisure_lower" status="on" srs="&srs900913;">
+    <StyleName>leisure_lower</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
@@ -28,18 +28,46 @@
     </Datasource>
 </Layer>
 
-<Layer name="water_areas" status="on" srs="&srs900913;">
-    <StyleName>water_areas</StyleName>
+<Layer name="coast-poly" status="on" srs="&srs900913;">
+    <StyleName>coast-poly</StyleName>
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural",waterway,landuse,way_area
-            from &prefix;_polygon
-                    where waterway in ('dock','mill_pond','riverbank','canal','river')
-                or "natural" in ('land','marsh','scrub','wetland','glacier')
-            order by z_order,way_area desc
-            ) as water_areas
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from water WHERE ST_Intersects(way,&box3857;)) as coastline
+      </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="islands" status="on" srs="&srs900913;">
+    <StyleName>islands</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural" from &prefix;_polygon
+            where "natural" in ('land', 'island')
+            order by z_order,way_area desc) as land
         </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="leisure_upper" status="on" srs="&srs900913;">
+    <StyleName>leisure_upper</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,amenity,landuse,leisure,man_made,highway,"natural",power,tourism,"water",waterway,way_area
+            from &prefix;_polygon
+            where landuse is not null
+                or leisure is not null
+                or amenity in ('parking','university','college','school','hospital','grave_yard')
+                or highway in ('pedestrian', 'services')
+                or "natural" is not null
+                or power in ('station','sub_station')
+                or tourism in ('attraction','camp_site','caravan_site','picnic_site','zoo')
+                or "water" = 'yes'
+            order by z_order,way_area desc
+            ) as leisure
+      </Parameter>
     </Datasource>
 </Layer>
 
@@ -70,6 +98,30 @@
     </Datasource>
 </Layer>
 
+<Layer name="bridge_areas" status="on" srs="&srs900913;">
+    <StyleName>land</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way from &prefix;_polygon
+            where "man_made" in ('bridge','breakwater','groyne','lighthouse')
+            order by z_order,way_area desc) as land
+        </Parameter>
+    </Datasource>
+</Layer>
+
+<Layer name="piers" status="on" srs="&srs900913;">
+    <StyleName>pavedareas</StyleName>
+    <Datasource>
+        &datasource-settings;
+        <Parameter name="table">
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural" from &prefix;_polygon
+            where "man_made" in ('pier')
+            order by z_order,way_area desc) as land
+        </Parameter>
+    </Datasource>
+</Layer>
+
 <Layer name="water_lines" status="on" srs="&srs900913;">
     <StyleName>water_lines</StyleName>
     <Datasource>
@@ -86,20 +138,6 @@
     </Datasource>
 </Layer>
 
-<Layer name="oldbuildings" status="off" srs="&srs900913;">
-    <StyleName>buildings-core</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,building,leisure,railway,amenity,landuse from &prefix;_polygon
-            where building is not null
-                or landuse='building'
-                or railway='station'
-                or amenity='place_of_worship'
-            order by z_order,way_area desc) as buildings
-        </Parameter>
-    </Datasource>
-</Layer>
 <Layer name="buildings" status="on" srs="&srs900913;">
     <StyleName>buildings-core</StyleName>
     <Datasource>
@@ -122,6 +160,7 @@
                           or b.landuse='building'
                           or b.railway='station'
                           or b.amenity='place_of_worship')
+                          and '&buildings;' = 'yes'
                           and ST_Intersects(b.way, a.way2)
           ) as buildings
         </Parameter>
@@ -143,7 +182,7 @@
     <Datasource>
         &datasource-settings;
         <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made='embankment') as roads
+            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,barrier,"natural",man_made from &prefix;_line where barrier is not null or "natural" in ('hedge','cliff') or man_made is not null) as roads
         </Parameter>
     </Datasource>
 </Layer>
@@ -178,10 +217,11 @@
             case when bridge in ('yes','true','1') then 'yes'::text else bridge end as bridge
             from &prefix;_line
             where (highway is not null
-            and (tags->'footway' is null or tags ->'footway' != 'sidewalk' or '&sidewalks;' = 'yes')
-            and (tags->'cycleway' is null or tags->'cycleway' != 'sidewalk' or '&sidewalks;' = 'yes')
+            and (tags->'footway' is null or (tags ->'footway' != 'sidewalk' and tags ->'footway' != 'crossing') or '&sidewalks;' = 'yes')
+            and (tags->'cycleway' is null or (tags ->'cycleway' != 'sidewalk' and  tags ->'cycleway' != 'crossing') or '&sidewalks;' = 'yes')
             and (service is null or service !='driveway')
-            and not (highway='footway' and access is not null and access ='private'))
+            and not (highway='footway' and access is not null and (access ='private' or access='no'))
+            and (not (access is not null and (access ='private' or access='no')) or '&privroads;' = 'yes'))
             or railway is not null
             order by z_order
             ) as roads
@@ -189,14 +229,3 @@
     </Datasource>
 </Layer>
 
-<Layer name="islands" status="on" srs="&srs900913;">
-    <StyleName>islands</StyleName>
-    <Datasource>
-        &datasource-settings;
-        <Parameter name="table">
-            (select ST_Rotate(ST_Intersection(way, &box3857;),&magn;, ST_Centroid(&box3857;)) as way,"natural" from &prefix;_polygon
-            where "natural" in ('land', 'island')
-            order by z_order,way_area desc) as land
-        </Parameter>
-    </Datasource>
-</Layer>
